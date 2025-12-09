@@ -5,7 +5,7 @@ TOOL_START_SEQ = "<tool>"
 TOOL_STOP_SEQ = "</tool>"
 
 def parse_tool(msg: str) -> Dict[str, Any] | None:
-    
+    msg = msg.strip()
     start = msg.rfind(TOOL_START_SEQ)
     if start == -1:
         return None

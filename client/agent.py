@@ -127,7 +127,8 @@ class AgentClient:
     async def process_query(
         self,
         query: str,
-        max_turns: int = 10
+        max_turns: int = 10,
+        verbose: bool = False
     ) -> str:
         messages = []
         output = []
@@ -148,11 +149,18 @@ class AgentClient:
         for _ in range(max_turns):
             resp = await self.llm.chat(messages)
             msg: str = resp.choices[0].message.content
+
             if self.toolbox and resp.choices[0].finish_reason == "stop" and \
                 TOOL_START_SEQ in msg and not msg.endswith(TOOL_STOP_SEQ):
                 msg += TOOL_STOP_SEQ
             
-            print(msg)
+            # Only for Ali AI-Hub Qwen
+            if self.toolbox and resp.choices[0].finish_reason == "stop" and \
+                msg.removesuffix(TOOL_STOP_SEQ).strip().endswith(TOOL_STOP_SEQ):
+                msg = msg.removesuffix(TOOL_STOP_SEQ)
+            
+            if verbose:
+                print(msg)
 
             output.append(msg)
             messages.append({
@@ -160,7 +168,7 @@ class AgentClient:
                 "content": msg
             })
             
-            if msg.endswith(TOOL_STOP_SEQ) and self.toolbox:
+            if msg.strip().endswith(TOOL_STOP_SEQ) and self.toolbox:
                 tool_calling_req = parse_tool(msg)
                 if "name" not in tool_calling_req or "arguments" not in tool_calling_req:
                     tool_resp = {
@@ -177,6 +185,9 @@ class AgentClient:
                     )).structured_content
                 format_tool_resp = f"<response>\n{tool_resp.__str__()}\n</response>"
 
+                if verbose:
+                    print(format_tool_resp)
+
                 output.append(format_tool_resp)
                 messages.append({
                     "role": "user",
@@ -189,6 +200,9 @@ class AgentClient:
         
 
 if __name__ == "__main__":
+    from dotenv import load_dotenv
+    load_dotenv()
+
     toolbox = Toolbox({
         "add": {
             "name": "add",
@@ -204,13 +218,13 @@ if __name__ == "__main__":
         }
     })
 
-    llm = OpenAIBackend(model="qwen2.5-max")
+    llm = OpenAIBackend(model="gpt-4o")
     client = AgentClient(
         llm=llm,
         toolbox=toolbox,
         system_prompt=toolbox.get_system_prompt()
     )
 
-    result = asyncio.run(client.process_query(query="What is the sum of 114.514 and 1919.810"))
+    result = asyncio.run(client.process_query(query="What is the sum of 114.514 and 1919.810", verbose=True))
 
-    print(result)
+    # print(result)
