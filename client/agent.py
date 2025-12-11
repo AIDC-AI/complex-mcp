@@ -1,9 +1,11 @@
 import os
+from abc import ABC, abstractmethod
 from openai import AsyncClient
 from fastmcp import Client as MCPClient
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Literal
 from tenacity import retry, stop_after_attempt, wait_exponential, before_sleep_log
 import asyncio
+import json
 import logging
 import colorlog
 
@@ -11,13 +13,14 @@ import sys
 sys.path.append('.')
 
 from client.utils import parse_tool, TOOL_START_SEQ, TOOL_STOP_SEQ
+from client.rag import RAGEngine
 
 LOG_FORMAT = '%(log_color)s%(levelname)-8s%(reset)s %(message)s'
 colorlog.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
 
 class Toolbox:
-    def __init__(self, tools: Dict[str, Dict[str, Any]]):
+    def __init__(self, tools: Dict[str, Dict[str, Any]] = {}):
         self.tools = tools
         self.clients = {}
     
@@ -37,7 +40,7 @@ class Toolbox:
                 "error": f"This tool `{key_name}` doesn't exist."
             }
         tool = self.tools[key_name]
-        tool_name = tool["name"]
+        tool_name = tool["tool_name"]
         server = tool["server"]
         url = server["url"]
 
@@ -45,39 +48,69 @@ class Toolbox:
             self.clients[url] = MCPClient(url)
         
         client = self.clients[url]
-        async with client:
-            result = await client.call_tool(
-                name=tool_name,
-                arguments=arguments
-            )
-            return result
+        try:
+            async with client:
+                result = (await client.call_tool(
+                    name=tool_name,
+                    arguments=arguments
+                )).structured_content
+                return result
+        except Exception as e:
+            return {
+                "error": e.__str__()
+            }
     
     def __get_desc_of_one_tool(self, key_name: str):
         tool = self.tools[key_name]
-        return {
+        tool_desc = {
             "tool_name": key_name,
             "description": tool["description"],
             "arguments": tool["arguments"]
         }
+        if "returns" in tool:
+            tool_desc["returns"] = tool["returns"]
+        return tool_desc
     
-    def get_system_prompt(self, list_all: bool = True):
+    def get_system_prompt(self, method: Literal["list_all", "rag", "fetch"] = "list_all"):
         tool_desc_list = [self.__get_desc_of_one_tool(key_name).__str__() for key_name in self.tools]
         SYSTEM_PROMPT = (
             "You are an AI assistant with access to a set of tools (APIs). "
             "When you need to use a tool, invoke it by outputting a JSON object in the following format:\n"
             f"{TOOL_START_SEQ}\n"
-            "{\"name\": \"tool_name\", \"arguments\": {\"arg1\": value1, \"arg2\": value2}}\n"
+            "{\"name\": \"tool_name\", \"arguments\": {\"arg1\": value1, \"arg2\": value2, ...}}\n"
             f"{TOOL_STOP_SEQ}\n"
             "Below is the list of available tools and their descriptions:\n"
         )
-        if list_all:
-            SYSTEM_PROMPT += '\n'.join(tool_desc_list)
+        if method == "list_all":
+            SYSTEM_PROMPT += '\n'.join(map(lambda x: f"- {x}", tool_desc_list))
+        elif method == "rag":
+            SYSTEM_PROMPT += '${CHOSEN_TOOLS}'
+        elif method == "fetch":
+            raise NotImplementedError
         else:
             raise NotImplementedError
 
         return SYSTEM_PROMPT
+    
+    def register_server(self, server_name: str, server_url: str, desc_path: str):
+        with open(desc_path) as f:
+            desc = json.load(f)
+            for tool_desc in desc:
+                tool_name = tool_desc["tool_name"]
 
-class ChatBackend:
+                key_name = tool_name[:]
+                while key_name in self.tools:
+                    key_name = f"{server_name}_{key_name}"
+                
+                self.tools[key_name] = {**tool_desc, **{
+                    "server": {
+                        "name": server_name,
+                        "url": server_url
+                    }
+                }}
+
+class ChatBackend(ABC):
+    @abstractmethod
     async def chat(self, *_, **__) -> Dict[str, Any]:
         raise NotImplemented
 
@@ -154,10 +187,10 @@ class AgentClient:
                 TOOL_START_SEQ in msg and not msg.endswith(TOOL_STOP_SEQ):
                 msg += TOOL_STOP_SEQ
             
-            # Only for Ali AI-Hub Qwen
-            if self.toolbox and resp.choices[0].finish_reason == "stop" and \
-                msg.removesuffix(TOOL_STOP_SEQ).strip().endswith(TOOL_STOP_SEQ):
-                msg = msg.removesuffix(TOOL_STOP_SEQ)
+            # Only for AIDC AI-Hub Qwen Model
+            # if self.toolbox and resp.choices[0].finish_reason == "stop" and \
+            #     msg.removesuffix(TOOL_STOP_SEQ).strip().endswith(TOOL_STOP_SEQ):
+            #     msg = msg.removesuffix(TOOL_STOP_SEQ)
             
             if verbose:
                 print(msg)
@@ -182,7 +215,7 @@ class AgentClient:
                     tool_resp = (await self.toolbox.call(
                         tool_calling_req["name"],
                         tool_calling_req["arguments"]
-                    )).structured_content
+                    ))
                 format_tool_resp = f"<response>\n{tool_resp.__str__()}\n</response>"
 
                 if verbose:
@@ -203,20 +236,13 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv()
 
-    toolbox = Toolbox({
-        "add": {
-            "name": "add",
-            "description": "Adds two numbers (a, b) together. Return the value of a + b.",
-            "arguments": {
-                "a": "The first float number",
-                "b": "The second float number"
-            },
-            "server": {
-                "name": "DummyServer",
-                "url": "http://127.0.0.1:8000/mcp"
-            }
-        }
-    })
+    toolbox = Toolbox()
+
+    toolbox.register_server(
+        server_name="MathServer",
+        server_url="http://127.0.0.1:8000/mcp",
+        desc_path="server/math_server/desc.json"
+    )
 
     llm = OpenAIBackend(model="gpt-4o")
     client = AgentClient(
@@ -225,6 +251,6 @@ if __name__ == "__main__":
         system_prompt=toolbox.get_system_prompt()
     )
 
-    result = asyncio.run(client.process_query(query="What is the sum of 114.514 and 1919.810", verbose=True))
+    result = asyncio.run(client.process_query(query="What is the value of (114.514 + 1919.810) * 114.514 - 1919.810 (round to the thrid decimal place). Output your final answer with ### {Your answer}\n", verbose=True))
 
-    # print(result)
+    print(result)
