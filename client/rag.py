@@ -1,6 +1,8 @@
 from typing import List, Dict, Any
 from abc import ABC, abstractmethod
 import chromadb
+from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
+
 from shortuuid import uuid
 
 class RAGEngine(ABC):
@@ -9,7 +11,7 @@ class RAGEngine(ABC):
         pass
     
     @abstractmethod
-    def read(self, query: str, k: int):
+    def read(self, query: str, k: int) -> List[Dict[str, Any]]:
         pass
 
     @abstractmethod
@@ -19,7 +21,7 @@ class RAGEngine(ABC):
 class ChromaRAG(RAGEngine):
     def __init__(self, name: str = "vec_db"):
         self.client = chromadb.Client()
-        self.collection = self.client.create_collection(name=name)
+        self.collection = self.client.create_collection(name=name, embedding_function=OpenAIEmbeddingFunction(model_name="text-embedding-3-small"))
 
     def read(self, query: str, k: int = 3) -> List[Dict[str, Any]]:
         results = self.collection.query(
@@ -47,14 +49,14 @@ if __name__ == "__main__":
     rag.write(
         doc="(send_message) Send a message",
         meta_data={
-            "name": "send_message"
+            "key_name": "send_message"
         }
     )
 
     rag.write(
         doc="(open_file) Open a file",
         meta_data={
-            "name": "opem_file"
+            "key_name": "open_file"
         }
     )
 
