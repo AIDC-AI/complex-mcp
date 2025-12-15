@@ -17,6 +17,11 @@ sh start.sh 8002 &
 PIDS+=($!)
 cd $PROJ_HOME
 
+cd server/car
+sh start.sh 8003 &
+PIDS+=($!)
+cd $PROJ_HOME
+
 echo "Type ':exit' to stop all services."
 
 while true; do

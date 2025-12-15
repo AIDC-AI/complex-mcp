@@ -17,3 +17,4 @@ def parse_tool(msg: str) -> Dict[str, Any] | None:
         return None
     
     return tool_calling_req
+

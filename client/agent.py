@@ -267,7 +267,7 @@ class AgentClient:
                     "${CHOSEN_TOOLS}",
                     "\n".join(map(lambda x: f"- {x}", self.toolbox.retrieve_tools(query=query)))
                 )
-        # print(system_prompt)
+            print(f"Tool number: {len(self.toolbox.tools)}")
         if system_prompt:
             messages.append({
                 "role": "system",
@@ -335,7 +335,7 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv()
 
-    toolbox = Toolbox(rag_cls=ChromaRAG, method="list_all", default_k=3)
+    toolbox = Toolbox(rag_cls=None, method="list_all")
 
     toolbox.register_server(
         server_name="MathServer",
@@ -355,7 +355,18 @@ if __name__ == "__main__":
         desc_path="server/weather/desc.json"
     )
 
-    print(toolbox.get_system_prompt())
+    toolbox.register_server(
+        server_name="CarServer",
+        server_url="http://127.0.0.1:8003/mcp",
+        desc_path="server/car/desc.json"
+    )
+    
+    toolbox.register_server(
+        server_name="WikiServer",
+        server_url="http://127.0.0.1:8080/sse"
+    )
+
+    # print(toolbox.get_system_prompt())
 
     llm = OpenAIBackend(model="gpt-4o")
     client = AgentClient(
@@ -365,6 +376,8 @@ if __name__ == "__main__":
     )
 
     # result1 = asyncio.run(client.process_query(query="What is the value of (114.514 + 1919.810) * 114.514 - 1919.810 (round to the thrid decimal place). Output your final answer with ### {Your answer}\n", verbose=True))
-    result2 = asyncio.run(client.process_query(query="A spacecraft is traveling at 112.3 km/s. How far will it travel from now until June 8, 2077? Output your answer with #### {Your answer}\n", verbose=True, max_turns=100, stop_tag="####"))
-
+    # result2 = asyncio.run(client.process_query(query="A spacecraft is traveling at 112.3 km/s. How far will it travel from now until June 8, 2077? Output your answer with #### {Your answer}\n", verbose=True, max_turns=100, stop_tag="####"))
     # result3 = asyncio.run(client.process_query(query="What should I wear in Hangzhou tomorrow? T-shirt or coat? Output your answer with #### {Your answer}\n", verbose=True, stop_tag="####"))
+    # result4 = asyncio.run(client.process_query(query="What is the sum of the cost of the most three expensive cars? Output your answer with #### {Your answer}", verbose=True, stop_tag="####"))
+    # result5 = asyncio.run(client.process_query(query="What many days has passed since Li Shimin was dead. Output your answer with #### {Your answer}", verbose=True, stop_tag="####"))
+    result6 = asyncio.run(client.process_query(query="Where was  born? Output your answer with #### {Your answer}", verbose=True, stop_tag="####"))
