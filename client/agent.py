@@ -123,26 +123,63 @@ class Toolbox:
 
         return SYSTEM_PROMPT
     
-    def register_server(self, server_name: str, server_url: str, desc_path: str):
-        with open(desc_path) as f:
-            desc = json.load(f)
-            for tool_desc in desc:
-                assert "tool_name" in tool_desc and "description" in tool_desc
-                tool_name = tool_desc["tool_name"]
+    def register_server(self, server_name: str, server_url: str, desc_path: str = None):
+        if desc_path:
+            """Optional, you can provide more LLM-friendly descriptions of MCP tools."""
+            with open(desc_path) as f:
+                desc = json.load(f)
+                for tool_desc in desc:
+                    assert "tool_name" in tool_desc and "description" in tool_desc
+                    tool_name = tool_desc["tool_name"]
+
+                    key_name = tool_name[:]
+                    while key_name in self.tools:
+                        key_name = f"{server_name}_{key_name}"
+                    
+                    self.tools[key_name] = {**tool_desc, **{
+                        "server": {
+                            "name": server_name,
+                            "url": server_url
+                        }
+                    }}
+                    if self.rag:
+                        self.rag.write(
+                            doc=f"({tool_name}) {tool_desc['description']}",
+                            meta_data={
+                                "key_name": key_name
+                            }
+                        )
+        else:
+            if server_name not in self.clients:
+                self.clients[server_name] = MCPClient(server_url)
+            client: MCPClient = self.clients[server_name]
+            async def get_tools():
+                async with client:
+                    tools = await client.list_tools()
+                    return tools
+            tools = asyncio.run(get_tools())
+            for tool in tools:
+                tool_name = tool.name
 
                 key_name = tool_name[:]
                 while key_name in self.tools:
                     key_name = f"{server_name}_{key_name}"
-                
-                self.tools[key_name] = {**tool_desc, **{
+
+                self.tools[key_name] = {
+                    "tool_name": tool_name,
+                    "description": tool.description,
+                    "arguments": tool.inputSchema["properties"],
+                    "returns": {
+                        "type": tool.outputSchema["type"]
+                    },
                     "server": {
                         "name": server_name,
                         "url": server_url
                     }
-                }}
+                }
                 if self.rag:
                     self.rag.write(
-                        doc=f"({tool_name}) {tool_desc['description']}",
+                        doc=f"({tool_name}) {tool.description}",
                         meta_data={
                             "key_name": key_name
                         }
@@ -215,7 +252,8 @@ class AgentClient:
         self,
         query: str,
         max_turns: int = 10,
-        verbose: bool = False
+        verbose: bool = False,
+        stop_tag: str = None
     ) -> str:
         messages = []
         output = []
@@ -287,7 +325,8 @@ class AgentClient:
                     "content": format_tool_resp
                 })
             else:
-                break # quit
+                if stop_tag and stop_tag in msg:
+                    break # quit
 
         return '\n'.join(output)
         
@@ -296,30 +335,36 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv()
 
-    toolbox = Toolbox(rag_cls=ChromaRAG, method="fetch", default_k=3)
+    toolbox = Toolbox(rag_cls=ChromaRAG, method="list_all", default_k=3)
 
     toolbox.register_server(
         server_name="MathServer",
         server_url="http://127.0.0.1:8000/mcp",
-        desc_path="server/math_server/desc.json"
+        desc_path="server/math/desc.json"
     )
 
     toolbox.register_server(
         server_name="TimeServer",
         server_url="http://127.0.0.1:8001/mcp",
-        desc_path="server/time_server/desc.json"
+        desc_path="server/time/desc.json"
     )
 
-    # print(toolbox.get_system_prompt())
+    toolbox.register_server(
+        server_name="WeatherServer",
+        server_url="http://127.0.0.1:8002/mcp",
+        desc_path="server/weather/desc.json"
+    )
 
-    print(asyncio.run(toolbox.call(key_name="now", arguments={})))
+    print(toolbox.get_system_prompt())
 
     llm = OpenAIBackend(model="gpt-4o")
     client = AgentClient(
         llm=llm,
         toolbox=toolbox,
-        system_prompt=toolbox.get_system_prompt()
+        system_prompt=toolbox.get_system_prompt() + "(You can use `retrieve_tools` to find tools which can help you solve problems if you can't solve without any other external tools)\n"
     )
 
-    result1 = asyncio.run(client.process_query(query="What is the value of (114.514 + 1919.810) * 114.514 - 1919.810 (round to the thrid decimal place). (You can use `retrieve_tools` to find tools which can help you solve this problem) Output your final answer with ### {Your answer}\n", verbose=True))
-    # result2 = asyncio.run(client.process_query(query="What date is it today? (You can use `retrieve_tools` to find tools which can help you solve this problem)\n", verbose=True))
+    # result1 = asyncio.run(client.process_query(query="What is the value of (114.514 + 1919.810) * 114.514 - 1919.810 (round to the thrid decimal place). Output your final answer with ### {Your answer}\n", verbose=True))
+    result2 = asyncio.run(client.process_query(query="A spacecraft is traveling at 112.3 km/s. How far will it travel from now until June 8, 2077? Output your answer with #### {Your answer}\n", verbose=True, max_turns=100, stop_tag="####"))
+
+    # result3 = asyncio.run(client.process_query(query="What should I wear in Hangzhou tomorrow? T-shirt or coat? Output your answer with #### {Your answer}\n", verbose=True, stop_tag="####"))

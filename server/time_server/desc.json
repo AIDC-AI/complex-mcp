@@ -1,8 +1,0 @@
-[
-    {
-        "tool_name": "now",
-        "description": "Get the current time.",
-        "arguments": {},
-        "returns": { "type": "str", "description": "Return the current time with YYYY-MM-DD M:H:S" }
-    }
-]

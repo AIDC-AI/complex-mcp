@@ -1,0 +1,24 @@
+[
+    {
+        "tool_name": "get_car_brands",
+        "description": "Get all available car brands from FIPE API.",
+        "arguments": {},
+        "returns": { "type": "string", "description": "List of car brands with their codes and names" }
+    },
+    {
+        "tool_name": "search_car_price",
+        "description": "Search for car models and prices by brand name.",
+        "arguments": {
+            "brand_name": { "type": "string", "description": "The car brand name to search for (e.g., \"Toyota\", \"Honda\", \"Ford\")" }
+        },
+        "returns": { "type": "string", "description": "Car models with current market prices from FIPE database" }
+    },
+    {
+        "tool_name": "get_vehicles_by_type",
+        "description": "Get vehicles by type (cars, motorcycles, trucks).",
+        "arguments": {
+            "vehicle_type": { "type": "string", "description": "Type of vehicles to fetch (\"carros\"/\"cars\", \"motos\"/\"motorcycles\", \"caminhoes\"/\"trucks\"). Default: \"carros\"" }
+        },
+        "returns": { "type": "string", "description": "List of vehicle brands for the specified type" }
+    }
+]
