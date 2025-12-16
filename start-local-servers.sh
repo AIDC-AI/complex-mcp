@@ -2,22 +2,22 @@ PROJ_HOME=$PWD
 
 PIDS=()
 
-cd server/math
+cd servers/math
 PIDS+=($!)
 sh start.sh 8000 &
 cd $PROJ_HOME
 
-cd server/time
+cd servers/time
 sh start.sh 8001 &
 PIDS+=($!)
 cd $PROJ_HOME
 
-cd server/weather
+cd servers/weather
 sh start.sh 8002 &
 PIDS+=($!)
 cd $PROJ_HOME
 
-cd server/car
+cd servers/car
 sh start.sh 8003 &
 PIDS+=($!)
 cd $PROJ_HOME
