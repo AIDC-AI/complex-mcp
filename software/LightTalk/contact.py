@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Any
 import random
 from datetime import datetime
@@ -53,14 +53,22 @@ class ContactSession:
         alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
         return ''.join(self.rng.choices(alphabet, k=22))
     
-    def get_all_contacts(self) -> Dict[str, Any]:
-        pass
+    def get_all_contacts(self) -> List[Dict[str, str]]:
+        contacts_list = []
+        for contact in self.contacts_dict.values():
+            contacts_list.append({
+                "uid": contact.uid,
+                "name": contact.name,
+                "tag": contact.tag
+            })
+        
+        return contacts_list
 
     def get_uid_from_name(
         self,
         name: str
     ) -> str:
-        return self.uid_dict[name]
+        return self.uid_dict.get(name, f"Contact {name} not found")
 
     def send_message(
         self,
@@ -75,11 +83,38 @@ class ContactSession:
             mid=f"msg_{self.uuid()}"
         )
 
+        contact = self.contacts_dict.get(uid)
+        if contact is None:
+            return {
+                "status": "failed",
+                "output": f"Contact with UID ({uid}) not found."
+            }
+
+
         self.contacts_dict[uid].chat_history.append(msg)
 
         return {
-            "status": "success"
+            "status": "ok"
         }
+
+    def get_chat_history(self, uid: str):
+        contact = self.contacts_dict.get(uid)
+        if contact is None:
+            return {
+                "status": "failed",
+                "output": f"Contact with UID ({uid}) not found."
+            }
+        chat_history = asdict(contact.chat_history)
+
+        return chat_history
+    
+    def get_myuid(self):
+        return self.my_uid
+    
+    def get_dict(self):
+        results = {uid: asdict(contact) for uid, contact in self.contacts_dict.items()}
+
+        return results
 
 
 if __name__ == "__main__":

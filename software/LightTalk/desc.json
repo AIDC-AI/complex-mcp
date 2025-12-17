@@ -1,0 +1,66 @@
+[
+    {
+        "tool_name": "get_all_contacts",
+        "description": "Get the information of all contacts in LightTalk.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of all contacts; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_uid_from_name",
+        "description": "Look up a user's unique ID (UID) by their display name in LightTalk.",
+        "arguments": {
+            "name": {
+                "type": "string",
+                "description": "The display name of the contact in LightTalk."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is the UID string; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "send_message",
+        "description": "Send a message to a specific contact in LightTalk using their UID.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the recipient in LightTalk."
+            },
+            "content": {
+                "type": "string",
+                "description": "The text content of the message to send."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output may confirm delivery; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_myuid",
+        "description": "Retrieve the current user's own unique ID (UID) in LightTalk.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is the current user's UID; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_chat_history",
+        "description": "Fetch the chat history with a specific contact in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact whose chat history to retrieve."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of message records; on failure, output contains an error message."
+        }
+    }
+]

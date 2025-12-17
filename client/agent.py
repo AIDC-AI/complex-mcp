@@ -24,6 +24,7 @@ class Toolbox:
     def __init__(self, tools: Dict[str, Dict[str, Any]] = {}, rag_cls = None, method: Literal["list_all", "rag", "fetch"] = "list_all", *args, **kwargs):
         self.tools = tools
         self.clients = {}
+        self.servers = {}
         self.rag: RAGEngine | None = rag_cls() if rag_cls else None
         self.method = method
 
@@ -54,7 +55,8 @@ class Toolbox:
     async def call(
         self,
         key_name: str,
-        arguments: Dict[str, Any]
+        arguments: Dict[str, Any],
+        session_id_dict: Dict[str, str] = {}
     ):
         if key_name not in self.tools:
             return {
@@ -72,7 +74,39 @@ class Toolbox:
                 }
         tool = self.tools[key_name]
         tool_name = tool["tool_name"]
-        server = tool["server"]
+        server = tool["server"]        
+        url = server["url"]
+        need_session = server["need_session"]
+
+        if need_session:
+            server_name = server["name"]
+            assert server_name in session_id_dict, f"{server_name} has not been logged into yet."
+            session_id = session_id_dict[server_name]
+            arguments["session_id"] = session_id
+
+        if url not in self.clients:
+            self.clients[url] = MCPClient(url)
+        
+        client = self.clients[url]
+        try:
+            async with client:
+                result = (await client.call_tool(
+                    name=tool_name,
+                    arguments=arguments
+                )).content[0].text
+                return result
+        except Exception as e:
+            return {
+                "error": e.__str__()
+            }
+
+    async def call_with_server(
+        self,
+        server_name: str,
+        tool_name: str,
+        arguments: Dict[str, Any]
+    ):
+        server = self.servers[server_name]
         url = server["url"]
 
         if url not in self.clients:
@@ -123,7 +157,15 @@ class Toolbox:
 
         return SYSTEM_PROMPT
     
-    def register_server(self, server_name: str, server_url: str, desc_path: str = None):
+    def register_server(self, server_name: str, server_url: str, desc_path: str = None, use_sandbox: bool = False):
+        if use_sandbox:
+            assert desc_path, "An MCP server which use sandbox must provide a description file."
+        
+        self.servers[server_name] = {
+            "url": server_url,
+            "need_session": use_sandbox
+        }
+
         if desc_path:
             """Optional, you can provide more LLM-friendly descriptions of MCP tools."""
             with open(desc_path) as f:
@@ -139,7 +181,8 @@ class Toolbox:
                     self.tools[key_name] = {**tool_desc, **{
                         "server": {
                             "name": server_name,
-                            "url": server_url
+                            "url": server_url,
+                            "need_session": use_sandbox
                         }
                     }}
                     if self.rag:
@@ -174,7 +217,8 @@ class Toolbox:
                     },
                     "server": {
                         "name": server_name,
-                        "url": server_url
+                        "url": server_url,
+                        "need_session": use_sandbox
                     }
                 }
                 if self.rag:
@@ -253,11 +297,35 @@ class AgentClient:
         query: str,
         max_turns: int = 10,
         verbose: bool = False,
-        stop_tag: str = None
+        stop_tag: str = None,
+        env: Dict[str, Any] = {
+            "apps": [],
+            "seed": 42
+        }
     ) -> str:
         messages = []
         output = []
         extra_body = {}
+        session_id_dict = {}
+
+        # Login
+        for app in env["apps"]:
+            if app in self.toolbox.servers:
+                server = self.toolbox.servers[app]
+                assert server["need_session"]
+                login_info = await self.toolbox.call_with_server(
+                    server_name=app,
+                    tool_name="login",
+                    arguments={
+                        "seed": env["seed"]
+                    }
+                )
+                logger.info(f"Logged into the app {app} : {login_info}")
+                login_info = json.loads(login_info)
+                session_id = login_info["session_id"]
+                session_id_dict[app] = session_id
+            else:
+                raise RuntimeError(f"The app `{app}` has not been registered yet.")
 
         system_prompt = self.system_prompt
         if self.toolbox:
@@ -312,7 +380,8 @@ class AgentClient:
                 else:
                     tool_resp = (await self.toolbox.call(
                         tool_calling_req["name"],
-                        tool_calling_req["arguments"]
+                        tool_calling_req["arguments"],
+                        session_id_dict=session_id_dict
                     ))
                 format_tool_resp = f"<response>\n{tool_resp.__str__()}\n</response>"
 
@@ -327,8 +396,30 @@ class AgentClient:
             else:
                 if stop_tag and stop_tag in msg:
                     break # quit
+        
+        results = {}
 
-        return '\n'.join(output)
+        results["output"] = '\n'.join(output)
+        results["apps"] = {}
+
+        # Logout
+        for app in env["apps"]:
+            if app in self.toolbox.servers:
+                server = self.toolbox.servers[app]
+                assert server["need_session"]
+                session_id = session_id_dict[app]
+                env_info = await self.toolbox.call_with_server(
+                    server_name=app,
+                    tool_name="logout",
+                    arguments={
+                        "session_id": session_id
+                    }
+                )
+                results["apps"][app] = json.loads(env_info)
+            else:
+                raise RuntimeError(f"The app `{app}` has not been registered yet.")
+
+        return results
         
 
 if __name__ == "__main__":
@@ -337,33 +428,40 @@ if __name__ == "__main__":
 
     toolbox = Toolbox(rag_cls=None, method="list_all")
 
-    toolbox.register_server(
-        server_name="MathServer",
-        server_url="http://127.0.0.1:8000/mcp"
-    )
+    # toolbox.register_server(
+    #     server_name="MathServer",
+    #     server_url="http://127.0.0.1:8000/mcp"
+    # )
 
-    toolbox.register_server(
-        server_name="TimeServer",
-        server_url="http://127.0.0.1:8001/mcp",
-        # desc_path="servers/time/desc.json"
-    )
+    # toolbox.register_server(
+    #     server_name="TimeServer",
+    #     server_url="http://127.0.0.1:8001/mcp",
+    #     # desc_path="servers/time/desc.json"
+    # )
 
-    toolbox.register_server(
-        server_name="WeatherServer",
-        server_url="http://127.0.0.1:8002/mcp",
-        # desc_path="servers/weather/desc.json"
-    )
+    # toolbox.register_server(
+    #     server_name="WeatherServer",
+    #     server_url="http://127.0.0.1:8002/mcp",
+    #     # desc_path="servers/weather/desc.json"
+    # )
 
-    toolbox.register_server(
-        server_name="CarServer",
-        server_url="http://127.0.0.1:8003/mcp",
-        # desc_path="servers/car/desc.json"
-    )
+    # toolbox.register_server(
+    #     server_name="CarServer",
+    #     server_url="http://127.0.0.1:8003/mcp",
+    #     # desc_path="servers/car/desc.json"
+    # )
     
     # toolbox.register_server(
     #     server_name="WikiServer",
-    #     server_url="http://127.0.0.1:8080/sse"
+    #     server_url="http://127.0.0.1:8004/sse"
     # )
+
+    toolbox.register_server(
+        server_name="LightTalk",
+        server_url="http://127.0.0.1:8080/mcp",
+        desc_path="software/LightTalk/desc.json",
+        use_sandbox=True
+    )
 
     # print(toolbox.get_system_prompt())
 
@@ -375,8 +473,21 @@ if __name__ == "__main__":
     )
 
     # result1 = asyncio.run(client.process_query(query="What is the value of (114.514 + 1919.810) * 114.514 - 1919.810 (round to the thrid decimal place). Output your final answer with ### {Your answer}\n", verbose=True))
-    result2 = asyncio.run(client.process_query(query="A spacecraft is traveling at 112.3 km/s. How far will it travel from now until June 8, 2077? Output your answer with #### {Your answer}\n", verbose=True, max_turns=100, stop_tag="####"))
+    # result2 = asyncio.run(client.process_query(query="A spacecraft is traveling at 112.3 km/s. How far will it travel from now until June 8, 2077? Output your answer with #### {Your answer}\n", verbose=True, max_turns=100, stop_tag="####"))
     # result3 = asyncio.run(client.process_query(query="What should I wear in Hangzhou tomorrow? T-shirt or coat? Output your answer with #### {Your answer}\n", verbose=True, stop_tag="####"))
     # result4 = asyncio.run(client.process_query(query="What is the sum of the cost of the most three expensive cars? Output your answer with #### {Your answer}", verbose=True, stop_tag="####"))
     # result5 = asyncio.run(client.process_query(query="What many days has passed since Li Shimin was dead. Output your answer with #### {Your answer}", verbose=True, stop_tag="####"))
     # result6 = asyncio.run(client.process_query(query="Where was M.J. born? Output your answer with #### {Your answer}", verbose=True, stop_tag="####"))
+
+    result7 = asyncio.run(
+        client.process_query(
+            query="Send the message `Good morning` to one of Steven Wayne on LightTalk App. After you finish your task, output an `[END]` in the final",
+            env={
+                "apps": ["LightTalk"],
+                "seed": 42
+            },
+            verbose=True,
+            stop_tag="[END]",
+            max_turns=20
+        )
+    )
