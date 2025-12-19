@@ -4,7 +4,6 @@ from openai import AsyncClient
 from fastmcp import Client as MCPClient
 from typing import List, Dict, Any, Literal
 from tenacity import retry, stop_after_attempt, wait_exponential, before_sleep_log
-from functools import lru_cache
 import asyncio
 import json
 import logging
@@ -329,7 +328,7 @@ class AgentClient:
 
         system_prompt = self.system_prompt
         if self.toolbox:
-            extra_body.update({"stop": TOOL_STOP_SEQ})
+            extra_body["stop"] = TOOL_STOP_SEQ
             if self.toolbox.method == "rag":
                 system_prompt = system_prompt.replace(
                     "${CHOSEN_TOOLS}",
@@ -348,6 +347,8 @@ class AgentClient:
         for _ in range(max_turns):
             resp = await self.llm.chat(messages)
             msg: str = resp.choices[0].message.content
+
+            # print(f"[{msg}]")
 
             if self.toolbox and resp.choices[0].finish_reason == "stop" and \
                 TOOL_START_SEQ in msg and not msg.endswith(TOOL_STOP_SEQ):
@@ -369,12 +370,20 @@ class AgentClient:
             
             if msg.strip().endswith(TOOL_STOP_SEQ) and self.toolbox:
                 tool_calling_req = parse_tool(msg)
-                if "name" not in tool_calling_req:
+                if tool_calling_req is None:
+                    tool_resp = {
+                        "error": (
+                            "Incorrect tool call format."
+                            "Please provide 'name' and 'arguments' (If needed), e.g.: "
+                            "{'name': 'tool_name', 'arguments': {'arg1': 'val1', 'arg2': 'val2', ...} }"
+                        )
+                    }
+                elif "name" not in tool_calling_req:
                     tool_resp = {
                         "error": (
                             "Tool call format is missing required fields. "
                             "Please provide 'name' and 'arguments' (If needed), e.g.: "
-                            "{'name': 'tool_name', 'arguments': {'arg1': 'val1', 'arg2': 'val2', ...}}"
+                            "{'name': 'tool_name', 'arguments': {'arg1': 'val1', 'arg2': 'val2', ...} }"
                         )
                     }
                 else:
@@ -428,28 +437,28 @@ if __name__ == "__main__":
 
     toolbox = Toolbox(rag_cls=None, method="list_all")
 
-    # toolbox.register_server(
-    #     server_name="MathServer",
-    #     server_url="http://127.0.0.1:8000/mcp"
-    # )
+    toolbox.register_server(
+        server_name="MathServer",
+        server_url="http://127.0.0.1:8000/mcp"
+    )
 
-    # toolbox.register_server(
-    #     server_name="TimeServer",
-    #     server_url="http://127.0.0.1:8001/mcp",
-    #     # desc_path="servers/time/desc.json"
-    # )
+    toolbox.register_server(
+        server_name="TimeServer",
+        server_url="http://127.0.0.1:8001/mcp",
+        # desc_path="servers/time/desc.json"
+    )
 
-    # toolbox.register_server(
-    #     server_name="WeatherServer",
-    #     server_url="http://127.0.0.1:8002/mcp",
-    #     # desc_path="servers/weather/desc.json"
-    # )
+    toolbox.register_server(
+        server_name="WeatherServer",
+        server_url="http://127.0.0.1:8002/mcp",
+        # desc_path="servers/weather/desc.json"
+    )
 
-    # toolbox.register_server(
-    #     server_name="CarServer",
-    #     server_url="http://127.0.0.1:8003/mcp",
-    #     # desc_path="servers/car/desc.json"
-    # )
+    toolbox.register_server(
+        server_name="CarServer",
+        server_url="http://127.0.0.1:8003/mcp",
+        # desc_path="servers/car/desc.json"
+    )
     
     # toolbox.register_server(
     #     server_name="WikiServer",
@@ -463,13 +472,13 @@ if __name__ == "__main__":
         use_sandbox=True
     )
 
-    # print(toolbox.get_system_prompt())
+    print(toolbox.get_system_prompt())
 
     llm = OpenAIBackend(model="gpt-4o")
     client = AgentClient(
         llm=llm,
         toolbox=toolbox,
-        system_prompt=toolbox.get_system_prompt() + "(You can use `retrieve_tools` to find tools which can help you solve problems if you can't solve without any other external tools)\n"
+        system_prompt=toolbox.get_system_prompt()
     )
 
     # result1 = asyncio.run(client.process_query(query="What is the value of (114.514 + 1919.810) * 114.514 - 1919.810 (round to the thrid decimal place). Output your final answer with ### {Your answer}\n", verbose=True))
@@ -479,15 +488,30 @@ if __name__ == "__main__":
     # result5 = asyncio.run(client.process_query(query="What many days has passed since Li Shimin was dead. Output your answer with #### {Your answer}", verbose=True, stop_tag="####"))
     # result6 = asyncio.run(client.process_query(query="Where was M.J. born? Output your answer with #### {Your answer}", verbose=True, stop_tag="####"))
 
-    result7 = asyncio.run(
+    # result7 = asyncio.run(
+    #     client.process_query(
+    #         query="Send the the most expensive Ford brand car and its price to Steven Wayne on LightTalk App. After you finish your task, output an `[END]` in the final",
+    #         env={
+    #             "apps": ["LightTalk"],
+    #             "seed": 42
+    #         },
+    #         verbose=True,
+    #         stop_tag="[END]",
+    #         max_turns=20
+    #     )
+    # )
+    # from pprint import pprint
+    # pprint(result7["apps"]["LightTalk"])
+
+    result8 = asyncio.run(
         client.process_query(
-            query="Send the message `Good morning` to one of Steven Wayne on LightTalk App. After you finish your task, output an `[END]` in the final",
+            query="Liked all your family's moments. After you finish your task, output an `[END]` in the final",
             env={
                 "apps": ["LightTalk"],
                 "seed": 42
             },
             verbose=True,
             stop_tag="[END]",
-            max_turns=20
+            max_turns=100
         )
     )

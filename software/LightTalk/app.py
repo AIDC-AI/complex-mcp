@@ -52,6 +52,17 @@ async def get_all_contacts(session_id: str):
     return session.contact_session.get_all_contacts()
 
 @mcp.tool
+async def get_contacts(page: int, session_id: str):
+    session = session_dict.get(session_id)
+    if session is None:
+        return {
+            "stutas": "failed",
+            "output": "session not found"
+        }
+    
+    return session.contact_session.get_contacts(page)
+
+@mcp.tool
 async def get_uid_from_name(name: str, session_id: str):
     session = session_dict.get(session_id)
     if session is None:
@@ -94,3 +105,114 @@ async def get_chat_history(uid: str, session_id: str):
         }
     
     return session.contact_session.get_chat_history(uid)
+
+@mcp.tool
+async def delete_chat_history(uid: str, session_id: str):
+    session = session_dict.get(session_id)
+    if session is None:
+        return {
+            "status": "failed",
+            "output": "session not found"
+        }
+    
+    return session.contact_session.delete_chat_history(uid)
+
+@mcp.tool
+async def delete_message(uid: str, mid: str, session_id: str):
+    session = session_dict.get(session_id)
+    if session is None:
+        return {
+            "status": "failed",
+            "output": "session not found"
+        }
+    
+    return session.contact_session.delete_message(uid, mid)
+
+
+@mcp.tool
+async def block(uid: str, session_id: str):
+    session = session_dict.get(session_id)
+    if session is None:
+        return {
+            "status": "failed",
+            "output": "session not found"
+        }
+    
+    return session.contact_session.block(uid)
+
+@mcp.tool
+async def unblock(uid: str, session_id: str):
+    session = session_dict.get(session_id)
+    if session is None:
+        return {
+            "status": "failed",
+            "output": "session not found"
+        }
+    
+    return session.contact_session.unblock(uid)
+
+@mcp.tool
+async def get_contact_info(uid: str, session_id: str):
+    session = session_dict.get(session_id)
+    if session is None:
+        return {
+            "status": "failed",
+            "output": "session not found"
+        }
+    
+    return session.contact_session.get_contact_info(uid)
+
+@mcp.tool
+async def get_all_moments(uid: str, session_id: str):
+    session = session_dict.get(session_id)
+    if session is None:
+        return {
+            "status": "failed",
+            "output": "session not found"
+        }
+    
+    return session.contact_session.get_all_moments(uid)
+
+@mcp.tool
+async def get_last_k_moments(uid: str, k: int, session_id: str):
+    session = session_dict.get(session_id)
+    if session is None:
+        return {
+            "status": "failed",
+            "output": "session not found"
+        }
+    
+    return session.contact_session.get_last_k_moments(uid, k)
+
+@mcp.tool
+async def get_moment(uid: str, index: int, session_id: str):
+    session = session_dict.get(session_id)
+    if session is None:
+        return {
+            "status": "failed",
+            "output": "session not found"
+        }
+    
+    return session.contact_session.get_moment(uid, index)
+
+@mcp.tool
+async def like_moment(uid: str, moid: str, session_id: str):
+    session = session_dict.get(session_id)
+    if session is None:
+        return {
+            "status": "failed",
+            "output": "session not found"
+        }
+    
+    return session.contact_session.like_moment(uid, moid)
+
+@mcp.tool
+async def comment_moment(uid: str, moid: str, content: str, session_id: str):
+    session = session_dict.get(session_id)
+    if session is None:
+        return {
+            "status": "failed",
+            "output": "session not found"
+        }
+    
+    return session.contact_session.comment_moment(uid, moid, content)

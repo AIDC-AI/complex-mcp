@@ -62,5 +62,184 @@
             "type": "object",
             "description": "A dictionary containing status and output. On success, output is a list of message records; on failure, output contains an error message."
         }
+    },
+    {
+        "tool_name": "get_contacts",
+        "description": "Retrieve a paginated list of contacts from LightTalk. Each page contains up to 10 contacts.",
+        "arguments": {
+            "page": {
+                "type": "integer",
+                "description": "The page number (starting from 1) to fetch contacts from. Each page returns at most 10 contacts."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of up to 10 contacts for the requested page; on failure (e.g., invalid session), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "delete_chat_history",
+        "description": "Delete the entire chat history with a specific contact in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact whose chat history should be deleted."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms deletion; on failure (e.g., UID not found), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "delete_message",
+        "description": "Delete a specific message in a chat with a contact in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact whose chat contains the message."
+            },
+            "mid": {
+                "type": "string",
+                "description": "The unique message ID (MID) of the message to delete."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms deletion; on failure (e.g., session not found, message not found, or insufficient permissions), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "block",
+        "description": "Block a contact in LightTalk by their unique ID (UID).",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact to block."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the contact was blocked; on failure (e.g., contact not found or already blocked), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "unblock",
+        "description": "Unblock a contact in LightTalk by their unique ID (UID).",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact to unblock."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the contact was unblocked; on failure (e.g., contact not found or not currently blocked), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_contact_info",
+        "description": "Retrieve detailed information about a specific contact in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes contact details (e.g., name, status, blocked state); on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_all_moments",
+        "description": "Fetch all public moments (posts) published by a specific contact in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact whose moments to retrieve."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of all moments; on failure (e.g., contact not found), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_last_k_moments",
+        "description": "Retrieve the most recent K moments published by a specific contact in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact whose moments to retrieve."
+            },
+            "k": {
+                "type": "integer",
+                "description": "The number of latest moments to fetch (must be a positive integer)."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of up to K most recent moments; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_moment",
+        "description": "Fetch a specific moment by its index from a contact's timeline in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact who posted the moment."
+            },
+            "index": {
+                "type": "integer",
+                "description": "The zero-based index of the moment in the contact's moment list."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is the moment object; on failure (e.g., invalid index or contact not found), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "like_moment",
+        "description": "Like a specific moment posted by a contact in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact who posted the moment."
+            },
+            "moid": {
+                "type": "string",
+                "description": "The unique moment ID (MOID) of the moment to like."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the like action; on failure (e.g., moment not found or already liked), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "comment_moment",
+        "description": "Post a comment on a specific moment in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact who posted the moment."
+            },
+            "moid": {
+                "type": "string",
+                "description": "The unique moment ID (MOID) of the moment to comment on."
+            },
+            "content": {
+                "type": "string",
+                "description": "The text content of the comment."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the comment was posted; on failure (e.g., invalid moment or empty content), output contains an error message."
+        }
     }
+
 ]
