@@ -40,6 +40,7 @@ class Contact:
     blocked: bool
     chat_history: List[Message] = field(default_factory=list)
     moments: List[Moment] = field(default_factory=list)
+    read_new_message: bool = field(default=False)
 
 from pathlib import Path
 import yaml
@@ -62,13 +63,16 @@ class ContactSession:
 
         n_contacts = self.rng.randint(5, 100)
 
-        first_names = self.rng.choices(info["first_names"], k=n_contacts + 1)
-        surnames = self.rng.choices(info["first_names"], k=n_contacts + 1)
+        surnames = self.rng.choices(info["surnames"], k=n_contacts + 1)
         tags = self.rng.choices(info["tags"], k=n_contacts)
-        genders = self.rng.choices(["male", "female", "unknown"], k=n_contacts)
+        genders = self.rng.choices(["male", "female"], k=n_contacts + 1)
+        first_names_arr = info["first_names"]
+        first_names = [self.rng.choice(first_names_arr[gender]) for gender in genders]
+
         blockeds = self.rng.choices([False, True], weights=[0.9, 0.1], k=n_contacts)
 
         self.my_name = f"{first_names[-1]} {surnames[-1]}"
+        self.my_gender = genders[-1]
         self.my_moments: List[Moment] = []
 
         # Generate all contacts
@@ -397,6 +401,10 @@ class ContactSession:
             "status": "failed",
             "output": f"The moment with MOID={moid} not found of contact `{contact.name}` (UID={uid})'s moments"
         }
+    
+    def comment_comment(self, uid: str, moid: str, cid: str, comment: str):
+        # TODO
+        pass
 
 
 if __name__ == "__main__":

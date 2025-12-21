@@ -351,13 +351,11 @@ class AgentClient:
             # print(f"[{msg}]")
 
             if self.toolbox and resp.choices[0].finish_reason == "stop" and \
-                TOOL_START_SEQ in msg and not msg.endswith(TOOL_STOP_SEQ):
+                TOOL_START_SEQ in msg and TOOL_STOP_SEQ not in msg:
                 msg += TOOL_STOP_SEQ
             
-            # Only for AIDC AI-Hub Qwen Model
-            # if self.toolbox and resp.choices[0].finish_reason == "stop" and \
-            #     msg.removesuffix(TOOL_STOP_SEQ).strip().endswith(TOOL_STOP_SEQ):
-            #     msg = msg.removesuffix(TOOL_STOP_SEQ)
+            if TOOL_STOP_SEQ in msg:
+                msg = msg[: msg.find(TOOL_STOP_SEQ) + len(TOOL_STOP_SEQ)]
             
             if verbose:
                 print(msg)
@@ -368,7 +366,7 @@ class AgentClient:
                 "content": msg
             })
             
-            if msg.strip().endswith(TOOL_STOP_SEQ) and self.toolbox:
+            if msg.endswith(TOOL_STOP_SEQ) and self.toolbox:
                 tool_calling_req = parse_tool(msg)
                 if tool_calling_req is None:
                     tool_resp = {
@@ -437,28 +435,28 @@ if __name__ == "__main__":
 
     toolbox = Toolbox(rag_cls=None, method="list_all")
 
-    toolbox.register_server(
-        server_name="MathServer",
-        server_url="http://127.0.0.1:8000/mcp"
-    )
+    # toolbox.register_server(
+    #     server_name="MathServer",
+    #     server_url="http://127.0.0.1:8000/mcp"
+    # )
 
-    toolbox.register_server(
-        server_name="TimeServer",
-        server_url="http://127.0.0.1:8001/mcp",
-        # desc_path="servers/time/desc.json"
-    )
+    # toolbox.register_server(
+    #     server_name="TimeServer",
+    #     server_url="http://127.0.0.1:8001/mcp",
+    #     # desc_path="servers/time/desc.json"
+    # )
 
-    toolbox.register_server(
-        server_name="WeatherServer",
-        server_url="http://127.0.0.1:8002/mcp",
-        # desc_path="servers/weather/desc.json"
-    )
+    # toolbox.register_server(
+    #     server_name="WeatherServer",
+    #     server_url="http://127.0.0.1:8002/mcp",
+    #     # desc_path="servers/weather/desc.json"
+    # )
 
-    toolbox.register_server(
-        server_name="CarServer",
-        server_url="http://127.0.0.1:8003/mcp",
-        # desc_path="servers/car/desc.json"
-    )
+    # toolbox.register_server(
+    #     server_name="CarServer",
+    #     server_url="http://127.0.0.1:8003/mcp",
+    #     # desc_path="servers/car/desc.json"
+    # )
     
     # toolbox.register_server(
     #     server_name="WikiServer",
@@ -505,7 +503,7 @@ if __name__ == "__main__":
 
     result8 = asyncio.run(
         client.process_query(
-            query="Liked all your family's moments. After you finish your task, output an `[END]` in the final",
+            query="Liked all your friends' moments which are positive. After you finish your task, output an `[END]` in the final",
             env={
                 "apps": ["LightTalk"],
                 "seed": 42
@@ -515,3 +513,5 @@ if __name__ == "__main__":
             max_turns=100
         )
     )
+
+    print(result8["apps"])
