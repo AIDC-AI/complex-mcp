@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Any
+from collections import defaultdict
 import random
-from datetime import datetime
 
 @dataclass
 class Message:
@@ -26,7 +26,7 @@ class Moment:
     owner_uid: str
     content: str
     timestamp: str
-    ip: str = field(default="UnKnown")
+    ip: str = field(default="Unknown")
     img_urls: List[str] = field(default_factory=list)
     who_likes: List[str] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
@@ -40,17 +40,25 @@ class Contact:
     blocked: bool
     chat_history: List[Message] = field(default_factory=list)
     moments: List[Moment] = field(default_factory=list)
-    read_new_message: bool = field(default=False)
+    read_new_message: bool = field(default=True)
 
 from pathlib import Path
 import yaml
+import sys
+
+WORK_DIR = Path('.')
+if WORK_DIR not in sys.path:
+    sys.path.append(WORK_DIR.__str__())
+
+from software.utils.time import TimeMachine
 
 corpus_path = Path("software") / "LightTalk" / "corpus"
 
 class ContactSession:
     def __init__(self, seed: int):
         self.rng = random.Random(seed)
-        
+        self.time_machine = TimeMachine(self.rng)
+
         self.contacts_dict: Dict[str, Contact] = {}
         self.uid_dict = {}
         self.my_uid = f"user_{self.uuid()}"
@@ -91,12 +99,13 @@ class ContactSession:
         for contact in self.contacts_dict.values():
             moment_cnt = self.rng.choices([0, 1, 2, 3, 4, 5], weights=[0.5, 0.2, 0.1, 0.1, 0.05, 0.05])[0]
             contact_moments = self.draw_without_replacement(moments, min(moment_cnt, len(moments)))
+            base_timestamp = self.time_machine.gen()
             for contact_moment in contact_moments:
                 moment = Moment(
                     moid=f"mo_{self.uuid()}",
                     owner_uid=contact.uid,
                     content=contact_moment["content"],
-                    timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    timestamp=(base_timestamp := self.time_machine.add_secs(base_timestamp, min_secs=600)),
                     ip=contact_moment["ip"],
                     who_likes=self.rng.sample(
                         population=self.uids,
@@ -110,7 +119,7 @@ class ContactSession:
                         send_uid=send_uid,
                         receive_moid=moment.moid,
                         content=moment_comment,
-                        timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        timestamp=(base_timestamp := self.time_machine.add_secs(base_timestamp, min_secs=60, max_secs=864000))
                     )
                     moment.comments.append(comment)
                 contact.moments.append(moment)
@@ -163,7 +172,7 @@ class ContactSession:
         msg = Message(
             send_uid=self.my_uid,
             receive_uid=uid,
-            timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            timestamp=self.time_machine.step(),
             content=content,
             mid=f"msg_{self.uuid()}"
         )
@@ -326,6 +335,11 @@ class ContactSession:
                 "status": "failed",
                 "output": f"Contact with UID ({uid}) not found"
             }
+        if contact.blocked:
+            return {
+                "status": "failed",
+                "output": f"You've already blocked {contact.name} ({uid}). Please unblock {'him' if contact.gender == 'male' else 'her'} first."
+            }
         moments = contact.moments
 
         return {
@@ -362,12 +376,51 @@ class ContactSession:
                 "status": "failed",
                 "output": f"Contact with UID ({uid}) not found"
             }
+        if contact.blocked:
+            return {
+                "status": "failed",
+                "output": f"You've already blocked {contact.name} ({uid}). Please unblock {'him' if contact.gender == 'male' else 'her'} first."
+            }
 
         for moment in contact.moments:
-            moment.who_likes.append(self.my_uid)
+            if moment.moid == moid:
+                moment.who_likes.append(self.my_uid)
+                return {
+                    "status": "ok",
+                    "output": f"You have successfully liked the moment (MOID={moid}) of contact `{contact.name}` (UID={contact.uid})"
+                }
+
+        return {
+            "status": "failed",
+            "output": f"The moment with MOID={moid} not found of {contact.name} (UID={uid})'s moments"
+        }
+    
+    def unlike_moment(self, uid: str, moid: str):
+        contact = self.contacts_dict.get(uid)
+        if contact is None:
             return {
-                "status": "ok",
-                "output": f"You have successfully liked the moment (MOID={moid}) of contact `{contact.name}` (UID={contact.uid})"
+                "status": "failed",
+                "output": f"Contact with UID ({uid}) not found"
+            }
+        if contact.blocked:
+            return {
+                "status": "failed",
+                "output": f"You've already blocked {contact.name} ({uid}). Please unblock {'him' if contact.gender == 'male' else 'her'} first."
+            }
+        
+        for moment in contact.moments:
+            if moment.moid != moid:
+                continue
+            for idx, _uid in enumerate(moment.who_likes):
+                if _uid == self.my_uid:
+                    moment.who_likes.pop(idx)
+                    return {
+                        "status": "ok",
+                        "output": f"You have successfully unliked the moment (MOID={moid}) of contact `{contact.name}` (UID={contact.uid})"
+                    }
+            return {
+                "status": "failed",
+                "output": f"You have not liked this moment (MOID={moid}) of contact `{contact.name}` (UID={contact.uid}) before."
             }
 
         return {
@@ -382,6 +435,11 @@ class ContactSession:
                 "status": "failed",
                 "output": f"Contact with UID ({uid}) not found"
             }
+        if contact.blocked:
+            return {
+                "status": "failed",
+                "output": f"You've already blocked {contact.name} ({uid}). Please unblock {'him' if contact.gender == 'male' else 'her'} first."
+            }
 
         for moment in contact.moments:
             comment = Comment(
@@ -389,7 +447,7 @@ class ContactSession:
                 send_uid=self.my_uid,
                 receive_moid=moid,
                 content=content,
-                timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                timestamp=self.time_machine.step()
             )
             moment.comments.append(comment)
             return {
@@ -402,28 +460,257 @@ class ContactSession:
             "output": f"The moment with MOID={moid} not found of contact `{contact.name}` (UID={uid})'s moments"
         }
     
-    def comment_comment(self, uid: str, moid: str, cid: str, comment: str):
-        # TODO
-        pass
+    def list_all_tags(self):
+        tags = defaultdict(int)
+        for contact in self.contacts_dict.values():
+            tags[contact.tag] += 1
+        return [f"{tag} ({cnt})" for tag, cnt in tags.items()]
+
+    def get_contacts_by_tag(self, tag: str):
+        matched = []
+        for contact in self.contacts_dict.values():
+            if contact.tag == tag:
+                matched.append({
+                    "uid": contact.uid,
+                    "name": contact.name,
+                    "tag": contact.tag
+                })
+        if not matched:
+            return {
+                "status": "failed",
+                "output": f"No contacts found with tag '{tag}'"
+            }
+        return {
+            "status": "ok",
+            "output": matched
+        }
+
+    def get_contacts_by_gender(self, gender: str):
+        if gender not in ("male", "female"):
+            return {
+                "status": "failed",
+                "output": "Gender must be either 'male' or 'female'"
+            }
+        matched = []
+        for contact in self.contacts_dict.values():
+            if contact.gender == gender:
+                matched.append({
+                    "uid": contact.uid,
+                    "name": contact.name,
+                    "gender": contact.gender,
+                    "tag": contact.tag
+                })
+        if not matched:
+            return {
+                "status": "failed",
+                "output": f"No contacts found with gender '{gender}'"
+            }
+        return {
+            "status": "ok",
+            "output": matched
+        }
+
+    def comment_comment(self, uid: str, moid: str, cid: str, content: str):
+        """在某条评论下回复（嵌套评论）"""
+        contact = self.contacts_dict.get(uid)
+        if contact is None:
+            return {
+                "status": "failed",
+                "output": f"Contact with UID ({uid}) not found"
+            }
+        if contact.blocked:
+            return {
+                "status": "failed",
+                "output": f"You've already blocked {contact.name} ({uid}). Please unblock {'him' if contact.gender == 'male' else 'her'} first."
+            }
+
+        # 查找对应 moment
+        target_moment = None
+        for moment in contact.moments:
+            if moment.moid == moid:
+                target_moment = moment
+                break
+        if target_moment is None:
+            return {
+                "status": "failed",
+                "output": f"The moment with MOID={moid} not found for contact `{contact.name}` (UID={uid})"
+            }
+
+        # 查找父评论
+        parent_comment = None
+        def find_comment(comments_list):
+            for c in comments_list:
+                if c.cid == cid:
+                    return c
+                # 递归查找子评论（虽然当前模型未使用嵌套，但为 future-proof）
+                if c.comments:
+                    found = find_comment(c.comments)
+                    if found:
+                        return found
+            return None
+
+        parent_comment = find_comment(target_moment.comments)
+        if parent_comment is None:
+            return {
+                "status": "failed",
+                "output": f"Comment with CID={cid} not found under moment MOID={moid}"
+            }
+
+        # 创建新回复
+        new_reply = Comment(
+            cid=f"com_{self.uuid()}",
+            send_uid=self.my_uid,
+            receive_moid=moid,
+            content=content,
+            timestamp=self.time_machine.step()
+        )
+
+        parent_comment.comments.append(new_reply)
+
+        return {
+            "status": "ok",
+            "output": f"You have successfully replied to comment (CID={cid}) under moment (MOID={moid}) of contact `{contact.name}` (UID={uid})"
+        }
+
+    def withdraw_comment_moment(self, uid: str, moid: str, my_cid: str):
+        """撤回自己对动态的直接评论（非嵌套）"""
+        contact = self.contacts_dict.get(uid)
+        if contact is None:
+            return {
+                "status": "failed",
+                "output": f"Contact with UID ({uid}) not found"
+            }
+        if contact.blocked:
+            return {
+                "status": "failed",
+                "output": f"You've already blocked {contact.name} ({uid}). Please unblock {'him' if contact.gender == 'male' else 'her'} first."
+            }
+
+        target_moment = None
+        for moment in contact.moments:
+            if moment.moid == moid:
+                target_moment = moment
+                break
+        if target_moment is None:
+            return {
+                "status": "failed",
+                "output": f"The moment with MOID={moid} not found for contact `{contact.name}` (UID={uid})"
+            }
+
+        # 在顶层评论中查找
+        for i, comment in enumerate(target_moment.comments):
+            if comment.cid == my_cid and comment.send_uid == self.my_uid:
+                target_moment.comments.pop(i)
+                return {
+                    "status": "ok",
+                    "output": f"You have successfully withdrawn your comment (CID={my_cid}) on moment (MOID={moid})"
+                }
+
+        return {
+            "status": "failed",
+            "output": f"Your comment with CID={my_cid} not found (or you didn't post it) under moment MOID={moid}"
+        }
+    
+    def withdraw_comment_comment(self, uid: str, moid: str, cid: str, my_cid: str):
+        contact = self.contacts_dict.get(uid)
+        if contact is None:
+            return {
+                "status": "failed",
+                "output": f"Contact with UID ({uid}) not found"
+            }
+        if contact.blocked:
+            return {
+                "status": "failed",
+                "output": f"You've already blocked {contact.name} ({uid}). Please unblock {'him' if contact.gender == 'male' else 'her'} first."
+            }
+
+        target_moment = None
+        for moment in contact.moments:
+            if moment.moid == moid:
+                target_moment = moment
+                break
+        if target_moment is None:
+            return {
+                "status": "failed",
+                "output": f"The moment with MOID={moid} not found for contact `{contact.name}` (UID={uid})"
+            }
+
+        def remove_nested_comment(comments_list):
+            for i, comment in enumerate(comments_list):
+                if comment.cid == my_cid:
+                    if comment.send_uid != self.my_uid:
+                        raise PermissionError("Not your comment")
+                    comments_list.pop(i)
+                    return True
+                if comment.comments:
+                    try:
+                        if remove_nested_comment(comment.comments):
+                            return True
+                    except PermissionError:
+                        raise
+            return False
+
+        try:
+            found_and_removed = remove_nested_comment(target_moment.comments)
+        except PermissionError:
+            return {
+                "status": "failed",
+                "output": f"You cannot withdraw comment CID={my_cid} because it was not posted by you."
+            }
+
+        if not found_and_removed:
+            return {
+                "status": "failed",
+                "output": f"Your reply with CID={my_cid} under comment CID={cid} (or anywhere in moment MOID={moid}) was not found."
+            }
+
+        return {
+            "status": "ok",
+            "output": f"You have successfully withdrawn your reply (CID={my_cid}) to comment (CID={cid}) under moment (MOID={moid}) of contact `{contact.name}` (UID={uid})"
+        }
+    
+    def mark_as_read(self, uid: str):
+        contact = self.contacts_dict.get(uid)
+        if contact is None:
+            return {
+                "status": "failed",
+                "output": f"Contact with UID ({uid}) not found"
+            }
+        if contact.blocked:
+            return {
+                "status": "failed",
+                "output": f"You've already blocked {contact.name} ({uid}). Please unblock {'him' if contact.gender == 'male' else 'her'} first."
+            }
+        
+        contact.read_new_message = True
+
+        return {
+            "status": "ok",
+            "output": f"You have successfully marked the messages from contact `{contact.name}` (UID={uid}) as read"
+        }
+    
+    def mark_as_unread(self, uid: str):
+        contact = self.contacts_dict.get(uid)
+        if contact is None:
+            return {
+                "status": "failed",
+                "output": f"Contact with UID ({uid}) not found"
+            }
+        if contact.blocked:
+            return {
+                "status": "failed",
+                "output": f"You've already blocked {contact.name} ({uid}). Please unblock {'him' if contact.gender == 'male' else 'her'} first."
+            }
+        
+        contact.read_new_message = False
+
+        return {
+            "status": "ok",
+            "output": f"You have successfully marked the messages from contact `{contact.name}` (UID={uid}) as unread"
+        }
 
 
 if __name__ == "__main__":
     contact_session = ContactSession(seed=42)
 
-    uid = contact_session.get_uid_from_name(name='Arthur Israel')
-
-    from pprint import pprint
-
-    # pprint(contact_session.get_contact_info(uid=uid))
-    # print(contact_session.get_last_k_moments(uid, 1))
-
-    moment = contact_session.get_moment(uid=uid, index=0)['output']
-    print(moment)
-
-    moid = moment["moid"]
-
-    contact_session.like_moment(uid, moid)
-
-    print(contact_session.get_moment(uid=uid, index=0)['output'])
-
-    print(contact_session.get_myuid())
+    print(contact_session.list_all_tags())

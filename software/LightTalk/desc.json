@@ -220,6 +220,24 @@
         }
     },
     {
+        "tool_name": "unlike_moment",
+        "description": "Remove your like from a specific moment posted by a contact in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact who posted the moment."
+            },
+            "moid": {
+                "type": "string",
+                "description": "The unique moment ID (MOID) of the moment to unlike."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the like was removed; on failure (e.g., moment not found, not previously liked, or invalid contact), output contains an error message."
+        }
+    },
+    {
         "tool_name": "comment_moment",
         "description": "Post a comment on a specific moment in LightTalk.",
         "arguments": {
@@ -240,6 +258,140 @@
             "type": "object",
             "description": "A dictionary containing status and output. On success, output confirms the comment was posted; on failure (e.g., invalid moment or empty content), output contains an error message."
         }
+    },
+    {
+        "tool_name": "comment_comment",
+        "description": "Post a nested reply (comment on a comment) under a specific moment in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact who posted the original moment."
+            },
+            "moid": {
+                "type": "string",
+                "description": "The unique moment ID (MOID) of the moment being commented on."
+            },
+            "content": {
+                "type": "string",
+                "description": "The text content of the nested comment."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the nested comment was posted; on failure (e.g., invalid moment or empty content), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "list_all_tags",
+        "description": "Retrieve a list of all available contact tags in LightTalk.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of tag names; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_contacts_by_tag",
+        "description": "Find all contacts in LightTalk that are labeled with a specific tag.",
+        "arguments": {
+            "tag": {
+                "type": "string",
+                "description": "The tag name to filter contacts by (e.g., 'family', 'work')."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of contacts associated with the given tag; on failure (e.g., tag not found), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_contacts_by_gender",
+        "description": "Retrieve all contacts in LightTalk filtered by gender.",
+        "arguments": {
+            "gender": {
+                "type": "string",
+                "description": "The gender to filter by (e.g., 'male', 'female', 'other')."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of contacts matching the specified gender; on failure (e.g., invalid gender value), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "withdraw_comment_moment",
+        "description": "Delete (withdraw) your own comment on a moment in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact who posted the moment."
+            },
+            "moid": {
+                "type": "string",
+                "description": "The unique moment ID (MOID) of the moment the comment belongs to."
+            },
+            "my_cid": {
+                "type": "string",
+                "description": "The unique comment ID (CID) of your own comment to withdraw."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the comment was deleted; on failure (e.g., comment not found, not owned by you, or invalid moment), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "withdraw_comment_comment",
+        "description": "Delete (withdraw) your own nested comment (reply to a comment) under a specific moment in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact who posted the original moment."
+            },
+            "moid": {
+                "type": "string",
+                "description": "The unique moment ID (MOID) of the moment the comment thread belongs to."
+            },
+            "cid": {
+                "type": "string",
+                "description": "The comment ID (CID) of the parent comment that your nested comment replies to."
+            },
+            "my_cid": {
+                "type": "string",
+                "description": "The unique comment ID (CID) of your own nested comment to withdraw."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the nested comment was deleted; on failure (e.g., comment not found, not owned by you, or invalid context), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "mark_as_read",
+        "description": "Mark the chat with a specific contact as read in LightTalk, clearing any unread message indicators.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact whose chat should be marked as read."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the chat was marked as read; on failure (e.g., contact not found), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "mark_as_unread",
+        "description": "Mark the chat with a specific contact as unread in LightTalk, so it appears as having new messages.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact whose chat should be marked as unread."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the chat was marked as unread; on failure (e.g., contact not found), output contains an error message."
+        }
     }
-
 ]

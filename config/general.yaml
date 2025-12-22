@@ -1,0 +1,31 @@
+servers:
+  - name: MathServer
+    url: http://127.0.0.1:8000/mcp
+    desc: servers/math/desc.json
+    use: true
+
+  - name: TimeServer
+    url: http://127.0.0.1:8001/mcp
+    desc: servers/time/desc.json
+    use: true
+
+  - name: WeatherServer
+    url: http://127.0.0.1:8002/mcp
+    desc: servers/weather/desc.json
+    use: true
+
+  - name: CarServer
+    url: http://127.0.0.1:8003/mcp
+    desc: servers/car/desc.json
+    use: true
+
+  - name: LightTalk
+    url: http://127.0.0.1:8080/mcp
+    desc: software/LightTalk/desc.json
+    use_sandbox: true
+    use: true
+
+  - name: WikiServer
+    url: http://127.0.0.1:8004/sse
+    use: false
+

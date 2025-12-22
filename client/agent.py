@@ -306,6 +306,9 @@ class AgentClient:
         output = []
         extra_body = {}
         session_id_dict = {}
+        results = {}
+
+        results["old_apps"] = {}
 
         # Login
         for app in env["apps"]:
@@ -319,10 +322,17 @@ class AgentClient:
                         "seed": env["seed"]
                     }
                 )
-                logger.info(f"Logged into the app {app} : {login_info}")
+                
                 login_info = json.loads(login_info)
+                session_info = login_info.pop("session_info")
+                results["old_apps"][app] = session_info
+
+                logger.info(f"Logged into the app {app} : {login_info}")
+
                 session_id = login_info["session_id"]
                 session_id_dict[app] = session_id
+
+
             else:
                 raise RuntimeError(f"The app `{app}` has not been registered yet.")
 
@@ -334,7 +344,7 @@ class AgentClient:
                     "${CHOSEN_TOOLS}",
                     "\n".join(map(lambda x: f"- {x}", self.toolbox.retrieve_tools(query=query)))
                 )
-            # print(f"Tool number: {len(self.toolbox.tools)}")
+            print(f"Tool number: {len(self.toolbox.tools)}")
         if system_prompt:
             messages.append({
                 "role": "system",
@@ -347,8 +357,6 @@ class AgentClient:
         for _ in range(max_turns):
             resp = await self.llm.chat(messages)
             msg: str = resp.choices[0].message.content
-
-            # print(f"[{msg}]")
 
             if self.toolbox and resp.choices[0].finish_reason == "stop" and \
                 TOOL_START_SEQ in msg and TOOL_STOP_SEQ not in msg:
@@ -401,10 +409,9 @@ class AgentClient:
                     "content": format_tool_resp
                 })
             else:
-                if stop_tag and stop_tag in msg:
+                if stop_tag and msg.strip().endswith(stop_tag):
                     break # quit
         
-        results = {}
 
         results["output"] = '\n'.join(output)
         results["apps"] = {}
@@ -427,7 +434,7 @@ class AgentClient:
                 raise RuntimeError(f"The app `{app}` has not been registered yet.")
 
         return results
-        
+
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
@@ -435,28 +442,28 @@ if __name__ == "__main__":
 
     toolbox = Toolbox(rag_cls=None, method="list_all")
 
-    # toolbox.register_server(
-    #     server_name="MathServer",
-    #     server_url="http://127.0.0.1:8000/mcp"
-    # )
+    toolbox.register_server(
+        server_name="MathServer",
+        server_url="http://127.0.0.1:8000/mcp"
+    )
 
-    # toolbox.register_server(
-    #     server_name="TimeServer",
-    #     server_url="http://127.0.0.1:8001/mcp",
-    #     # desc_path="servers/time/desc.json"
-    # )
+    toolbox.register_server(
+        server_name="TimeServer",
+        server_url="http://127.0.0.1:8001/mcp",
+        # desc_path="servers/time/desc.json"
+    )
 
-    # toolbox.register_server(
-    #     server_name="WeatherServer",
-    #     server_url="http://127.0.0.1:8002/mcp",
-    #     # desc_path="servers/weather/desc.json"
-    # )
+    toolbox.register_server(
+        server_name="WeatherServer",
+        server_url="http://127.0.0.1:8002/mcp",
+        # desc_path="servers/weather/desc.json"
+    )
 
-    # toolbox.register_server(
-    #     server_name="CarServer",
-    #     server_url="http://127.0.0.1:8003/mcp",
-    #     # desc_path="servers/car/desc.json"
-    # )
+    toolbox.register_server(
+        server_name="CarServer",
+        server_url="http://127.0.0.1:8003/mcp",
+        # desc_path="servers/car/desc.json"
+    )
     
     # toolbox.register_server(
     #     server_name="WikiServer",
@@ -479,31 +486,9 @@ if __name__ == "__main__":
         system_prompt=toolbox.get_system_prompt()
     )
 
-    # result1 = asyncio.run(client.process_query(query="What is the value of (114.514 + 1919.810) * 114.514 - 1919.810 (round to the thrid decimal place). Output your final answer with ### {Your answer}\n", verbose=True))
-    # result2 = asyncio.run(client.process_query(query="A spacecraft is traveling at 112.3 km/s. How far will it travel from now until June 8, 2077? Output your answer with #### {Your answer}\n", verbose=True, max_turns=100, stop_tag="####"))
-    # result3 = asyncio.run(client.process_query(query="What should I wear in Hangzhou tomorrow? T-shirt or coat? Output your answer with #### {Your answer}\n", verbose=True, stop_tag="####"))
-    # result4 = asyncio.run(client.process_query(query="What is the sum of the cost of the most three expensive cars? Output your answer with #### {Your answer}", verbose=True, stop_tag="####"))
-    # result5 = asyncio.run(client.process_query(query="What many days has passed since Li Shimin was dead. Output your answer with #### {Your answer}", verbose=True, stop_tag="####"))
-    # result6 = asyncio.run(client.process_query(query="Where was M.J. born? Output your answer with #### {Your answer}", verbose=True, stop_tag="####"))
-
-    # result7 = asyncio.run(
-    #     client.process_query(
-    #         query="Send the the most expensive Ford brand car and its price to Steven Wayne on LightTalk App. After you finish your task, output an `[END]` in the final",
-    #         env={
-    #             "apps": ["LightTalk"],
-    #             "seed": 42
-    #         },
-    #         verbose=True,
-    #         stop_tag="[END]",
-    #         max_turns=20
-    #     )
-    # )
-    # from pprint import pprint
-    # pprint(result7["apps"]["LightTalk"])
-
-    result8 = asyncio.run(
+    result = asyncio.run(
         client.process_query(
-            query="Liked all your friends' moments which are positive. After you finish your task, output an `[END]` in the final",
+            query="Liked all your friends' moments which were post after 2024-06-01. After you finish your task, output an `[END]` in the final",
             env={
                 "apps": ["LightTalk"],
                 "seed": 42
@@ -514,4 +499,5 @@ if __name__ == "__main__":
         )
     )
 
-    print(result8["apps"])
+    print(result["old_apps"])
+    print(result["apps"])

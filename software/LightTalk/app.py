@@ -29,7 +29,11 @@ async def login(seed: int):
     logger.info(f"A new user logged in! [{session.session_id}]")
     return {
         "status": "ok",
-        "session_id": session.session_id
+        "session_id": session.session_id,
+        "session_info": {
+            "status": "ok",
+            "contacts": session.contact_session.get_dict()
+        }
     }
 
 @mcp.tool
@@ -101,7 +105,6 @@ async def delete_message(uid: str, mid: str, session_id: str):
     
     return session.contact_session.delete_message(uid, mid)
 
-
 @mcp.tool
 async def block(uid: str, session_id: str):
     session, err = get_session(session_id)
@@ -152,8 +155,72 @@ async def like_moment(uid: str, moid: str, session_id: str):
     return session.contact_session.like_moment(uid, moid)
 
 @mcp.tool
+async def unlike_moment(uid: str, moid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.unlike_moment(uid, moid)
+
+@mcp.tool
 async def comment_moment(uid: str, moid: str, content: str, session_id: str):
     session, err = get_session(session_id)
     if err: return err
     
     return session.contact_session.comment_moment(uid, moid, content)
+
+@mcp.tool
+async def comment_comment(uid: str, moid: str, content: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.comment_comment(uid, moid, content)
+
+@mcp.tool
+async def list_all_tags(session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.list_all_tags()
+
+@mcp.tool
+async def get_contacts_by_tag(tag: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.get_contacts_by_tag(tag)
+
+@mcp.tool
+async def get_contacts_by_gender(gender: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.get_contacts_by_gender(gender)
+
+@mcp.tool
+async def withdraw_comment_moment(uid: str, moid: str, my_cid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.withdraw_comment_moment(uid, moid, my_cid)
+
+@mcp.tool
+async def withdraw_comment_comment(uid: str, moid: str, cid: str, my_cid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.withdraw_comment_comment(uid, moid, cid, my_cid)
+
+@mcp.tool
+async def mark_as_read(uid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.mark_as_read(uid)
+
+@mcp.tool
+async def mark_as_unread(uid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.mark_as_unread(uid)
+
