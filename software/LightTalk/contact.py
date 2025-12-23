@@ -2,6 +2,8 @@ from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Any
 from collections import defaultdict
 import random
+from copy import deepcopy
+
 
 @dataclass
 class Message:
@@ -217,11 +219,6 @@ class ContactSession:
     
     def get_myuid(self):
         return self.my_uid
-    
-    def get_dict(self):
-        results = {uid: asdict(contact) for uid, contact in self.contacts_dict.items()}
-
-        return results
     
     def delete_chat_history(self, uid: str):
         contact = self.contacts_dict.get(uid)
@@ -473,6 +470,7 @@ class ContactSession:
                 matched.append({
                     "uid": contact.uid,
                     "name": contact.name,
+                    "gender": contact.gender,
                     "tag": contact.tag
                 })
         if not matched:
@@ -708,9 +706,51 @@ class ContactSession:
             "status": "ok",
             "output": f"You have successfully marked the messages from contact `{contact.name}` (UID={uid}) as unread"
         }
+    
+    def get_session_dict(self):
+        def convert_list_to_dict(obj, id_key: str):
+            if not isinstance(obj, list):
+                return obj
+            result = {}
+            for item in obj:
+                if isinstance(item, dict) and id_key in item:
+                    key = item[id_key]
+                    processed_item = recursive_transform(item)
+                    result[key] = processed_item
+                else:
+                    result[str(len(result))] = item
+            return result
 
+        def recursive_transform(obj):
+            if isinstance(obj, dict):
+                new_obj = {}
+                for k, v in obj.items():
+                    if k == 'moments':
+                        new_obj[k] = convert_list_to_dict(v, 'moid')
+                    elif k == 'comments':
+                        new_obj[k] = convert_list_to_dict(v, 'cid')
+                    elif k == 'chat_history':
+                        new_obj[k] = convert_list_to_dict(v, 'mid')
+                    elif k == 'who_likes':
+                        # who_likes is List[str], keep as-is
+                        new_obj[k] = v
+                    else:
+                        new_obj[k] = recursive_transform(v)
+                return new_obj
+            elif isinstance(obj, list):
+                return [recursive_transform(item) for item in obj]
+            else:
+                return obj
+
+        raw_dict = {uid: asdict(contact) for uid, contact in self.contacts_dict.items()}
+        
+        transformed = recursive_transform(raw_dict)
+        
+        return transformed
 
 if __name__ == "__main__":
     contact_session = ContactSession(seed=42)
 
-    print(contact_session.list_all_tags())
+    from pprint import pprint
+
+    pprint(contact_session.get_session_dict())

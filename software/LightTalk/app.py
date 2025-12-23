@@ -32,7 +32,7 @@ async def login(seed: int):
         "session_id": session.session_id,
         "session_info": {
             "status": "ok",
-            "contacts": session.contact_session.get_dict()
+            "contacts": session.contact_session.get_session_dict()
         }
     }
 
@@ -42,7 +42,7 @@ async def logout(session_id: str | None = None):
     if err: return err
     session_info = {
         "status": "ok",
-        "contacts": session.contact_session.get_dict()
+        "contacts": session.contact_session.get_session_dict()
     }
     del session_dict[session_id]
     logger.info(f"A user logged out! [{session_id}]")

@@ -3,11 +3,21 @@ from typing import List, Dict, Any
 def exact_match(x: str, y: str):
     return x == y
 
+def fuzzy_match(x: str, y: str):
+    if x is None:
+        return y is None
+    if y is None:
+        return x is None
+
+    return y.lower().strip() in x.lower().strip()
+
 exclude_keys = [
     "timestamp"
 ]
 
-eq_methods = {}
+eq_methods = {
+    "content": fuzzy_match
+}
 
 def judge_env(
     old_env: Dict[str, Any],
@@ -47,6 +57,8 @@ def judge_env(
                 total += 1
                 if __eq_func(new_val, gt_val):
                     recall += 1
+                else:
+                    print(new_val, gt_val)
     
     dfs(old_env, new_env, gt_env)
         

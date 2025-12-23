@@ -3,10 +3,13 @@ from benchmark.judge import judge_env
 from dotenv import load_dotenv
 from argparse import ArgumentParser
 from pathlib import Path
+import json
 
 import sys
 import yaml
 import asyncio
+
+import pandas as pd
 
 def parse_toolbox(tool_config_path: str | Path):
     config = {}
@@ -40,25 +43,32 @@ def main(args):
         system_prompt=toolbox.get_system_prompt() if toolbox else ""
     )
 
-    query = "Happy Women's Day to all the women on your cowoker list! After you finish this task, output an '[END]' in the end."
-    task = agent.process_query(
-        query=query,
-        max_turns=100,
-        verbose=True,
-        stop_tag="[END]",
-        env={
-            "apps": ["LightTalk"],
-            "seed": 42
-        }
-    )
+    data_path = Path("benchmark") / "data" / "data.parquet"
+    dataset = pd.read_parquet(data_path)
+    for i in range(len(dataset)):
+        data = dataset.iloc[i]
+        query = data["query"]
+        seed = int(data["seed"])
+        apps = data["apps"]
+        gt_env = json.loads(data["gt_env"])
 
-    result = asyncio.run(task)
+        task = agent.process_query(
+            query=query,
+            max_turns=100,
+            verbose=True,
+            stop_tag="[END]",
+            env={
+                "apps": apps,
+                "seed": seed
+            }
+        )
 
-    old_env = result["old_apps"]
-    new_env = result["apps"]
-    gt_env = result["apps"]
+        result = asyncio.run(task)
 
-    print(judge_env(old_env, new_env, gt_env))
+        old_env = result["old_apps"]
+        new_env = result["apps"]
+
+        print(judge_env(old_env, new_env, gt_env))
 
 
 if __name__ == "__main__":

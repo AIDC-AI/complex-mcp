@@ -10,6 +10,10 @@ import logging
 import colorlog
 
 import sys
+import argparse
+import re
+import ast
+
 sys.path.append('.')
 
 from client.utils import parse_tool, TOOL_START_SEQ, TOOL_STOP_SEQ
@@ -121,8 +125,9 @@ class Toolbox:
                 return result
         except Exception as e:
             return {
-                "error": e.__str__()
-            }
+                "status": "failed",
+                "output": e.__str__()
+            }.__str__()
     
     def __get_desc_of_one_tool(self, key_name: str):
         tool = self.tools[key_name]
@@ -279,6 +284,60 @@ class OpenAIBackend(ChatBackend):
 
         return resp
 
+class HumanAnnotator(ChatBackend):
+    def __init__(self):
+        super().__init__()
+    
+    async def chat(self, *_, **__):
+        content = input("$ ")
+        resp = argparse.Namespace(
+            choices=[argparse.Namespace(
+                message=argparse.Namespace(
+                    content=self.convert_func_calls(content)
+                ),
+                finish_reason="stop"
+            )]
+        )
+
+        return resp
+    
+    def convert_func_calls(self, text: str):
+        def replace_match(match):
+            func_name = match.group(1)
+            args_str = match.group(2)
+            
+            if not args_str.strip():
+                arguments = {}
+            else:
+                try:
+                    fake_call = f"fake_func({args_str})"
+                    tree = ast.parse(fake_call, mode='eval')
+                    call_node = tree.body
+                    
+                    if not isinstance(call_node, ast.Call):
+                        raise ValueError("Invalid function call format")
+                    
+                    arguments = {}
+                    for keyword in call_node.keywords:
+                        key = keyword.arg
+                        value = ast.literal_eval(keyword.value)
+                        arguments[key] = value
+                except Exception as e:
+                    raise ValueError(f"Failed to parse arguments in '{args_str}': {e}")
+            
+            tool_dict = {
+                "name": func_name,
+                "arguments": arguments
+            }
+            json_str = json.dumps(tool_dict, ensure_ascii=False)
+            return f'<tool> {json_str} </tool>'
+
+        # 正则表达式匹配 func(...)
+        pattern = r'(\w+)\(([^)]*)\)'
+        result = re.sub(pattern, replace_match, text)
+        return result
+
+
 
 class AgentClient:
     def __init__(
@@ -379,7 +438,7 @@ class AgentClient:
                 if tool_calling_req is None:
                     tool_resp = {
                         "error": (
-                            "Incorrect tool call format."
+                            "Incorrect tool call format. (Not a json or missing key words)"
                             "Please provide 'name' and 'arguments' (If needed), e.g.: "
                             "{'name': 'tool_name', 'arguments': {'arg1': 'val1', 'arg2': 'val2', ...} }"
                         )
@@ -395,7 +454,7 @@ class AgentClient:
                 else:
                     tool_resp = (await self.toolbox.call(
                         tool_calling_req["name"],
-                        tool_calling_req["arguments"],
+                        tool_calling_req.get("arguments", {}),
                         session_id_dict=session_id_dict
                     ))
                 format_tool_resp = f"<response>\n{tool_resp.__str__()}\n</response>"

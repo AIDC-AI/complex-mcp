@@ -211,3 +211,5 @@ __marimo__/
 
 check-server.py
 check-client.py
+
+/ignore/
