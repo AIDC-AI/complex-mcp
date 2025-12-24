@@ -2,7 +2,6 @@ from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Any
 from collections import defaultdict
 import random
-from copy import deepcopy
 
 
 @dataclass
