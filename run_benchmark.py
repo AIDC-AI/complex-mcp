@@ -45,6 +45,10 @@ def main(args):
 
     data_path = Path("benchmark") / "data" / "data.parquet"
     dataset = pd.read_parquet(data_path)
+
+    avg_recall_rate = 0
+    avg_misbehave_rate = 0
+
     for i in range(len(dataset)):
         data = dataset.iloc[i]
         query = data["query"]
@@ -68,8 +72,17 @@ def main(args):
         old_env = result["old_apps"]
         new_env = result["apps"]
 
-        print(judge_env(old_env, new_env, gt_env))
+        judge_result = judge_env(old_env, new_env, gt_env)
+        print(judge_result)
+        avg_recall_rate += judge_result["recall"] / judge_result["total"]
+        avg_misbehave_rate += judge_result["misbehave"] / judge_result["total"]
 
+    avg_recall_rate /= len(dataset)
+    avg_misbehave_rate /= len(dataset)
+
+    print(f"Model: {model}")
+    print(f"\t\tavg. recall rate:\t{avg_recall_rate}")
+    print(f"\t\tavg. misbehave rate:\t{avg_misbehave_rate}")
 
 if __name__ == "__main__":
     parser = ArgumentParser()

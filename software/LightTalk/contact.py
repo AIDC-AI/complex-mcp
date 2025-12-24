@@ -708,45 +708,9 @@ class ContactSession:
         }
     
     def get_session_dict(self):
-        def convert_list_to_dict(obj, id_key: str):
-            if not isinstance(obj, list):
-                return obj
-            result = {}
-            for item in obj:
-                if isinstance(item, dict) and id_key in item:
-                    key = item[id_key]
-                    processed_item = recursive_transform(item)
-                    result[key] = processed_item
-                else:
-                    result[str(len(result))] = item
-            return result
-
-        def recursive_transform(obj):
-            if isinstance(obj, dict):
-                new_obj = {}
-                for k, v in obj.items():
-                    if k == 'moments':
-                        new_obj[k] = convert_list_to_dict(v, 'moid')
-                    elif k == 'comments':
-                        new_obj[k] = convert_list_to_dict(v, 'cid')
-                    elif k == 'chat_history':
-                        new_obj[k] = convert_list_to_dict(v, 'mid')
-                    elif k == 'who_likes':
-                        # who_likes is List[str], keep as-is
-                        new_obj[k] = v
-                    else:
-                        new_obj[k] = recursive_transform(v)
-                return new_obj
-            elif isinstance(obj, list):
-                return [recursive_transform(item) for item in obj]
-            else:
-                return obj
-
-        raw_dict = {uid: asdict(contact) for uid, contact in self.contacts_dict.items()}
-        
-        transformed = recursive_transform(raw_dict)
-        
-        return transformed
+        return {
+            uid: asdict(contact) for uid, contact in self.contacts_dict.items()
+        }
 
 if __name__ == "__main__":
     contact_session = ContactSession(seed=42)
