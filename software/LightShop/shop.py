@@ -43,6 +43,17 @@ class ShopSession:
         self.cart: List[CartItem] = []
         self.trans_history: List[Transaction] = []
 
+    def get_session_dict(self):
+        shops = {sid: asdict(shop) for sid, shop in self.shops.items()}
+        cart = [asdict(item) for item in self.cart]
+        trans_history = [asdict(trans) for trans in self.trans_history]
+
+        return {
+            "shops": shops,
+            "cart": cart,
+            "trans_history": trans_history
+        }
+
     def init_shops(self):
         mock_shops_path = Path("software") / "LightShop" / "corpus" / "shop.yaml"
         shops: Dict[str, Shop] = {}
@@ -93,7 +104,18 @@ class ShopSession:
         
         return {
             "status": "ok",
-            "output": list(shop_category)
+            "output": sorted(list(shop_category))
+        }
+    
+    def list_all_shops_by_category(self, category: str):
+        shops_list = []
+        for shop in self.shops.values():
+            if shop.category == category:
+                shops_list.append(shop.name)
+        
+        return {
+            "status": "ok",
+            "output": sorted(shops_list)
         }
     
     def get_shop(self, sid: str):
@@ -102,7 +124,29 @@ class ShopSession:
             return shop, None
         return None, {
             "status": "failed",
-            "output": f"Shop with ID ({sid}) not found."
+            "output": f"Shop with ID {sid} not found."
+        }
+    
+    def get_shop_id_by_name(self, name: str):
+        for shop in self.shops.values():
+            if shop.name == name:
+                return {
+                    "status": "ok",
+                    "output": shop.sid
+                }
+        return {
+            "status": "failed",
+            "output": f"Shop named {name} not found."
+        }
+    
+    def list_items(self, sid: str):
+        shop, err = self.get_shop(sid)
+        if err: return err
+        items_list = [asdict(item) for item in shop.items.values()]
+
+        return {
+            "status": "ok",
+            "output": sorted(items_list, key=lambda x: x.get("name", ""))
         }
     
     def add_to_cart(self, sid: str, tid: str, cnt: int):
@@ -113,15 +157,16 @@ class ShopSession:
         if item is None:
             return {
                 "status": "failed",
-                "output": f"Item with ID ({tid}) not found in the shop {shop.name} (ID={shop.sid})"
+                "output": f"Item with ID {tid} not found in shop '{shop.name}' (ID: {shop.sid})."
             }
 
-        if shop.count.get(tid, 0) < cnt:
+        if shop.count[tid] < cnt:
             return {
                 "status": "failed",
-                "output": f"The number of `{item.name}` (ID={tid}) in the shop {shop.name} (ID={shop.sid}) is {shop.count.get(tid, 0)}, which is less than {cnt}"
+                "output": f"Shop '{shop.name}' (ID: {shop.sid}) has {shop.count[tid]} of '{item.name}' (ID: {tid}), which is less than the requested {cnt}."
             }
 
+        shop.count[tid] -= cnt
         self.cart.append(
             CartItem(
                 caid=f"cart_{self.uuid()}",
@@ -133,22 +178,117 @@ class ShopSession:
 
         return {
             "status": "ok",
-            "output": f"You have successfully added {cnt}x`{item.name}` (ID={tid}) to the cart."
+            "output": f"Added {cnt} × '{item.name}' (ID: {tid}) to your cart."
         }
 
-
     def delete_item_in_cart(self, caid: str):
-        pass
+        for i, cart_item in enumerate(self.cart):
+            if cart_item.caid == caid:
+                shop = self.shops[cart_item.sid]
+                shop.items[cart_item.tid] += cart_item.count
+                self.cart.pop(i)
+                return {
+                    "status": "ok",
+                    "output": f"Removed item (ID: {caid}) from your cart."
+                }
+        
+        return {
+            "status": "failed",
+            "output": f"Item with ID {caid} not found in your cart."
+        }
+    
+    def get_item_info(self, sid: str, tid: str):
+        shop, err = self.get_shop(sid)
+        if err: return err
 
-    def checkout(self):
-        pass
+        item = shop.items.get(tid)
+        if item is None:
+            return {
+                "status": "failed",
+                "output": f"Item with ID {tid} not found in shop '{shop.name}' (ID: {sid})"
+            }
+        
+        return {
+            "status": "ok",
+            "output": {
+                "name": item.name,
+                "price": item.price,
+                "count": shop.count[tid]
+            }
+        }
+    
+    def check_balance(self):
+        return {
+            "status": "ok",
+            "output": self.my_balance
+        }
 
+    def checkout_all(self):
+        if len(self.cart) == 0:
+            return {
+                "status": "failed",
+                "output": "Your cart is empty."
+            }
 
+        total_price = 0
+        info = defaultdict(dict)
 
+        for cart_item in self.cart:
+            sid = cart_item.sid
+            tid = cart_item.tid
+            count = cart_item.count
 
+            info[sid][tid] = count
+
+            shop = self.shops[sid]
+            item = shop.items[tid]
+
+            total_price += item.price * count
+        
+        if total_price > self.my_balance:
+            return {
+                "status": "failed",
+                "output": "Insufficient balance."
+            }
+
+        self.my_balance -= total_price
+        trans = Transaction(
+            trid=f"trans_{self.uuid()}",
+            total=total_price,
+            info=dict(info)
+        )
+
+        self.trans_history.append(trans)
+        self.cart.clear()
+
+        return {
+            "status": "ok",
+            "output": f"Checkout successful. Transaction ID: {trans.trid}."
+        }
+    
+    def get_trans_history(self):
+
+        return {
+            "status": "ok",
+            "output": [asdict(trans) for trans in self.trans_history]
+        }
 
 
 if __name__ == "__main__":
     shop_session = ShopSession(seed=42)
 
-    print(shop_session.shops)
+    print(shop_session.list_all_shop_categories())
+    print(shop_session.list_all_shops_by_category("fashion"))
+    print(shop_session.get_shop_id_by_name("Sweater Spot"))
+    sid = "shop_MBWjFa7a2ECJuYy7EWiNbT"
+    tid = "item_HhNYNA9JnRvBEWqoZhxrii"
+    # print(shop_session.list_items(sid=sid))
+    print(shop_session.get_item_info(sid=sid, tid=tid))
+    print(shop_session.add_to_cart(sid=sid, tid=tid, cnt=14))
+    print(shop_session.get_item_info(sid=sid, tid=tid))
+
+    print(shop_session.check_balance())
+    print(shop_session.checkout_all())
+    print(shop_session.check_balance())
+
+    print(shop_session.get_trans_history())

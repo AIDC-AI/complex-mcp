@@ -536,6 +536,13 @@ if __name__ == "__main__":
         use_sandbox=True
     )
 
+    toolbox.register_server(
+        server_name="LightShop",
+        server_url="http://127.0.0.1:8088/mcp",
+        desc_path="software/LightShop/desc.json",
+        use_sandbox=True
+    )
+
     print(toolbox.get_system_prompt())
 
     llm = OpenAIBackend(model="gpt-4o")
@@ -547,9 +554,9 @@ if __name__ == "__main__":
 
     result = asyncio.run(
         client.process_query(
-            query="Liked all your friends' moments which were post after 2024-06-01. After you finish your task, output an `[END]` in the final",
+            query="Find the most expensive cloth in LightShop and bug it. After you finish your task, output an `[END]` in the final",
             env={
-                "apps": ["LightTalk"],
+                "apps": ["LightTalk", "LightShop"],
                 "seed": 42
             },
             verbose=True,
@@ -558,5 +565,5 @@ if __name__ == "__main__":
         )
     )
 
-    print(result["old_apps"])
-    print(result["apps"])
+    # print(result["old_apps"])
+    # print(result["apps"])
