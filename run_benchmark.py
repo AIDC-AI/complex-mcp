@@ -33,6 +33,7 @@ def parse_toolbox(tool_config_path: str | Path):
 def main(args):
     model = args.__getattribute__("model")
     tool_config_path = args.__getattribute__("tool_config")
+    custom = args.__getattribute__("custom")
 
     toolbox = parse_toolbox(tool_config_path) if tool_config_path else None
 
@@ -42,6 +43,28 @@ def main(args):
         toolbox=toolbox,
         system_prompt=toolbox.get_system_prompt() if toolbox else ""
     )
+
+    if custom:
+        apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop"}]
+
+        seed = int(input("> seed: "))
+        query = f"{input('> instruct: ')}\nAfter you finish the task, output an [END] in the final."
+
+        task = agent.process_query(
+            query=query,
+            max_turns=100,
+            verbose=True,
+            stop_tag="[END]",
+            env={
+                "apps": apps,
+                "seed": seed
+            }
+        )
+        
+        asyncio.run(task)
+
+        return
+        
 
     data_path = Path("benchmark") / "data" / "data.parquet"
     dataset = pd.read_parquet(data_path)
@@ -88,6 +111,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-m", "--model", default="gpt-4o", type=str)
     parser.add_argument("-t", "--tool-config", type=str, required=False)
+    parser.add_argument("-c", "--custom", action="store_true", default=False)
 
     args = parser.parse_args()
     load_dotenv()

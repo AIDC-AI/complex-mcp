@@ -393,5 +393,102 @@
             "type": "object",
             "description": "A dictionary containing status and output. On success, output confirms the chat was marked as unread; on failure (e.g., contact not found), output contains an error message."
         }
+    },
+    {
+        "tool_name": "get_my_moments",
+        "description": "Retrieve all moments (posts) that you have published in LightTalk.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of your own moments; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "post_moment",
+        "description": "Publish a new moment (post) in LightTalk with optional images.",
+        "arguments": {
+            "content": {
+                "type": "string",
+                "description": "The text content of the moment to post."
+            },
+            "img_urls": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "A list of image URLs to attach to the moment. Can be empty if no images."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the moment was posted and may include its unique ID (MOID); on failure (e.g., empty content), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "delete_moment",
+        "description": "Delete one of your own moments (posts) in LightTalk by its unique ID.",
+        "arguments": {
+            "moid": {
+                "type": "string",
+                "description": "The unique moment ID (MOID) of the moment to delete."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms deletion; on failure (e.g., moment not found or not owned by you), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_shared_url_of_moment",
+        "description": "Generate a shareable URL for a specific moment posted by a contact in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact who posted the moment."
+            },
+            "moid": {
+                "type": "string",
+                "description": "The unique moment ID (MOID) of the moment to share."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a public or semi-public shareable URL string; on failure (e.g., invalid moment), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_shared_url_of_contact",
+        "description": "Generate a shareable profile URL for a contact in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact whose profile URL to generate."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a shareable contact profile URL; on failure (e.g., contact not found), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "delete_contact",
+        "description": "Remove a contact from your contact list in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact to delete."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the contact was removed; on failure (e.g., contact not found), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "ask_for_privilege",
+        "description": "Request elevated privileges or special access permissions in LightTalk (e.g., for moderation, API access, or advanced features).",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the privilege request was submitted or granted; on failure (e.g., already have privilege or not eligible), output contains an error message."
+        }
     }
 ]

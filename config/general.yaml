@@ -25,6 +25,12 @@ servers:
     use_sandbox: true
     use: true
 
+  - name: LightShop
+    url: http://127.0.0.1:8088/mcp
+    desc: software/LightShop/desc.json
+    use_sandbox: true
+    use: true
+
   - name: WikiServer
     url: http://127.0.0.1:8004/sse
     use: false

@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 from fastmcp import FastMCP
 from session import LightTalkSession
 import logging
@@ -223,4 +223,62 @@ async def mark_as_unread(uid: str, session_id: str):
     if err: return err
 
     return session.contact_session.mark_as_unread(uid)
+
+@mcp.tool
+async def get_my_moments(session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.get_my_moments()
+
+@mcp.tool
+async def post_moment(content: str, img_urls: List[str], session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.post_moment(content, img_urls)
+
+@mcp.tool
+async def delete_moment(moid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.delete_moment(moid)
+
+@mcp.tool
+async def get_shared_url_of_moment(uid: str, moid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.get_shared_url_of_moment(uid, moid)
+
+@mcp.tool
+async def get_shared_url_of_contact(uid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.get_shared_url_of_contact(uid)
+
+@mcp.tool
+async def delete_contact(uid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.delete_contact(uid)
+
+@mcp.tool
+async def ask_for_privilege(session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.ask_for_privilege()
+
+# TODO
+@mcp.tool
+async def list_ip_choices(session_id: str):
+    pass
+
+@mcp.tool
+async def change_my_ip(ip: str, session_id: str):
+    pass
 

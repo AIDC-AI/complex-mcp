@@ -1,0 +1,7 @@
+servers:
+  - name: LightTalk
+    url: http://127.0.0.1:8080/mcp
+    desc: software/LightTalk/desc.json
+    use_sandbox: true
+    use: true
+

@@ -83,6 +83,9 @@ class ContactSession:
         self.my_name = f"{first_names[-1]} {surnames[-1]}"
         self.my_gender = genders[-1]
         self.my_moments: List[Moment] = []
+        self.my_ip = "UnKnown"
+
+        self.has_privilege = False
 
         # Generate all contacts
         for first_name, surname, tag, gender, blocked in \
@@ -95,6 +98,13 @@ class ContactSession:
             self.uid_dict[name] = contact.uid
         
         self.uids = list(self.contacts_dict.keys())
+        self.contacts_dict[self.my_uid] = Contact(
+            name=self.my_name,
+            gender=self.my_gender,
+            tag="Me",
+            uid=self.my_uid,
+            blocked=False
+        )
 
         # Generate moments of each contact
         for contact in self.contacts_dict.values():
@@ -124,6 +134,26 @@ class ContactSession:
                     )
                     moment.comments.append(comment)
                 contact.moments.append(moment)
+    
+    @staticmethod
+    def require_privilege(func):
+        def wrapper(self, *args, **kwargs):
+            if not self.has_privilege:
+                return {
+                    "status": "failed",
+                    "output": "This operation need privilege"
+                }
+            return func(self, *args, **kwargs)
+        
+        return wrapper
+    
+    def ask_for_privilege(self):
+        self.has_privilege = True
+
+        return {
+            "status": "ok",
+            "output": "You have successfully got the privilege"
+        }
 
     def draw_without_replacement(self, arr: List[Dict[str, Any]], k: int):
         if k > len(arr):
@@ -710,10 +740,94 @@ class ContactSession:
         return {
             uid: asdict(contact) for uid, contact in self.contacts_dict.items()
         }
+    
+    def get_my_moments(self):
+        contact = self.contacts_dict[self.my_uid]
+
+        return {
+            "status": "ok",
+            "output": [asdict(moment) for moment in contact.moments]
+        }
+    
+    @require_privilege
+    def post_moment(self, content: str, img_urls: List[str]):
+        contact = self.contacts_dict[self.my_uid]
+        moment = Moment(
+            moid=f"mo_{self.uuid()}",
+            owner_uid=self.my_uid,
+            content=content,
+            img_urls=img_urls,
+            timestamp=self.time_machine.step(),
+            ip=self.my_ip
+        )
+
+        contact.moments.append(moment)
+
+        return {
+            "status": "ok",
+            "output": f"You have successfully post a moment (MOID = {moment.moid})"
+        }
+
+    @require_privilege    
+    def delete_moment(self, moid: str):
+        contact = self.contacts_dict[self.my_uid]
+        for idx, moment in enumerate(contact.moments):
+            if moment.moid == moid:
+                contact.moments.pop(idx)
+                return {
+                    "status": "ok",
+                    "output": f"You have successfully deleted one moment (MOID = {moid})"
+                }
+
+        return {
+            "status": "failed",
+            "output": f"Moment (MOID = {moid}) not found"
+        }
+
+    def get_shared_url_of_moment(self, uid: str, moid: str):
+        return {
+            "status": "ok",
+            "output": f"light://moment.talk.so?uid={uid}&moid={moid}"
+        }
+    
+    def get_shared_url_of_contact(self, uid: str):
+        return {
+            "status": "ok",
+            "output": f"light://contact.talk.so?uid={uid}"
+        }
+    
+    @require_privilege
+    def delete_contact(self, uid: str):
+        if uid == self.my_uid:
+            return {
+                "status": "failed",
+                "output": f"You can't delete yourself."
+            }
+
+        if uid not in self.contacts_dict:
+            return {
+                "status": "failed",
+                "output": f"Contact with UID ({uid}) not found"
+            }
+
+        contact_info = asdict(self.contacts_dict[uid])
+
+        del self.contacts_dict[uid]
+
+        return {
+            "status": "ok",
+            "output": f"You have successfully deleted the contact {contact_info['name']} (UID={contact_info['uid']})"
+        }
+
+
 
 if __name__ == "__main__":
     contact_session = ContactSession(seed=42)
 
-    from pprint import pprint
+    print(contact_session.list_all_tags())
 
-    pprint(contact_session.get_session_dict())
+    print(contact_session.delete_contact(uid="user_C7SSUjgz7QMsGCTSHGvTsZ"))
+    print(contact_session.ask_for_privilege())
+    print(contact_session.delete_contact(uid="user_C7SSUjgz7QMsGCTSHGvTsZ"))
+
+    print(contact_session.list_all_tags())
