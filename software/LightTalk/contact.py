@@ -137,7 +137,7 @@ class ContactSession:
     
     @staticmethod
     def require_privilege(func):
-        def wrapper(self, *args, **kwargs):
+        def wrapper(self: 'ContactSession', *args, **kwargs):
             if not self.has_privilege:
                 return {
                     "status": "failed",
@@ -146,6 +146,19 @@ class ContactSession:
             return func(self, *args, **kwargs)
         
         return wrapper
+    
+    @staticmethod
+    def network_trouble(prob: float = 0.05):
+        def __network_trouble(func):
+            def wrapper(self: 'ContactSession', *args, **kwargs):
+                if self.rng.uniform(0, 1) < prob:
+                    return {
+                        "status": "internel error",
+                        "output": "It appears there's a network issue, please try again."
+                    }
+                return func(self, *args, **kwargs)
+            return wrapper
+        return __network_trouble
     
     def ask_for_privilege(self):
         self.has_privilege = True
@@ -170,6 +183,7 @@ class ContactSession:
         alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
         return ''.join(self.rng.choices(alphabet, k=22))
     
+    @network_trouble()
     def get_all_contacts(self) -> List[Dict[str, str]]:
         contacts_list = []
         for contact in self.contacts_dict.values():
@@ -179,12 +193,18 @@ class ContactSession:
                 "tag": contact.tag
             })
         
-        return contacts_list
+        return {
+            "status": "ok",
+            "output": contacts_list
+        }
 
     def get_contacts(self, page: int = 0) -> List[Dict[str, str]]:
         PAGE_SIZE = 10
-        contacts_list = self.get_all_contacts()
-
+        result = self.get_all_contacts()
+        if result["status"] != "ok":
+            return result
+        
+        contacts_list = result["output"]
         page = min(len(contacts_list) // PAGE_SIZE, page)
 
         return contacts_list[PAGE_SIZE * page : PAGE_SIZE * (page + 1)]
@@ -193,8 +213,19 @@ class ContactSession:
         self,
         name: str
     ) -> str:
-        return self.uid_dict.get(name, f"Contact {name} not found")
+        uid = self.uid_dict.get(name)
+        if uid:
+            return {
+                "status": "ok",
+                "output": uid
+            }
+        else:
+            return {
+                "status": "failed",
+                "output": f"Contact {name} not found"
+            }
 
+    @network_trouble(prob=0.1)
     def send_message(
         self,
         uid: str,
@@ -224,17 +255,12 @@ class ContactSession:
 
         self.contacts_dict[uid].chat_history.append(msg)
 
-        if self.rng.random() > 0.8:
-            return {
-                "status": "failed",
-                "output": "It appears there's a network issue, please try again."
-            }
-
         return {
             "status": "ok",
             "output": f"You have successfully sent one message to {contact.name} ({uid})"
         }
 
+    @network_trouble()
     def get_chat_history(self, uid: str):
         contact = self.contacts_dict.get(uid)
         if contact is None:
@@ -244,11 +270,19 @@ class ContactSession:
             }
         chat_history = [asdict(message) for message in contact.chat_history]
 
-        return chat_history
+        return {
+            "status": "ok",
+            "output": chat_history
+        }
     
+    @network_trouble()
     def get_myuid(self):
-        return self.my_uid
+        return {
+            "status": "ok",
+            "output": self.my_uid
+        }
     
+    @network_trouble()
     def delete_chat_history(self, uid: str):
         contact = self.contacts_dict.get(uid)
         if contact is None:
@@ -264,6 +298,8 @@ class ContactSession:
             "output": f"The chat history with {contact.name} ({uid}) has been successfully deleted"
         }
     
+    @network_trouble()
+    @require_privilege
     def delete_message(self, uid: str, mid: str):
         contact = self.contacts_dict.get(uid)
         if contact is None:
@@ -287,6 +323,8 @@ class ContactSession:
             "output": f"Message with MID ({mid}) with user (UID={uid}) not found."
         }
     
+    @network_trouble()
+    @require_privilege
     def unblock(self, uid: str):
         contact = self.contacts_dict.get(uid)
         if contact is None:
@@ -308,6 +346,8 @@ class ContactSession:
             "output": f"You have successfully unblocked contact {contact.name} ({uid})"
         }
     
+    @network_trouble()
+    @require_privilege
     def block(self, uid: str):
         contact = self.contacts_dict.get(uid)
         if contact is None:
@@ -329,6 +369,7 @@ class ContactSession:
             "output": f"You have successfully blocked contact {contact.name} ({uid})"
         }
 
+    @network_trouble()
     def get_contact_info(self, uid: str):
         if uid == self.my_uid:
             return {
@@ -354,6 +395,7 @@ class ContactSession:
             }
         }
 
+    @network_trouble()
     def get_all_moments(self, uid: str):
         contact = self.contacts_dict.get(uid)
         if contact is None:
@@ -373,6 +415,7 @@ class ContactSession:
             "output": [asdict(moment) for moment in moments]
         }
 
+    @network_trouble()
     def get_last_k_moments(self, uid: str, k: int):
         result = self.get_all_moments(uid)
         if result["status"] != "ok":
@@ -382,7 +425,7 @@ class ContactSession:
 
         return result
 
-
+    @network_trouble()
     def get_moment(self, uid: str, index: int):
         result = self.get_all_moments(uid)
         if result["status"] != "ok":
@@ -395,6 +438,7 @@ class ContactSession:
         
         return result
 
+    @network_trouble()
     def like_moment(self, uid: str, moid: str):
         contact = self.contacts_dict.get(uid)
         if contact is None:
@@ -421,6 +465,7 @@ class ContactSession:
             "output": f"The moment with MOID={moid} not found of {contact.name} (UID={uid})'s moments"
         }
     
+    @network_trouble()
     def unlike_moment(self, uid: str, moid: str):
         contact = self.contacts_dict.get(uid)
         if contact is None:
@@ -454,6 +499,7 @@ class ContactSession:
             "output": f"The moment with MOID={moid} not found of {contact.name} (UID={uid})'s moments"
         }
 
+    @network_trouble()
     def comment_moment(self, uid: str, moid: str, content: str):
         contact = self.contacts_dict.get(uid)
         if contact is None:
@@ -486,12 +532,17 @@ class ContactSession:
             "output": f"The moment with MOID={moid} not found of contact `{contact.name}` (UID={uid})'s moments"
         }
     
+    @network_trouble()
     def list_all_tags(self):
         tags = defaultdict(int)
         for contact in self.contacts_dict.values():
             tags[contact.tag] += 1
-        return [f"{tag} ({cnt})" for tag, cnt in tags.items()]
+        return {
+            "status": "ok",
+            "output": [f"{tag} ({cnt})" for tag, cnt in tags.items()]
+        }
 
+    @network_trouble()
     def get_contacts_by_tag(self, tag: str):
         matched = []
         for contact in self.contacts_dict.values():
@@ -512,6 +563,7 @@ class ContactSession:
             "output": matched
         }
 
+    @network_trouble()
     def get_contacts_by_gender(self, gender: str):
         if gender not in ("male", "female"):
             return {
@@ -537,6 +589,7 @@ class ContactSession:
             "output": matched
         }
 
+    @network_trouble()
     def comment_comment(self, uid: str, moid: str, cid: str, content: str):
         """在某条评论下回复（嵌套评论）"""
         contact = self.contacts_dict.get(uid)
@@ -599,6 +652,7 @@ class ContactSession:
             "output": f"You have successfully replied to comment (CID={cid}) under moment (MOID={moid}) of contact `{contact.name}` (UID={uid})"
         }
 
+    @network_trouble()
     def withdraw_comment_moment(self, uid: str, moid: str, my_cid: str):
         """撤回自己对动态的直接评论（非嵌套）"""
         contact = self.contacts_dict.get(uid)
@@ -638,6 +692,7 @@ class ContactSession:
             "output": f"Your comment with CID={my_cid} not found (or you didn't post it) under moment MOID={moid}"
         }
     
+    @network_trouble()
     def withdraw_comment_comment(self, uid: str, moid: str, cid: str, my_cid: str):
         contact = self.contacts_dict.get(uid)
         if contact is None:
@@ -696,6 +751,7 @@ class ContactSession:
             "output": f"You have successfully withdrawn your reply (CID={my_cid}) to comment (CID={cid}) under moment (MOID={moid}) of contact `{contact.name}` (UID={uid})"
         }
     
+    @network_trouble()
     def mark_as_read(self, uid: str):
         contact = self.contacts_dict.get(uid)
         if contact is None:
@@ -716,6 +772,7 @@ class ContactSession:
             "output": f"You have successfully marked the messages from contact `{contact.name}` (UID={uid}) as read"
         }
     
+    @network_trouble()
     def mark_as_unread(self, uid: str):
         contact = self.contacts_dict.get(uid)
         if contact is None:
@@ -741,6 +798,7 @@ class ContactSession:
             uid: asdict(contact) for uid, contact in self.contacts_dict.items()
         }
     
+    @network_trouble()
     def get_my_moments(self):
         contact = self.contacts_dict[self.my_uid]
 
@@ -749,6 +807,7 @@ class ContactSession:
             "output": [asdict(moment) for moment in contact.moments]
         }
     
+    @network_trouble()
     @require_privilege
     def post_moment(self, content: str, img_urls: List[str]):
         contact = self.contacts_dict[self.my_uid]
@@ -768,6 +827,7 @@ class ContactSession:
             "output": f"You have successfully post a moment (MOID = {moment.moid})"
         }
 
+    @network_trouble()
     @require_privilege    
     def delete_moment(self, moid: str):
         contact = self.contacts_dict[self.my_uid]
@@ -796,6 +856,7 @@ class ContactSession:
             "output": f"light://contact.talk.so?uid={uid}"
         }
     
+    @network_trouble()
     @require_privilege
     def delete_contact(self, uid: str):
         if uid == self.my_uid:
