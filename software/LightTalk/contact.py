@@ -34,13 +34,23 @@ class Moment:
 
 @dataclass
 class Contact:
+    uid: str
     name: str
     gender: str
     tag: str
-    uid: str
     blocked: bool
+    remark: str = field(default="")
     chat_history: List[Message] = field(default_factory=list)
     moments: List[Moment] = field(default_factory=list)
+    read_new_message: bool = field(default=True)
+
+@dataclass
+class Group:
+    gid: str
+    name: str
+    owner_id: str
+    uids: List[str] = field(default_factory=list)
+    chat_history: List[Message] = field(default_factory=list)
     read_new_message: bool = field(default=True)
 
 from pathlib import Path
@@ -84,6 +94,16 @@ class ContactSession:
         self.my_gender = genders[-1]
         self.my_moments: List[Moment] = []
         self.my_ip = "UnKnown"
+        self.ip_choices = [
+            "New York", "Los Angeles", "San Francisco", "Chicago", "Seattle", "Dallas",
+            "London", "Manchester", "Frankfurt", "Berlin", "Paris",
+            "Tokyo", "Osaka", "Seoul", "Singapore",
+            "Sydney", "Melbourne", "Toronto", "Vancouver",
+            "Mumbai", "New Delhi", "Sao Paulo", "Moscow",
+            "Amsterdam", "Zurich", "Stockholm", "Helsinki",
+            "Oslo", "Copenhagen", "Rome", "Madrid",
+            "Istanbul", "Dubai", "Hong Kong", "Taipei"
+        ]
 
         self.has_privilege = False
 
@@ -134,6 +154,17 @@ class ContactSession:
                     )
                     moment.comments.append(comment)
                 contact.moments.append(moment)
+        
+        self.groups: List[Group] = []
+
+    def __get_contact(self, uid: str):
+        contact = self.contacts_dict.get(uid)
+        if contact is None:
+            return None, {
+                "status": "failed",
+                "output": f"Contact with UID ({uid}) not found"
+            }
+        return contact, None
     
     @staticmethod
     def require_privilege(func):
@@ -209,6 +240,7 @@ class ContactSession:
 
         return contacts_list[PAGE_SIZE * page : PAGE_SIZE * (page + 1)]
 
+    @network_trouble()
     def get_uid_from_name(
         self,
         name: str
@@ -239,12 +271,8 @@ class ContactSession:
             mid=f"msg_{self.uuid()}"
         )
 
-        contact = self.contacts_dict.get(uid)
-        if contact is None:
-            return {
-                "status": "failed",
-                "output": f"Contact with UID ({uid}) not found."
-            }
+        contact, err = self.__get_contact(uid)
+        if err: return err
         
         if contact.blocked:
             return {
@@ -262,12 +290,9 @@ class ContactSession:
 
     @network_trouble()
     def get_chat_history(self, uid: str):
-        contact = self.contacts_dict.get(uid)
-        if contact is None:
-            return {
-                "status": "failed",
-                "output": f"Contact with UID ({uid}) not found."
-            }
+        contact, err = self.__get_contact(uid)
+        if err: return err
+
         chat_history = [asdict(message) for message in contact.chat_history]
 
         return {
@@ -284,12 +309,8 @@ class ContactSession:
     
     @network_trouble()
     def delete_chat_history(self, uid: str):
-        contact = self.contacts_dict.get(uid)
-        if contact is None:
-            return {
-                "status": "failed",
-                "output": f"Contact with UID ({uid}) not found"
-            }
+        contact, err = self.__get_contact(uid)
+        if err: return err
         
         contact.chat_history.clear()
 
@@ -301,12 +322,8 @@ class ContactSession:
     @network_trouble()
     @require_privilege
     def delete_message(self, uid: str, mid: str):
-        contact = self.contacts_dict.get(uid)
-        if contact is None:
-            return {
-                "status": "failed",
-                "output": f"Contact with UID ({uid}) not found"
-            }
+        contact, err = self.__get_contact(uid)
+        if err: return err
         
         chat_history = contact.chat_history
 
@@ -326,12 +343,8 @@ class ContactSession:
     @network_trouble()
     @require_privilege
     def unblock(self, uid: str):
-        contact = self.contacts_dict.get(uid)
-        if contact is None:
-            return {
-                "status": "failed",
-                "output": f"Contact with UID ({uid}) not found"
-            }
+        contact, err = self.__get_contact(uid)
+        if err: return err
         
         if not contact.blocked:
             return {
@@ -349,12 +362,8 @@ class ContactSession:
     @network_trouble()
     @require_privilege
     def block(self, uid: str):
-        contact = self.contacts_dict.get(uid)
-        if contact is None:
-            return {
-                "status": "failed",
-                "output": f"Contact with UID ({uid}) not found"
-            }
+        contact, err = self.__get_contact(uid)
+        if err: return err
 
         if contact.blocked:
             return {
@@ -397,12 +406,9 @@ class ContactSession:
 
     @network_trouble()
     def get_all_moments(self, uid: str):
-        contact = self.contacts_dict.get(uid)
-        if contact is None:
-            return {
-                "status": "failed",
-                "output": f"Contact with UID ({uid}) not found"
-            }
+        contact, err = self.__get_contact(uid)
+        if err: return err
+
         if contact.blocked:
             return {
                 "status": "failed",
@@ -440,12 +446,9 @@ class ContactSession:
 
     @network_trouble()
     def like_moment(self, uid: str, moid: str):
-        contact = self.contacts_dict.get(uid)
-        if contact is None:
-            return {
-                "status": "failed",
-                "output": f"Contact with UID ({uid}) not found"
-            }
+        contact, err = self.__get_contact(uid)
+        if err: return err
+
         if contact.blocked:
             return {
                 "status": "failed",
@@ -467,12 +470,9 @@ class ContactSession:
     
     @network_trouble()
     def unlike_moment(self, uid: str, moid: str):
-        contact = self.contacts_dict.get(uid)
-        if contact is None:
-            return {
-                "status": "failed",
-                "output": f"Contact with UID ({uid}) not found"
-            }
+        contact, err = self.__get_contact(uid)
+        if err: return err
+
         if contact.blocked:
             return {
                 "status": "failed",
@@ -501,12 +501,9 @@ class ContactSession:
 
     @network_trouble()
     def comment_moment(self, uid: str, moid: str, content: str):
-        contact = self.contacts_dict.get(uid)
-        if contact is None:
-            return {
-                "status": "failed",
-                "output": f"Contact with UID ({uid}) not found"
-            }
+        contact, err = self.__get_contact(uid)
+        if err: return err
+
         if contact.blocked:
             return {
                 "status": "failed",
@@ -592,12 +589,9 @@ class ContactSession:
     @network_trouble()
     def comment_comment(self, uid: str, moid: str, cid: str, content: str):
         """在某条评论下回复（嵌套评论）"""
-        contact = self.contacts_dict.get(uid)
-        if contact is None:
-            return {
-                "status": "failed",
-                "output": f"Contact with UID ({uid}) not found"
-            }
+        contact, err = self.__get_contact(uid)
+        if err: return err
+
         if contact.blocked:
             return {
                 "status": "failed",
@@ -655,12 +649,9 @@ class ContactSession:
     @network_trouble()
     def withdraw_comment_moment(self, uid: str, moid: str, my_cid: str):
         """撤回自己对动态的直接评论（非嵌套）"""
-        contact = self.contacts_dict.get(uid)
-        if contact is None:
-            return {
-                "status": "failed",
-                "output": f"Contact with UID ({uid}) not found"
-            }
+        contact, err = self.__get_contact(uid)
+        if err: return err
+
         if contact.blocked:
             return {
                 "status": "failed",
@@ -694,12 +685,9 @@ class ContactSession:
     
     @network_trouble()
     def withdraw_comment_comment(self, uid: str, moid: str, cid: str, my_cid: str):
-        contact = self.contacts_dict.get(uid)
-        if contact is None:
-            return {
-                "status": "failed",
-                "output": f"Contact with UID ({uid}) not found"
-            }
+        contact, err = self.__get_contact(uid)
+        if err: return err
+
         if contact.blocked:
             return {
                 "status": "failed",
@@ -753,12 +741,9 @@ class ContactSession:
     
     @network_trouble()
     def mark_as_read(self, uid: str):
-        contact = self.contacts_dict.get(uid)
-        if contact is None:
-            return {
-                "status": "failed",
-                "output": f"Contact with UID ({uid}) not found"
-            }
+        contact, err = self.__get_contact(uid)
+        if err: return err
+
         if contact.blocked:
             return {
                 "status": "failed",
@@ -774,12 +759,9 @@ class ContactSession:
     
     @network_trouble()
     def mark_as_unread(self, uid: str):
-        contact = self.contacts_dict.get(uid)
-        if contact is None:
-            return {
-                "status": "failed",
-                "output": f"Contact with UID ({uid}) not found"
-            }
+        contact, err = self.__get_contact(uid)
+        if err: return err
+
         if contact.blocked:
             return {
                 "status": "failed",
@@ -879,16 +861,298 @@ class ContactSession:
             "status": "ok",
             "output": f"You have successfully deleted the contact {contact_info['name']} (UID={contact_info['uid']})"
         }
+    
+    @network_trouble()
+    def list_ip_choices(self):
+        return {
+            "status": "ok",
+            "output": self.ip_choices
+        }
+    
+    @network_trouble()
+    def change_my_ip(self, where: str):
+        if where not in self.ip_choices:
+            return {
+                "status": "failed",
+                "output": f"Unsupported IP address: {where}"
+            }
+        self.my_ip = where
 
+        return {
+            "status": "ok",
+            "output": f"Your IP address has already been set to {self.my_ip}"
+        }
+    
+    @network_trouble()
+    def edit_remark(self, uid: str, remark: str):
+        contact, err = self.__get_contact(uid)
+        if err: return err
+
+        contact.remark = remark
+
+        return {
+            "status": "ok",
+            "output": f"The remark for contact {contact.name} (UID={contact.uid}) has been successfully updated to: {contact.remark}"
+        }
+    
+    @network_trouble()
+    def delete_remark(self, uid: str):
+        contact, err = self.__get_contact(uid)
+        if err: return err
+
+        contact.remark = ""
+
+        return {
+            "status": "ok",
+            "output": f"The remark for contact {contact.name} (UID={contact.uid}) has been successfully deleted."
+        }
+    
+    def __get_group(self, gid: str):
+        for group in self.groups:
+            if group.gid == gid:
+                return group, None
+        return None, {
+            "status": "failed",
+            "output": f"Group with GID ({gid}) not found"
+        }
+
+    @network_trouble()
+    @require_privilege
+    def create_group_chat(self, uids: List[str]):
+        for uid in uids:
+            if uid not in self.contacts_dict:
+                return {
+                    "status": "failed",
+                    "output": f"Contact with UID ({uid}) not found"
+                }
+        uids = list(set(uids + [self.my_uid]))
+        group = Group(
+            gid=f"group_{self.uuid()}",
+            name=f"Group Chat {len(self.groups) + 1}",
+            owner_id=self.my_uid,
+            uids=sorted(uids)
+        )
+        self.groups.append(group)
+
+        return {
+            "status": "ok",
+            "output": f"You have successfully created a group (GID={group.gid})"
+        }
+    
+    @network_trouble(prob=0.2)
+    def send_message_to_group(self, gid: str, content: str, at: List[str] | str):
+        group, err = self.__get_group(gid)
+        if err: return err
+
+        if at != "all":
+            uids = sorted(list(set(at)))
+            for uid in uids:
+                if uid not in group.uids:
+                    return {
+                        "status": "failed",
+                        "output": f"Contact with UID ({uid}) not found in group chat (GID={group.gid})"
+                    }
+            receive_uid = ','.join(uids)
+        else:
+            receive_uid = "all"
+        message = Message(
+            send_uid=self.my_uid,
+            receive_uid=receive_uid,
+            timestamp=self.time_machine.step(),
+            content=content,
+            mid=f"msg_{self.uuid()}"
+        )
+
+        group.chat_history.append(message)
+
+        return {
+            "status": "ok",
+            "output": f"You have successfully sent one message to group chat (GID={group.gid})"
+        }
+
+    @network_trouble()
+    def get_group_chat_history(self, gid: str):
+        group, err = self.__get_group(gid)
+        if err: return group
+
+        return {
+            "status": "ok",
+            "output": [asdict(message) for message in group.chat_history]
+        }
+    
+    def send_image(self, uid: str, img_url: str):
+        return self.send_message(
+            uid=uid,
+            content=f"<img str={img_url} />"
+        )
+    
+    def send_image_to_group(self, gid: str, img_url: str, at: List[str] | str):
+        return self.send_message_to_group(
+            gid=gid,
+            content=f"<img str={img_url} />"
+        )
+
+    @network_trouble()
+    @require_privilege
+    def rename_group(self, gid: str, name: str):
+        group, err = self.__get_group(gid)
+        if err: return err
+
+        group.name = name
+
+        return {
+            "status": "ok",
+            "output": f"You have successfully renamed the group chat (GID={gid}) to '{group.name}'"
+        }
+    
+    @network_trouble()
+    @require_privilege
+    def delete_group(self, gid: str):
+        for i, groud in enumerate(self.groups):
+            if groud.gid == gid:
+                if groud.owner_id != self.my_uid:
+                    return {
+                        "status": "failed",
+                        "output": f"You are not the owner of the group chat (GID={gid})"
+                    }
+                self.groups.pop(i)
+                return {
+                    "status": "ok",
+                    "output": f"You have successfully deleted the group chat (GID={gid})"
+                }
+        return {
+            "status": "failed",
+            "output": f"Group chat with GID ({gid}) not found"
+        }
+    
+    @network_trouble()
+    @require_privilege
+    def change_owner_of_group(self, gid: str, uid: str):
+        group, err = self.__get_group(gid)
+        if err: return err
+
+        if group.owner_id != self.my_uid:
+            return {
+                "status": "failed",
+                "output": f"You are not the owner of the group (GID={gid})"
+            }
+        
+        contact, err = self.__get_contact(uid)
+        if err: return err
+        
+        group.owner_id = uid
+
+        return {
+            "status": "ok",
+            "output": f"The owner of group chat (GID={gid}) has already been changed to contact {contact.name} (UID={contact.uid})"
+        }
+    
+    @network_trouble()
+    @require_privilege
+    def quit_group(self, gid: str):
+        group, err = self.__get_group(gid)
+        if err: return err
+
+        if group.owner_id == self.my_uid:
+            return {
+                "status": "failed",
+                "output": f"You are the owner of the group chat (GID={gid}), you can't quit."
+            }
+        
+        for i, grp in enumerate(self.groups):
+            if grp.gid == gid:
+                self.groups.pop(i)
+                return {
+                    "status": "ok",
+                    "output": f"You have successfully quit the group chat (GID={gid})"
+                }
+        
+        return {
+            "status": "internel error",
+            "output": "Unknown runtime error"
+        }
+
+    @network_trouble()
+    def invite_new_member(self, gid: str, uid: str):
+        group, err = self.__get_group(gid)
+        if err: return err
+
+        contact, err = self.__get_contact(uid)
+        if err: return err
+
+        group.uids.append(uid)
+        group.uids.sort()
+
+        return {
+            "status": "ok",
+            "output": f"You have successfully invite a new member {contact.name} (UID={uid}) to group chat (GID={gid})"
+        }
+    
+    @network_trouble()
+    def list_all_groups(self):
+        grp_list: List[Group] = []
+        for group in self.groups:
+            grp_info = {
+                "gid": group.gid,
+                "name": group.name,
+                "owner_id": group.owner_id,
+                "uids": group.uids
+            }
+            grp_list.append(grp_info)
+        return {
+            "status": "ok",
+            "output": grp_list
+        }
+
+    @network_trouble()
+    def get_group_info(self, gid: str):
+        group, err = self.__get_group(gid)
+        if err: return err
+
+        grp_info = {
+            "gid": group.gid,
+            "name": group.name,
+            "owner_id": group.owner_id,
+            "uids": group.uids,
+            "read_new_messages": group.read_new_message
+        }
+
+        return {
+            "status": "ok",
+            "output": grp_info
+        }
+    
+    @network_trouble()
+    def mark_as_read_in_group(self, gid: str):
+        group, err = self.__get_group(gid)
+        if err: return err
+
+        group.read_new_message = True
+        return {
+            "status": "ok",
+            "output": f"All messages in group chat (GID={gid}) has been marked as read"
+        }
+    
+    @network_trouble()
+    def mark_as_unread_in_group(self, gid: str):
+        group, err = self.__get_group(gid)
+        if err: return err
+
+        group.read_new_message = False
+        return {
+            "status": "ok",
+            "output": f"All messages in group chat (GID={gid}) has been marked as unread"
+        }
 
 
 if __name__ == "__main__":
     contact_session = ContactSession(seed=42)
 
-    print(contact_session.list_all_tags())
-
-    print(contact_session.delete_contact(uid="user_C7SSUjgz7QMsGCTSHGvTsZ"))
     print(contact_session.ask_for_privilege())
-    print(contact_session.delete_contact(uid="user_C7SSUjgz7QMsGCTSHGvTsZ"))
+    print(contact_session.create_group_chat(uids=[]))
+    
+    print(contact_session.send_message_to_group(gid="group_Mtj3PjG4iZYVaYLUscsBYT", content="hello", at=[]))
 
-    print(contact_session.list_all_tags())
+    print(contact_session.get_group_chat_history(gid="group_Mtj3PjG4iZYVaYLUscsBYT"))
+
+    print(contact_session.list_all_groups())

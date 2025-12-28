@@ -491,4 +491,283 @@
             "description": "A dictionary containing status and output. On success, output confirms the privilege request was submitted or granted; on failure (e.g., already have privilege or not eligible), output contains an error message."
         }
     }
+    ,
+    {
+        "tool_name": "list_ip_choices",
+        "description": "List available IP/address choices that can be used by the current LightTalk session.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of available IP/address choices; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "change_my_ip",
+        "description": "Change the current session's IP/address to one of the available choices.",
+        "arguments": {
+            "where": {
+                "type": "string",
+                "description": "The identifier or label of the target IP/address choice to switch to."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the IP/address was changed; on failure (e.g., invalid choice), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "edit_remark",
+        "description": "Edit the remark/note associated with a contact in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact whose remark will be edited."
+            },
+            "remark": {
+                "type": "string",
+                "description": "The new remark text to store for the contact."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the remark was updated; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "delete_remark",
+        "description": "Remove the remark/note associated with a contact in LightTalk.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the contact whose remark will be removed."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the remark was deleted; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "create_group_chat",
+        "description": "Create a new group chat with a list of participants in LightTalk.",
+        "arguments": {
+            "uids": {
+                "type": "array[string]",
+                "description": "A list of UIDs to include as initial members of the group chat."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes the new group's ID (GID) and info; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "send_message_to_group",
+        "description": "Send a text message to a group chat, optionally addressing specific members.",
+        "arguments": {
+            "gid": {
+                "type": "string",
+                "description": "The unique identifier of the group to send the message to."
+            },
+            "content": {
+                "type": "string",
+                "description": "The text content of the message to send to the group."
+            },
+            "at": {
+                "type": "array[string] | string('all')",
+                "description": "Optional list of UIDs to mention in the message; can be empty or omitted, or 'all' if mention all members"
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output may confirm delivery and list mentions; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_group_chat_history",
+        "description": "Retrieve the chat history of a specific group in LightTalk.",
+        "arguments": {
+            "gid": {
+                "type": "string",
+                "description": "The unique identifier of the group whose history to retrieve."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of group messages; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "send_image",
+        "description": "Send an image to a specific contact in LightTalk by URL.",
+        "arguments": {
+            "uid": {
+                "type": "string",
+                "description": "The unique identifier of the recipient contact."
+            },
+            "img_url": {
+                "type": "string",
+                "description": "A publicly accessible URL pointing to the image to send."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the image was sent; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "send_image_to_group",
+        "description": "Send an image to a group chat by URL, optionally mentioning members.",
+        "arguments": {
+            "gid": {
+                "type": "string",
+                "description": "The unique identifier of the group to send the image to."
+            },
+            "img_url": {
+                "type": "string",
+                "description": "A publicly accessible URL pointing to the image to send."
+            },
+            "at": {
+                "type": "array[string] | string('all')",
+                "description": "Optional list of UIDs to mention in the message; can be empty or omitted, or 'all' if mention all members"
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the image was sent to the group; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "rename_group",
+        "description": "Change the display name of an existing group chat in LightTalk.",
+        "arguments": {
+            "gid": {
+                "type": "string",
+                "description": "The unique identifier of the group to rename."
+            },
+            "name": {
+                "type": "string",
+                "description": "The new name to assign to the group."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the group's name was changed; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "delete_group",
+        "description": "Delete an existing group chat in LightTalk.",
+        "arguments": {
+            "gid": {
+                "type": "string",
+                "description": "The unique identifier of the group to delete."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the group was deleted; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "change_owner_of_group",
+        "description": "Transfer group ownership to another member in LightTalk.",
+        "arguments": {
+            "gid": {
+                "type": "string",
+                "description": "The unique identifier of the group."
+            },
+            "uid": {
+                "type": "string",
+                "description": "The UID of the member who should become the new owner."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms ownership transfer; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "quit_group",
+        "description": "Leave a group chat in LightTalk.",
+        "arguments": {
+            "gid": {
+                "type": "string",
+                "description": "The unique identifier of the group to quit."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms you left the group; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "invite_new_member",
+        "description": "Invite a new member into an existing group chat in LightTalk.",
+        "arguments": {
+            "gid": {
+                "type": "string",
+                "description": "The unique identifier of the group to invite the member into."
+            },
+            "uid": {
+                "type": "string",
+                "description": "The UID of the contact to invite."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the invite was sent; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "list_all_groups",
+        "description": "List all group chats that the current user is a member of in LightTalk.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of group metadata; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_group_info",
+        "description": "Retrieve detailed information about a specific group chat in LightTalk.",
+        "arguments": {
+            "gid": {
+                "type": "string",
+                "description": "The unique identifier of the group whose info to retrieve."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes group details (members, name, owner); on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "mark_as_read_in_group",
+        "description": "Mark a group's chat as read for the current user in LightTalk.",
+        "arguments": {
+            "gid": {
+                "type": "string",
+                "description": "The unique identifier of the group to mark as read."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the group was marked as read; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "mark_as_unread_in_group",
+        "description": "Mark a group's chat as unread so it appears to have new messages in LightTalk.",
+        "arguments": {
+            "gid": {
+                "type": "string",
+                "description": "The unique identifier of the group to mark as unread."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the group was marked as unread; on failure, output contains an error message."
+        }
+    }
 ]

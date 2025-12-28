@@ -273,12 +273,128 @@ async def ask_for_privilege(session_id: str):
 
     return session.contact_session.ask_for_privilege()
 
-# TODO
 @mcp.tool
 async def list_ip_choices(session_id: str):
-    pass
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.list_ip_choices()
 
 @mcp.tool
-async def change_my_ip(ip: str, session_id: str):
-    pass
+async def change_my_ip(where: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
 
+    return session.contact_session.change_my_ip(where)
+
+@mcp.tool
+async def edit_remark(uid: str, remark: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.edit_remark(uid, remark)
+
+@mcp.tool
+async def delete_remark(uid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.delete_remark(uid)
+
+@mcp.tool
+async def create_group_chat(uids: List[str], session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.create_group_chat(uids)
+
+@mcp.tool
+async def send_message_to_group(gid: str, content: str, at: List[str] | str = [], session_id: str = ""):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.send_message_to_group(gid, content, at)
+
+@mcp.tool
+async def get_group_chat_history(gid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.get_group_chat_history(gid)
+
+@mcp.tool
+async def send_image(uid: str, img_url: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.send_image(uid, img_url)
+
+@mcp.tool
+async def send_image_to_group(gid: str, img_url: str, at: List[str] | str = [], session_id: str = ""):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.send_image_to_group(gid, img_url, at)
+
+@mcp.tool
+async def rename_group(gid: str, name: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.rename_group(gid, name)
+
+@mcp.tool
+async def delete_group(gid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.delete_group(gid)
+
+@mcp.tool
+async def change_owner_of_group(gid: str, uid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.change_owner_of_group(gid, uid)
+
+@mcp.tool
+async def quit_group(gid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.quit_group(gid)
+
+@mcp.tool
+async def invite_new_member(gid: str, uid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.invite_new_member(gid, uid)
+
+@mcp.tool
+async def list_all_groups(session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.list_all_groups()
+
+@mcp.tool
+async def get_group_info(gid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.get_group_info(gid)
+
+@mcp.tool
+async def mark_as_read_in_group(gid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.mark_as_read_in_group(gid)
+
+@mcp.tool
+async def mark_as_unread_in_group(gid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.mark_as_unread_in_group(gid)
