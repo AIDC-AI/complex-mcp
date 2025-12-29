@@ -4,6 +4,7 @@ from openai import AsyncClient
 from fastmcp import Client as MCPClient
 from typing import List, Dict, Any, Literal
 from tenacity import retry, stop_after_attempt, wait_exponential, before_sleep_log
+from collections import defaultdict
 import asyncio
 import json
 import logging
@@ -100,7 +101,8 @@ class Toolbox:
                 return result
         except Exception as e:
             return {
-                "error": e.__str__()
+                "status": "failed",
+                "output": e.__str__()
             }
 
     async def call_with_server(
@@ -368,6 +370,7 @@ class AgentClient:
         results = {}
 
         results["old_apps"] = {}
+        results["tool_cnt"] = defaultdict(lambda: defaultdict(int))
 
         # Login
         for app in env["apps"]:
@@ -413,6 +416,7 @@ class AgentClient:
             "role": "user",
             "content": query
         })
+
         for _ in range(max_turns):
             resp = await self.llm.chat(messages)
             msg: str = resp.choices[0].message.content
@@ -452,12 +456,22 @@ class AgentClient:
                         )
                     }
                 else:
+                    tool_name = tool_calling_req["name"]
+                    arguments = tool_calling_req.get("arguments", {})
                     tool_resp = (await self.toolbox.call(
-                        tool_calling_req["name"],
-                        tool_calling_req.get("arguments", {}),
+                        tool_name,
+                        arguments,
                         session_id_dict=session_id_dict
-                    ))
-                format_tool_resp = f"<response>\n{tool_resp.__str__()}\n</response>"
+                    )).__str__()
+                    try:
+                        tool_resp_dict = json.loads(tool_resp)
+                        status = tool_resp_dict["status"]
+                    except Exception as e:
+                        print(e) # TODO: delete
+                        status = "internel error"
+                    results["tool_cnt"][tool_name][status] += 1
+
+                format_tool_resp = f"<response>\n{tool_resp}\n</response>"
 
                 if verbose:
                     print(format_tool_resp)
@@ -471,6 +485,7 @@ class AgentClient:
                 if stop_tag and msg.strip().endswith(stop_tag):
                     break # quit
         
+        results["tool_cnt"] = {key: dict(val) for key, val in results["tool_cnt"].items()}
 
         results["output"] = '\n'.join(output)
         results["apps"] = {}
@@ -567,3 +582,5 @@ if __name__ == "__main__":
 
     # print(result["old_apps"])
     # print(result["apps"])
+
+    

@@ -49,14 +49,15 @@ def main(args):
         system_prompt=toolbox.get_system_prompt() if toolbox else ""
     )
 
-    query = "Like Sharon Kennedy's last post in her moments. After you finish this task, output an '[END]' in the end."
+    query = "Buy one Nintendo Switch OLED in LightShop from Storage Spot. Then send the message 'Happy Birthday' to Dax."
+    query += "\nAfter you finish this task, output an '[END]' in the end."
     task = agent.process_query(
         query=query,
         max_turns=100,
         verbose=True,
         stop_tag="[END]",
         env={
-            "apps": ["LightTalk"],
+            "apps": ["LightTalk", "LightShop"],
             "seed": 42
         }
     )
@@ -70,7 +71,7 @@ def main(args):
             "query": query,
             "seed": 42,
             "level": 1,
-            "apps": ["LightTalk"],
+            "apps": ["LightTalk", "LishtShop"],
             "rollout": result["output"],
             "gt_env": json.dumps(gt_env)
         }

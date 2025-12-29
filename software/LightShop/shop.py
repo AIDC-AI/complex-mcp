@@ -277,18 +277,6 @@ class ShopSession:
 if __name__ == "__main__":
     shop_session = ShopSession(seed=42)
 
-    print(shop_session.list_all_shop_categories())
-    print(shop_session.list_all_shops_by_category("fashion"))
-    print(shop_session.get_shop_id_by_name("Sweater Spot"))
-    sid = "shop_MBWjFa7a2ECJuYy7EWiNbT"
-    tid = "item_HhNYNA9JnRvBEWqoZhxrii"
-    # print(shop_session.list_items(sid=sid))
-    print(shop_session.get_item_info(sid=sid, tid=tid))
-    print(shop_session.add_to_cart(sid=sid, tid=tid, cnt=14))
-    print(shop_session.get_item_info(sid=sid, tid=tid))
+    from pprint import pprint
 
-    print(shop_session.check_balance())
-    print(shop_session.checkout_all())
-    print(shop_session.check_balance())
-
-    print(shop_session.get_trans_history())
+    pprint(shop_session.get_session_dict())

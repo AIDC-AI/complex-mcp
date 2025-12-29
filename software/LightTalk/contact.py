@@ -121,7 +121,7 @@ class ContactSession:
         self.contacts_dict[self.my_uid] = Contact(
             name=self.my_name,
             gender=self.my_gender,
-            tag="Me",
+            tag="me",
             uid=self.my_uid,
             blocked=False
         )
@@ -777,7 +777,8 @@ class ContactSession:
     
     def get_session_dict(self):
         return {
-            uid: asdict(contact) for uid, contact in self.contacts_dict.items()
+            "contacts": {uid: asdict(contact) for uid, contact in self.contacts_dict.items()},
+            "groups": sorted(list(asdict(group) for group in self.groups), key=lambda x: x["name"])
         }
     
     @network_trouble()
@@ -1148,11 +1149,6 @@ class ContactSession:
 if __name__ == "__main__":
     contact_session = ContactSession(seed=42)
 
-    print(contact_session.ask_for_privilege())
-    print(contact_session.create_group_chat(uids=[]))
-    
-    print(contact_session.send_message_to_group(gid="group_Mtj3PjG4iZYVaYLUscsBYT", content="hello", at=[]))
+    from pprint import pprint
 
-    print(contact_session.get_group_chat_history(gid="group_Mtj3PjG4iZYVaYLUscsBYT"))
-
-    print(contact_session.list_all_groups())
+    pprint(contact_session.get_session_dict())

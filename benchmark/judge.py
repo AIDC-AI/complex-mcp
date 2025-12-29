@@ -13,13 +13,14 @@ def fuzzy_match(x: str, y: str):
 
 exclude_keys = {
     "timestamp",
-    "mid", "moid", "cid"
+    "mid", "moid", "cid",
+    "gid"
 }
 
 eq_methods = {
     "content": fuzzy_match
 }
-
+         
 def __at(arr: List[Any], idx: int):
     if not isinstance(arr, list):
         return None
@@ -49,6 +50,8 @@ def judge_env(
         key: str = ""
     ):
         nonlocal total, recall, misbehave
+        if key in exclude_keys:
+            return
         if isinstance(gt_env_item, list):
             length = max(
                 len(gt_env_item),
@@ -67,8 +70,8 @@ def judge_env(
         if isinstance(gt_env_item, dict):
             keys = set(
                 list(gt_env_item.keys()) + \
-                list(old_env_item.keys()) if isinstance(old_env_item, dict) else [] + \
-                list(new_env_item.keys()) if isinstance(new_env_item, dict) else []
+                (list(old_env_item.keys()) if isinstance(old_env_item, dict) else []) + \
+                (list(new_env_item.keys()) if isinstance(new_env_item, dict) else [])
             )
             for sub_key in keys:
                 dfs(

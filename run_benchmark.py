@@ -61,7 +61,8 @@ def main(args):
             }
         )
         
-        asyncio.run(task)
+        result = asyncio.run(task)
+        print(result["tool_cnt"])
 
         return
         
@@ -71,6 +72,7 @@ def main(args):
 
     avg_recall_rate = 0
     avg_misbehave_rate = 0
+    acc_cnt = 0
 
     for i in range(len(dataset)):
         data = dataset.iloc[i]
@@ -95,8 +97,9 @@ def main(args):
         old_env = result["old_apps"]
         new_env = result["apps"]
 
-        judge_result = judge_env(old_env, new_env, gt_env)
+        judge_result = judge_env(old_env, new_env, gt_env, verbose=True)
         print(judge_result)
+        acc_cnt += int(judge_result["recall"] == judge_result["total"] and judge_result["misbehave"] == 0)
         avg_recall_rate += judge_result["recall"] / judge_result["total"]
         avg_misbehave_rate += judge_result["misbehave"] / judge_result["total"]
 
@@ -106,6 +109,7 @@ def main(args):
     print(f"Model: {model}")
     print(f"\t\tavg. recall rate:\t{avg_recall_rate}")
     print(f"\t\tavg. misbehave rate:\t{avg_misbehave_rate}")
+    print(f"\t\taccuracy:\t{acc_cnt / len(dataset)}")
 
 if __name__ == "__main__":
     parser = ArgumentParser()
