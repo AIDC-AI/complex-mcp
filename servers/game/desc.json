@@ -1,0 +1,44 @@
+[
+    {
+        "tool_name": "get_steam_trending_games",
+        "description": "Fetches a list of trending games on the Steam platform with live data.",
+        "arguments": {},
+        "returns": { "type": "object", "description": "A list of currently trending Steam games with summary details." }
+    },
+    {
+        "tool_name": "get_steam_top_sellers",
+        "description": "Fetches a list of top selling games from Steam with live sales data.",
+        "arguments": {},
+        "returns": { "type": "object", "description": "A list of Steam's top selling games with sales information." }
+    },
+    {
+        "tool_name": "get_steam_most_played",
+        "description": "Fetches a list of most played games on Steam with live player statistics.",
+        "arguments": {},
+        "returns": { "type": "object", "description": "A list of the most played Steam games with real-time player count." }
+    },
+    {
+        "tool_name": "get_epic_free_games",
+        "description": "Fetches data on current and upcoming free games available in the Epic Games Store.",
+        "arguments": {},
+        "returns": { "type": "object", "description": "List of all free and promotional games on Epic Games Store." }
+    },
+    {
+        "tool_name": "get_epic_trending_games",
+        "description": "Fetches a list of trending games from the Epic Games Store.",
+        "arguments": {},
+        "returns": { "type": "object", "description": "A list of top trending games from the Epic Games Store." }
+    },
+    {
+        "tool_name": "get_all_trending_games",
+        "description": "Fetches a combined real-time list of trending games from Steam and Epic Games Store.",
+        "arguments": {},
+        "returns": { "type": "object", "description": "Consolidated list of trending games from multiple platforms including Steam and Epic." }
+    },
+    {
+        "tool_name": "get_api_health",
+        "description": "Checks the health and operational status of the Gaming Trend Analytics API.",
+        "arguments": {},
+        "returns": { "type": "object", "description": "API status and health check response." }
+    }
+]

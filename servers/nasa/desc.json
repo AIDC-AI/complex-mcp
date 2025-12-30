@@ -1,0 +1,258 @@
+[
+    {
+        "tool_name": "get_astronomy_picture_of_day",
+        "description": "Gets NASA's Astronomy Picture of the Day (APOD) for a specific date, or random pictures if count is specified.",
+        "arguments": {
+            "date": "string (optional, format: YYYY-MM-DD)",
+            "count": "integer (optional, returns 'count' random images)",
+            "thumbs": "boolean (optional, returns thumbnail if the APOD is a video)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "APOD image, video, or explanation content."
+        }
+    },
+    {
+        "tool_name": "get_asteroids_feed",
+        "description": "Gets a list of asteroids based on their closest approach date to Earth.",
+        "arguments": {
+            "start_date": "string (format: YYYY-MM-DD)",
+            "end_date": "string (optional, format: YYYY-MM-DD)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Asteroid list and close approach details."
+        }
+    },
+    {
+        "tool_name": "get_asteroid_lookup",
+        "description": "Looks up a specific asteroid's details using its NASA JPL ID.",
+        "arguments": {
+            "asteroid_id": "string (NASA JPL small body SPK-ID)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Detailed asteroid information."
+        }
+    },
+    {
+        "tool_name": "browse_asteroids",
+        "description": "Browse the NASA asteroid dataset.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "Asteroids list and data summary."
+        }
+    },
+    {
+        "tool_name": "get_coronal_mass_ejection",
+        "description": "Gets coronal mass ejection (CME) data from NASA.",
+        "arguments": {
+            "start_date": "string (optional, YYYY-MM-DD)",
+            "end_date": "string (optional, YYYY-MM-DD)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "CME events list and properties."
+        }
+    },
+    {
+        "tool_name": "get_geomagnetic_storm",
+        "description": "Gets geomagnetic storm (GST) data from NASA.",
+        "arguments": {
+            "start_date": "string (optional, YYYY-MM-DD)",
+            "end_date": "string (optional, YYYY-MM-DD)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Geomagnetic storm events and properties."
+        }
+    },
+    {
+        "tool_name": "get_solar_flare",
+        "description": "Gets solar flare (FLR) data from NASA.",
+        "arguments": {
+            "start_date": "string (optional, YYYY-MM-DD)",
+            "end_date": "string (optional, YYYY-MM-DD)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Solar flare events and details."
+        }
+    },
+    {
+        "tool_name": "get_solar_energetic_particle",
+        "description": "Gets solar energetic particle (SEP) event data from NASA.",
+        "arguments": {
+            "start_date": "string (optional, YYYY-MM-DD)",
+            "end_date": "string (optional, YYYY-MM-DD)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "SEP events and details."
+        }
+    },
+    {
+        "tool_name": "get_magnetopause_crossing",
+        "description": "Gets magnetopause crossing (MPC) event data from NASA.",
+        "arguments": {
+            "start_date": "string (optional, YYYY-MM-DD)",
+            "end_date": "string (optional, YYYY-MM-DD)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Magnetopause crossing events."
+        }
+    },
+    {
+        "tool_name": "get_radiation_belt_enhancement",
+        "description": "Gets radiation belt enhancement (RBE) event data from NASA.",
+        "arguments": {
+            "start_date": "string (optional, YYYY-MM-DD)",
+            "end_date": "string (optional, YYYY-MM-DD)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Radiation belt enhancement events."
+        }
+    },
+    {
+        "tool_name": "get_hight_speed_stream",
+        "description": "Gets high speed stream (HSS) data from NASA.",
+        "arguments": {
+            "start_date": "string (optional, YYYY-MM-DD)",
+            "end_date": "string (optional, YYYY-MM-DD)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "High speed stream events."
+        }
+    },
+    {
+        "tool_name": "get_wsa_enlil_simulation",
+        "description": "Gets WSA+Enlil solar wind propagation simulation data from NASA.",
+        "arguments": {
+            "start_date": "string (optional, YYYY-MM-DD)",
+            "end_date": "string (optional, YYYY-MM-DD)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "WSA+Enlil simulation data."
+        }
+    },
+    {
+        "tool_name": "get_notifications",
+        "description": "Gets DONKI notifications for NASA solar events or status updates.",
+        "arguments": {
+            "start_date": "string (optional, YYYY-MM-DD)",
+            "end_date": "string (optional, YYYY-MM-DD)",
+            "notification_type": "string (optional, 'all', 'FLR', 'SEP', 'CME', ...)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Notification details and event summaries."
+        }
+    },
+    {
+        "tool_name": "get_earth_imagery",
+        "description": "Gets Landsat 8 satellite Earth imagery for a specific coordinate and date.",
+        "arguments": {
+            "lat": "float (latitude)",
+            "lon": "float (longitude)",
+            "date": "string (optional, YYYY-MM-DD)",
+            "dim": "float (optional, in degrees, default: 0.025)",
+            "cloud_score": "boolean (optional, not supported)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Satellite image and properties."
+        }
+    },
+    {
+        "tool_name": "get_earth_assets",
+        "description": "Gets available Earth imagery assets for a location and date.",
+        "arguments": {
+            "lat": "float (latitude)",
+            "lon": "float (longitude)",
+            "date": "string (YYYY-MM-DD)",
+            "dim": "float (optional, in degrees, default: 0.025)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "List of available assets and links for the location/date."
+        }
+    },
+    {
+        "tool_name": "get_epic_imagery",
+        "description": "Gets images from NASA EPIC (Earth Polychromatic Imaging Camera) collection.",
+        "arguments": {
+            "collection": "string (optional, 'natural' or 'enhanced')"
+        },
+        "returns": {
+            "type": "object",
+            "description": "List of EPIC images."
+        }
+    },
+    {
+        "tool_name": "get_epic_imagery_by_date",
+        "description": "Gets NASA EPIC images from a specific date.",
+        "arguments": {
+            "date": "string (YYYY-MM-DD)",
+            "collection": "string (optional, 'natural' or 'enhanced')"
+        },
+        "returns": {
+            "type": "object",
+            "description": "EPIC images for date/collection."
+        }
+    },
+    {
+        "tool_name": "get_epic_dates",
+        "description": "Gets available dates for NASA EPIC images.",
+        "arguments": {
+            "collection": "string (optional, 'natural' or 'enhanced')"
+        },
+        "returns": {
+            "type": "object",
+            "description": "List of all available EPIC image dates."
+        }
+    },
+    {
+        "tool_name": "get_exoplanet_data",
+        "description": "Gets NASA Exoplanet Archive data based on query and table.",
+        "arguments": {
+            "query": "string (optional, Exoplanet Archive query syntax)",
+            "table": "string (optional, default: 'exoplanets')",
+            "format": "string (optional, default: 'json')"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Exoplanet data for the query."
+        }
+    },
+    {
+        "tool_name": "get_mars_rover_photos",
+        "description": "Gets photos from a specified Mars rover for a given sol or earth date.",
+        "arguments": {
+            "rover_name": "string (curiosity, opportunity, spirit)",
+            "sol": "integer (optional, Martian day)",
+            "earth_date": "string (optional, YYYY-MM-DD)",
+            "camera": "string (optional, camera code)",
+            "page": "integer (optional, page of results)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "List of Mars photos taken by the rover."
+        }
+    },
+    {
+        "tool_name": "get_mars_rover_manifest",
+        "description": "Gets the mission manifest (details/history/stats) for a NASA Mars rover.",
+        "arguments": {
+            "rover_name": "string (curiosity, opportunity, spirit)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Manifest details and photo statistics for the rover."
+        }
+    }
+]

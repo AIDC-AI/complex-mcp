@@ -1,0 +1,58 @@
+[
+    {
+        "tool_name": "whois_lookup",
+        "description": "Retrieves WHOIS registration details for a specified domain or IP address.",
+        "arguments": {
+            "target": { "type": "string", "description": "Domain name or IP address to query" }
+        },
+        "returns": { "type": "object", "description": "WHOIS output including registrar, registrant, registration dates, and contact details." }
+    },
+    {
+        "tool_name": "nmap_scan",
+        "description": "Performs network port scanning on a specified target using Nmap.",
+        "arguments": {
+            "target": { "type": "string", "description": "Domain or IP address to scan" }
+        },
+        "returns": { "type": "object", "description": "Open ports and network services detected, with version info where applicable." }
+    },
+    {
+        "tool_name": "dnsrecon_lookup",
+        "description": "Performs DNS reconnaissance and enumerates DNS records for a domain.",
+        "arguments": {
+            "target": { "type": "string", "description": "Domain name to query" }
+        },
+        "returns": { "type": "object", "description": "DNS records and DNS enumeration data (A, MX, NS, TXT, etc.)." }
+    },
+    {
+        "tool_name": "dnstwist_lookup",
+        "description": "Detects phishing and typo-squatting domains resembling the target domain name.",
+        "arguments": {
+            "domain": { "type": "string", "description": "Domain name to analyze" }
+        },
+        "returns": { "type": "object", "description": "List of detected similar/typo domains and status metadata." }
+    },
+    {
+        "tool_name": "dig_lookup",
+        "description": "Performs DNS lookup for a domain using the dig command.",
+        "arguments": {
+            "target": { "type": "string", "description": "Domain name or IP to check" }
+        },
+        "returns": { "type": "object", "description": "Detailed DNS query results including answer and authority sections." }
+    },
+    {
+        "tool_name": "host_lookup",
+        "description": "Performs a basic DNS host lookup for a domain or IP address.",
+        "arguments": {
+            "target": { "type": "string", "description": "Domain name or IP address" }
+        },
+        "returns": { "type": "object", "description": "IP resolution information and forward/reverse DNS results." }
+    },
+    {
+        "tool_name": "osint_overview",
+        "description": "Gathers a summary OSINT report for a specified target domain or IP.",
+        "arguments": {
+            "target": { "type": "string", "description": "Domain or IP address for OSINT summary" }
+        },
+        "returns": { "type": "object", "description": "Summary of domain/IP: WHOIS, DNS, open ports, and basic risk indicators." }
+    }
+]
