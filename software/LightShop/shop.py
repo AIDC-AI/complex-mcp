@@ -4,13 +4,22 @@ from collections import defaultdict
 import random
 import yaml
 
+import sys
 from pathlib import Path
+
+WORK_DIR = Path('.').__str__()
+if WORK_DIR not in sys.path:
+    sys.path.append(WORK_DIR)
+
+from software.utils.time import TimeMachine
+from software.utils.dist import lev_sim
 
 @dataclass
 class Item:
     tid: str
     name: str
     price: float
+    star: bool = field(default=False)
 
 @dataclass
 class Shop:
@@ -19,6 +28,7 @@ class Shop:
     category: str
     items: Dict[str, Item] = field(default_factory=dict)
     count: Dict[str, int] = field(default_factory=dict)
+    star: bool = field(default=False)
 
 @dataclass
 class CartItem:
@@ -29,6 +39,7 @@ class CartItem:
 
 @dataclass
 class Transaction:
+    timestamp: str
     trid: str
     total: float
     info: Dict[str, Dict[str, int]] = field(default_factory=dict) # {sid: {cid: cnt}}
@@ -37,15 +48,19 @@ class Transaction:
 class ShopSession:
     def __init__(self, seed: int):
         self.rng = random.Random(seed)
+        self.time_machine = TimeMachine(rng=self.rng)
         self.shops = self.init_shops()
 
         self.my_balance = self.rng.randint(8000, 100000)
         self.cart: List[CartItem] = []
         self.trans_history: List[Transaction] = []
 
+        self.my_starred_shops = set()
+        self.my_starred_items = set()
+
     def get_session_dict(self):
         shops = {sid: asdict(shop) for sid, shop in self.shops.items()}
-        cart = [asdict(item) for item in self.cart]
+        cart = sorted([asdict(item) for item in self.cart], key=lambda x: x["caid"])
         trans_history = [asdict(trans) for trans in self.trans_history]
 
         return {
@@ -118,7 +133,7 @@ class ShopSession:
             "output": sorted(shops_list)
         }
     
-    def get_shop(self, sid: str):
+    def __get_shop(self, sid: str):
         shop = self.shops.get(sid)
         if shop:
             return shop, None
@@ -140,7 +155,7 @@ class ShopSession:
         }
     
     def list_items(self, sid: str):
-        shop, err = self.get_shop(sid)
+        shop, err = self.__get_shop(sid)
         if err: return err
         items_list = [asdict(item) for item in shop.items.values()]
 
@@ -150,7 +165,7 @@ class ShopSession:
         }
     
     def add_to_cart(self, sid: str, tid: str, cnt: int):
-        shop, err = self.get_shop(sid)
+        shop, err = self.__get_shop(sid)
         if err: return err
 
         item = shop.items.get(tid)
@@ -198,7 +213,7 @@ class ShopSession:
         }
     
     def get_item_info(self, sid: str, tid: str):
-        shop, err = self.get_shop(sid)
+        shop, err = self.__get_shop(sid)
         if err: return err
 
         item = shop.items.get(tid)
@@ -253,6 +268,7 @@ class ShopSession:
 
         self.my_balance -= total_price
         trans = Transaction(
+            timestamp=self.time_machine.now(),
             trid=f"trans_{self.uuid()}",
             total=total_price,
             info=dict(info)
@@ -272,11 +288,282 @@ class ShopSession:
             "status": "ok",
             "output": [asdict(trans) for trans in self.trans_history]
         }
+    
+    def get_cart_summary(self):
+        summary = []
+        for cart_item in self.cart:
+            summary.append(asdict(cart_item))
+
+        return {
+            "status": "ok",
+            "output": summary
+        }
+    
+    def search_shops(self, shop_name: str):
+        results = []
+        for shop in self.shops.values():
+            if shop_name.lower() in shop.name.lower():
+                results.append(f"{shop.name} ({shop.sid})")
+        
+        return {
+            "status": "ok",
+            "results": results
+        }
+    
+    def fuzzy_search_shops(self, shop_name: str):
+        results = []
+        shop_name = shop_name.lower()
+        for shop in self.shops.values():
+            _shop_name = shop.name.lower()
+            if shop_name in _shop_name or lev_sim(_shop_name, shop_name) > 0.6:
+                results.append(f"{shop.name} ({shop.sid})")
+        
+        return {
+            "status": "ok",
+            "output": results
+        }
+
+    def search_items(self, item_name: str):
+        results = []
+        item_name = item_name.lower()
+
+        for shop in self.shops.values():
+            for item in shop.items.values():
+                if item_name in item.name.lower():
+                    results.append(
+                        {
+                            "tid": item.tid,
+                            "name": item.name,
+                            "price": item.price,
+                            "shop": shop.name
+                        }
+                    )
+        
+        return {
+            "status": "ok",
+            "output": results
+        }
+
+    def fuzzy_search_items(self, item_name: str):
+        results = []
+        item_name = item_name.lower()
+
+        for shop in self.shops.values():
+            for item in shop.items.values():
+                if item_name in item.name.lower() or lev_sim(item_name, item.name.lower()) > 0.6:
+                    results.append(
+                        {
+                            "tid": item.tid,
+                            "name": item.name,
+                            "price": item.price,
+                            "shop": shop.name
+                        }
+                    )
+        
+        return {
+            "status": "ok",
+            "output": results
+        }
+    
+    def search_items_in_shop(self, sid: str, item_name: str):
+        results = []
+        shop, err = self.__get_shop(sid)
+        if err: return err
+
+        item_name = item_name.lower()
+        for item in shop.items.values():
+            if item_name in item.name.lower():
+                results.append(
+                    {
+                        "tid": item.tid,
+                        "name": item.name,
+                        "price": item.price
+                    }
+                )
+        
+        return {
+            "status": "ok",
+            "output": results
+        }
+    
+    def fuzzy_search_items_in_shop(self, sid: str, item_name: str):
+        results = []
+        shop, err = self.__get_shop(sid)
+        if err: return err
+
+        item_name = item_name.lower()
+        for item in shop.items.values():
+            if item_name in item.name.lower() or lev_sim(item_name, item.name.lower()) > 0.6:
+                results.append(
+                    {
+                        "tid": item.tid,
+                        "name": item.name,
+                        "price": item.price
+                    }
+                )
+        
+        return {
+            "status": "ok",
+            "output": results
+        }
+    
+    def get_trans_info(self, trid: str):
+        for trans in self.trans_history:
+            if trans.trid == trid:
+                return {
+                    "status": "ok",
+                    "output": asdict(trans)
+                }
+        
+
+        return {
+            "status": "failed",
+            "output": f"Transaction with ID ({trid}) not found"
+        }
+    
+    def delete_trans_history(self, trid: str):
+        for i, trans in enumerate(self.trans_history):
+            if trans.trid == trid:
+                self.trans_history.pop(i)
+                return {
+                    "status": "ok",
+                    "output": f"You have successfully deleted one transaction history (TRID={trid})"
+                }
+        
+        return {
+            "status": "failed",
+            "output": f"Transaction history with TRID={trid} not found"
+        }
+
+    def star_shop(self, sid: str):
+        shop, err = self.__get_shop(sid)
+        if err: return err
+
+        if shop.star:
+            return {
+                "status": "failed",
+                "output": f"You have already starred the shop {shop.name} ({shop.sid})"
+            }
+        shop.star = True
+        self.my_starred_shops.add(shop.sid)
+
+        return {
+            "status": "ok",
+            "output": f"You have successfully starred the shop {shop.name} ({shop.sid})"
+        }
+
+    def unstar_shop(self, sid: str):
+        shop, err = self.__get_shop(sid)
+        if err: return err
+
+        if not shop.star:
+            return {
+                "status": "failed",
+                "output": f"The shop {shop.name} ({shop.sid}) is not starred."
+            }
+        shop.star = False
+        self.my_starred_shops.discard(shop.sid)
+
+        return {
+            "status": "ok",
+            "output": f"You have successfully unstarred the shop {shop.name} ({shop.sid})"
+        }
+
+    def star_item(self, sid: str, tid: str):
+        shop, err = self.__get_shop(sid)
+        if err: return err
+
+        item = shop.items.get(tid)
+        if item is None:
+            return {
+                "status": "failed",
+                "output": f"Item with ID {tid} not found in shop '{shop.name}' (ID: {shop.sid})."
+            }
+
+        if item.star:
+            return {
+                "status": "failed",
+                "output": f"You have already starred the item '{item.name}' (ID: {tid}) in shop '{shop.name}' (ID: {shop.sid})."
+            }
+        item.star = True
+        self.my_starred_items.add((sid, tid))
+
+        return {
+            "status": "ok",
+            "output": f"You have successfully starred the item '{item.name}' (ID: {tid}) in shop '{shop.name}' (ID: {shop.sid})."
+        }
+
+    def unstar_item(self, sid: str, tid: str):
+        shop, err = self.__get_shop(sid)
+        if err: return err
+
+        item = shop.items.get(tid)
+        if item is None:
+            return {
+                "status": "failed",
+                "output": f"Item with ID {tid} not found in shop '{shop.name}' (ID: {shop.sid})."
+            }
+
+        if not item.star:
+            return {
+                "status": "failed",
+                "output": f"The item '{item.name}' (ID: {tid}) in shop '{shop.name}' (ID: {shop.sid}) is not starred."
+            }
+        item.star = False
+        self.my_starred_items.discard((sid, tid))
+
+        return {
+            "status": "ok",
+            "output": f"You have successfully unstarred the item '{item.name}' (ID: {tid}) in shop '{shop.name}' (ID: {shop.sid})."
+        }
+    
+    def get_my_starred_shops(self):
+        starred_shops = []
+        for sid in self.my_starred_shops:
+            shop = self.shops[sid]
+            assert shop # TODO: delete
+            starred_shops.append(
+                {
+                    "sid": shop.sid,
+                    "shop_name": shop.name,
+                    "category": shop.category,
+                }
+            )
+        return {
+            "status": "ok",
+            "output": starred_shops
+        }
+
+    def get_my_starred_items(self):
+        starred_items = []
+        for sid, tid in self.my_starred_items:
+            shop = self.shops[sid]
+            assert shop # TODO: delete
+            item = shop.items[tid]
+            assert item # TODO: delete
+            starred_items.append(
+                {
+                    "sid": sid,
+                    "tid": tid,
+                    "item_name": item.name,
+                    "price": item.price
+                }
+            )
+
+        return {
+            "status": "failed",
+            "output": starred_items
+        }
 
 
 if __name__ == "__main__":
-    shop_session = ShopSession(seed=42)
+    shop_session = ShopSession(seed=4102)
 
     from pprint import pprint
 
-    pprint(shop_session.get_session_dict())
+    # pprint(shop_session.get_session_dict())
+
+    pprint(shop_session.fuzzy_search_items("orange"))
+    pprint(shop_session.get_shop_id_by_name("Melon Meadows"))
+    pprint(shop_session.star_item(sid="shop_CxuuYfVx7cv7ksFCVb97V9", tid="item_85NW6EUM7m7LmA2yb5vVBV"))
+    pprint(shop_session.get_my_starred_items())

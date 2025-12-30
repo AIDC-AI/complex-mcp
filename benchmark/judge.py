@@ -13,8 +13,8 @@ def fuzzy_match(x: str, y: str):
 
 exclude_keys = {
     "timestamp",
-    "mid", "moid", "cid",
-    "gid"
+    "mid", "moid", "cid", "gid",
+    "sid", "tid", "caid"
 }
 
 eq_methods = {

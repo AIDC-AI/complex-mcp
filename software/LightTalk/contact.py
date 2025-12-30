@@ -157,6 +157,8 @@ class ContactSession:
         
         self.groups: List[Group] = []
 
+        self.__network_acc = False
+
     def __get_contact(self, uid: str):
         contact = self.contacts_dict.get(uid)
         if contact is None:
@@ -182,7 +184,7 @@ class ContactSession:
     def network_trouble(prob: float = 0.05):
         def __network_trouble(func):
             def wrapper(self: 'ContactSession', *args, **kwargs):
-                if self.rng.uniform(0, 1) < prob:
+                if not self.__network_acc and self.rng.uniform(0, 1) < prob:
                     return {
                         "status": "internel error",
                         "output": "It appears there's a network issue, please try again."
@@ -1143,6 +1145,14 @@ class ContactSession:
         return {
             "status": "ok",
             "output": f"All messages in group chat (GID={gid}) has been marked as unread"
+        }
+    
+    def acc_network(self):
+        self.__network_acc = True
+
+        return {
+            "status": "ok",
+            "output": "You have successfully accelerated the network for the LightTalk app."
         }
 
 

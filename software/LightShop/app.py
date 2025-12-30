@@ -118,3 +118,109 @@ async def get_trans_history(session_id: str):
     if err: return err
 
     return session.shop_session.get_trans_history()
+
+# TODO
+@mcp.tool
+async def get_cart_summary(session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.get_cart_summary()
+
+@mcp.tool
+async def search_shops(shop_name: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.search_shops(shop_name)
+
+@mcp.tool
+async def fuzzy_search_shops(shop_name: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.fuzzy_search_shops(shop_name)
+
+@mcp.tool
+async def search_items(item_name: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.search_items(item_name)
+
+@mcp.tool
+async def fuzzy_search_items(item_name: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.fuzzy_search_items(item_name)
+
+@mcp.tool
+async def search_items_in_shop(sid: str, item_name: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.search_items_in_shop(sid, item_name)
+
+@mcp.tool
+async def fuzzy_search_items_in_shop(sid: str, item_name: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.fuzzy_search_items_in_shop(sid, item_name)
+
+@mcp.tool
+async def get_trans_info(trid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.get_trans_info(trid)
+
+@mcp.tool
+async def delete_trans_history(trid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.delete_trans_history(trid)
+
+@mcp.tool
+async def star_shop(sid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.star_shop(sid)
+
+@mcp.tool
+async def unstar_shop(sid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.unstar_shop(sid)
+
+@mcp.tool
+async def star_item(sid: str, tid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.star_item(sid, tid)
+
+@mcp.tool
+async def unstar_item(sid: str, tid: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.unstar_item(sid, tid)
+
+@mcp.tool
+async def get_starred_shops(session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.get_my_starred_shops()
+
+@mcp.tool
+async def get_my_starred_items(session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.get_my_starred_items()

@@ -130,5 +130,216 @@
             "type": "object",
             "description": "A dictionary containing status and output. On success, output is a list of shops in the given category, including their names and IDs; on failure (e.g., invalid category), output contains an error message."
         }
+    },
+    {
+        "tool_name": "get_cart_summary",
+        "description": "Retrieve a summary of the current shopping cart in LightShop, including total price and item counts.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes cart total, number of items, and list of cart entries; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "search_shops",
+        "description": "Search for shops in LightShop by exact or partial name match (case-insensitive).",
+        "arguments": {
+            "shop_name": {
+                "type": "string",
+                "description": "The shop name or partial name to search for."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of matching shops with names and IDs; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "fuzzy_search_shops",
+        "description": "Perform a fuzzy (approximate) search for shops in LightShop based on shop name.",
+        "arguments": {
+            "shop_name": {
+                "type": "string",
+                "description": "The shop name to perform fuzzy matching on (e.g., handles typos or similar spellings)."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a ranked list of potentially matching shops; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "search_items",
+        "description": "Search for items across all shops in LightShop by item name (exact or partial match).",
+        "arguments": {
+            "item_name": {
+                "type": "string",
+                "description": "The item name or keyword to search for."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of matching items with shop info, prices, and IDs; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "fuzzy_search_items",
+        "description": "Perform a fuzzy (approximate) search for items across all shops in LightShop by item name.",
+        "arguments": {
+            "item_name": {
+                "type": "string",
+                "description": "The item name to perform fuzzy matching on (e.g., tolerant to spelling errors)."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of likely matching items; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "search_items_in_shop",
+        "description": "Search for items within a specific shop in LightShop by item name (exact or partial match).",
+        "arguments": {
+            "sid": {
+                "type": "string",
+                "description": "The unique shop ID (SID) to search within."
+            },
+            "item_name": {
+                "type": "string",
+                "description": "The item name or keyword to search for in the specified shop."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of matching items from that shop; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "fuzzy_search_items_in_shop",
+        "description": "Perform a fuzzy search for items within a specific shop in LightShop by item name.",
+        "arguments": {
+            "sid": {
+                "type": "string",
+                "description": "The unique shop ID (SID) to search within."
+            },
+            "item_name": {
+                "type": "string",
+                "description": "The item name to perform fuzzy matching on inside the specified shop."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of likely matching items from that shop; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_trans_info",
+        "description": "Retrieve detailed information about a specific transaction in LightShop.",
+        "arguments": {
+            "trid": {
+                "type": "string",
+                "description": "The unique transaction ID (TRID) to look up."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes items purchased, total amount, timestamp, and status; on failure (e.g., invalid TRID), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "delete_trans_history",
+        "description": "Delete a specific transaction record from your transaction history in LightShop.",
+        "arguments": {
+            "trid": {
+                "type": "string",
+                "description": "The unique transaction ID (TRID) of the record to delete."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms deletion; on failure (e.g., transaction not found or not owned by you), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "star_shop",
+        "description": "Mark a shop as starred (favorited) in LightShop for quick access.",
+        "arguments": {
+            "sid": {
+                "type": "string",
+                "description": "The unique shop ID (SID) to star."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the shop was starred; on failure (e.g., already starred or invalid shop), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "unstar_shop",
+        "description": "Remove a shop from your starred (favorited) list in LightShop.",
+        "arguments": {
+            "sid": {
+                "type": "string",
+                "description": "The unique shop ID (SID) to unstar."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the shop was unstarred; on failure (e.g., not previously starred), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "star_item",
+        "description": "Mark a specific item as starred (favorited) in LightShop.",
+        "arguments": {
+            "sid": {
+                "type": "string",
+                "description": "The unique shop ID (SID) where the item is sold."
+            },
+            "tid": {
+                "type": "string",
+                "description": "The unique item ID (TID) to star."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the item was starred; on failure (e.g., already starred or invalid item), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "unstar_item",
+        "description": "Remove a specific item from your starred (favorited) list in LightShop.",
+        "arguments": {
+            "sid": {
+                "type": "string",
+                "description": "The unique shop ID (SID) where the item is sold."
+            },
+            "tid": {
+                "type": "string",
+                "description": "The unique item ID (TID) to unstar."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the item was unstarred; on failure (e.g., not previously starred), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_starred_shops",
+        "description": "Retrieve a list of all shops you have starred (favorited) in LightShop.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of starred shops with names and IDs; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_my_starred_items",
+        "description": "Retrieve a list of all items you have starred (favorited) in LightShop.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of starred items with shop info, names, and IDs; on failure, output contains an error message."
+        }
     }
 ]

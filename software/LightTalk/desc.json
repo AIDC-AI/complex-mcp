@@ -769,5 +769,14 @@
             "type": "object",
             "description": "A dictionary containing status and output. On success, output confirms the group was marked as unread; on failure, output contains an error message."
         }
+    },
+    {
+        "tool_name": "acc_network",
+        "description": "Optimize and accelerate the network connection for LightTalk to reduce latency and improve responsiveness.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms that network acceleration has been applied; on failure, output contains an error message (e.g., already optimized or network unavailable)."
+        }
     }
 ]
