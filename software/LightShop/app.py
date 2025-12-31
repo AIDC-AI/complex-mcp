@@ -224,3 +224,10 @@ async def get_my_starred_items(session_id: str):
     if err: return err
 
     return session.shop_session.get_my_starred_items()
+
+@mcp.tool
+async def wait_payment_password(session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.shop_session.wait_payment_password()

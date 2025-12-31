@@ -484,7 +484,7 @@
     },
     {
         "tool_name": "ask_for_privilege",
-        "description": "Request elevated privileges or special access permissions in LightTalk (e.g., for moderation, API access, or advanced features).",
+        "description": "Request elevated privileges or special access permissions in LightTalk (e.g., for deletion, moderation, API access, or advanced features).",
         "arguments": {},
         "returns": {
             "type": "object",

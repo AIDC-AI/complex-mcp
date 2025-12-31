@@ -64,7 +64,8 @@ class Toolbox:
     ):
         if key_name not in self.tools:
             return {
-                "error": f"This tool `{key_name}` doesn't exist."
+                "status": "error",
+                "output": f"This tool `{key_name}` doesn't exist."
             }
         if key_name == "retrieve_tools":
             try:
@@ -74,7 +75,8 @@ class Toolbox:
                 )
             except Exception as e:
                 return {
-                    "error": e.__str__()
+                    "status": "error",
+                    "output": e.__str__()
                 }
         tool = self.tools[key_name]
         tool_name = tool["tool_name"]
@@ -441,7 +443,8 @@ class AgentClient:
                 tool_calling_req = parse_tool(msg)
                 if tool_calling_req is None:
                     tool_resp = {
-                        "error": (
+                        "status": "error",
+                        "output": (
                             "Incorrect tool call format. (Not a json or missing key words)"
                             "Please provide 'name' and 'arguments' (If needed), e.g.: "
                             "{'name': 'tool_name', 'arguments': {'arg1': 'val1', 'arg2': 'val2', ...} }"
@@ -449,7 +452,8 @@ class AgentClient:
                     }
                 elif "name" not in tool_calling_req:
                     tool_resp = {
-                        "error": (
+                        "status": "error",
+                        "output": (
                             "Tool call format is missing required fields. "
                             "Please provide 'name' and 'arguments' (If needed), e.g.: "
                             "{'name': 'tool_name', 'arguments': {'arg1': 'val1', 'arg2': 'val2', ...} }"

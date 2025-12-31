@@ -341,5 +341,14 @@
             "type": "object",
             "description": "A dictionary containing status and output. On success, output is a list of starred items with shop info, names, and IDs; on failure, output contains an error message."
         }
+    },
+    {
+        "tool_name": "wait_payment_password",
+        "description": "Prompt the user to enter or verify their payment password in LightShop. This step is required before proceeding with checkout.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms that payment authentication is complete and checkout may proceed; on failure (e.g., user cancellation or timeout), output contains an error message."
+        }
     }
 ]

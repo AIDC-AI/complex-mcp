@@ -54,9 +54,12 @@ class ShopSession:
         self.my_balance = self.rng.randint(8000, 100000)
         self.cart: List[CartItem] = []
         self.trans_history: List[Transaction] = []
+        self.__mock_cart()
 
         self.my_starred_shops = set()
         self.my_starred_items = set()
+
+        self.enter_password = False
 
     def get_session_dict(self):
         shops = {sid: asdict(shop) for sid, shop in self.shops.items()}
@@ -107,6 +110,14 @@ class ShopSession:
                 shops[shop.sid] = shop
         
         return shops
+    
+    def __mock_cart(self):
+        if self.rng.uniform(0, 1) < 0.4:
+            return
+        shop: Shop = self.rng.choice(list(self.shops.values()))
+        items: List[Item] = self.rng.sample(list(shop.items.values()), k=self.rng.randint(1, 5))
+        for item in items:
+            self.add_to_cart(shop.sid, item.tid, cnt=1)
     
     def uuid(self):
         alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
@@ -200,7 +211,7 @@ class ShopSession:
         for i, cart_item in enumerate(self.cart):
             if cart_item.caid == caid:
                 shop = self.shops[cart_item.sid]
-                shop.items[cart_item.tid] += cart_item.count
+                shop.count[cart_item.tid] += cart_item.count
                 self.cart.pop(i)
                 return {
                     "status": "ok",
@@ -239,6 +250,13 @@ class ShopSession:
         }
 
     def checkout_all(self):
+        if not self.enter_password:
+            return {
+                "status": "failed",
+                "output": "This operation requires the user to enter their payment password first."
+            }
+        self.enter_password = False
+
         if len(self.cart) == 0:
             return {
                 "status": "failed",
@@ -554,6 +572,18 @@ class ShopSession:
             "status": "failed",
             "output": starred_items
         }
+    
+    def wait_payment_password(self):
+        if self.rng.uniform(0, 1) < 0.1:
+            return {
+                "status": "internal error",
+                "output": "Incorrect password, please try again."
+            }
+        self.enter_password = True
+        return {
+            "status": "ok",
+            "output": "The user has entered the correct payment password."
+        }
 
 
 if __name__ == "__main__":
@@ -561,9 +591,9 @@ if __name__ == "__main__":
 
     from pprint import pprint
 
-    # pprint(shop_session.get_session_dict())
+    pprint(shop_session.get_cart_summary())
 
-    pprint(shop_session.fuzzy_search_items("orange"))
-    pprint(shop_session.get_shop_id_by_name("Melon Meadows"))
-    pprint(shop_session.star_item(sid="shop_CxuuYfVx7cv7ksFCVb97V9", tid="item_85NW6EUM7m7LmA2yb5vVBV"))
-    pprint(shop_session.get_my_starred_items())
+    # pprint(shop_session.fuzzy_search_items("orange"))
+    # pprint(shop_session.get_shop_id_by_name("Melon Meadows"))
+    # pprint(shop_session.star_item(sid="shop_CxuuYfVx7cv7ksFCVb97V9", tid="item_85NW6EUM7m7LmA2yb5vVBV"))
+    # pprint(shop_session.get_my_starred_items())

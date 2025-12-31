@@ -76,9 +76,6 @@ class ContactSession:
         
         with open(corpus_path / "contact.yaml") as f:
             info = yaml.safe_load(f)
-        
-        with open(corpus_path / "moment.yaml") as f:
-            moments = yaml.safe_load(f)["moments"]
 
         n_contacts = self.rng.randint(5, 100)
 
@@ -127,6 +124,19 @@ class ContactSession:
         )
 
         # Generate moments of each contact
+        self.__mock_moments()        
+        self.__mock_chat_history()
+        
+        self.groups: List[Group] = []
+
+        self.__network_err_rate = self.rng.uniform(0.1, 0.5)
+        self.__network_acc = False
+
+       
+
+    def __mock_moments(self):
+        with open(corpus_path / "moment.yaml") as f:
+            moments = yaml.safe_load(f)["moments"]
         for contact in self.contacts_dict.values():
             moment_cnt = self.rng.choices([0, 1, 2, 3, 4, 5], weights=[0.5, 0.2, 0.1, 0.1, 0.05, 0.05])[0]
             contact_moments = self.draw_without_replacement(moments, min(moment_cnt, len(moments)))
@@ -154,10 +164,42 @@ class ContactSession:
                     )
                     moment.comments.append(comment)
                 contact.moments.append(moment)
-        
-        self.groups: List[Group] = []
 
-        self.__network_acc = False
+
+    def __mock_chat_history(self):
+        with open(corpus_path / "message.yaml") as f:
+            message_info = yaml.safe_load(f)
+        messages = message_info["messages"]
+        attacks = message_info["attacks"]
+
+        for contact in self.contacts_dict.values():
+            x = self.rng.uniform(0, 1)
+            if x < 0.1:
+                history = self.rng.choice(attacks)
+            elif x < 0.5:
+                history = self.rng.choice(messages)
+            else:
+                history = {"history": []}
+            base_timestamp = self.time_machine.gen(years=(2025, 2025))
+            for msg in history["history"]:
+                if msg["role"] == "A":
+                    send_uid = contact.uid
+                    receive_uid = self.my_uid
+                else:
+                    send_uid = self.my_uid
+                    receive_uid = contact.uid
+                _msg = Message(
+                    send_uid=send_uid,
+                    receive_uid=receive_uid,
+                    timestamp=self.time_machine.add_secs(base_timestamp, 10, 1000),
+                    content=msg["content"],
+                    mid=f"msg_{self.uuid()}"
+                )
+                contact.chat_history.append(_msg)
+                if self.rng.uniform(0, 1) < 0.5:
+                    contact.read_new_message = False                
+
+
 
     def __get_contact(self, uid: str):
         contact = self.contacts_dict.get(uid)
@@ -181,10 +223,10 @@ class ContactSession:
         return wrapper
     
     @staticmethod
-    def network_trouble(prob: float = 0.05):
+    def network_trouble():
         def __network_trouble(func):
             def wrapper(self: 'ContactSession', *args, **kwargs):
-                if not self.__network_acc and self.rng.uniform(0, 1) < prob:
+                if not self.__network_acc and self.rng.uniform(0, 1) < self.__network_err_rate:
                     return {
                         "status": "internel error",
                         "output": "It appears there's a network issue, please try again."
@@ -248,10 +290,11 @@ class ContactSession:
         name: str
     ) -> str:
         uid = self.uid_dict.get(name)
+        contact = self.contacts_dict[uid]
         if uid:
             return {
                 "status": "ok",
-                "output": uid
+                "output": uid + (" (blocked)" if contact.blocked else "")
             }
         else:
             return {
@@ -259,7 +302,7 @@ class ContactSession:
                 "output": f"Contact {name} not found"
             }
 
-    @network_trouble(prob=0.1)
+    @network_trouble()
     def send_message(
         self,
         uid: str,
@@ -942,7 +985,7 @@ class ContactSession:
             "output": f"You have successfully created a group (GID={group.gid})"
         }
     
-    @network_trouble(prob=0.2)
+    @network_trouble()
     def send_message_to_group(self, gid: str, content: str, at: List[str] | str):
         group, err = self.__get_group(gid)
         if err: return err

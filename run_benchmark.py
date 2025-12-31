@@ -102,8 +102,8 @@ def main(args):
         judge_result = judge_env(old_env, new_env, gt_env, verbose=True)
         print(judge_result)
         acc_cnt += int(judge_result["recall"] == judge_result["total"] and judge_result["misbehave"] == 0)
-        avg_recall_rate += judge_result["recall"] / judge_result["total"]
-        avg_misbehave_rate += judge_result["misbehave"] / judge_result["total"]
+        avg_recall_rate += judge_result["recall"] / (judge_result["total"]) if judge_result["total"] else (judge_result["recall"] == 0)
+        avg_misbehave_rate += judge_result["misbehave"] / judge_result["total"] if judge_result["total"] else (judge_result["misbehave"])
         for tool_cnt_info in tool_cnt.values():
             avg_valid_tc += tool_cnt_info.get("ok", 0)
             avg_invalid_tc += tool_cnt_info.get("failed", 0)
