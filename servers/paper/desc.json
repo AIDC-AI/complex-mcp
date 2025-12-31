@@ -1,0 +1,175 @@
+[
+    {
+        "tool_name": "search_arxiv",
+        "description": "Searches academic papers from arXiv.",
+        "arguments": {
+            "query": { "type": "string", "description": "Search query string, e.g., 'machine learning'." },
+            "max_results": { "type": "integer", "description": "Maximum number of papers to return (optional, default: 10)." }
+        },
+        "returns": { "type": "array", "description": "List of paper metadata in dictionary format." }
+    },
+    {
+        "tool_name": "download_arxiv",
+        "description": "Downloads the PDF of an arXiv paper.",
+        "arguments": {
+            "paper_id": { "type": "string", "description": "arXiv paper ID, e.g., '2106.12345'." },
+            "save_path": { "type": "string", "description": "Directory to save the PDF (optional, default: './downloads')." }
+        },
+        "returns": { "type": "string", "description": "Path to the downloaded PDF file." }
+    },
+    {
+        "tool_name": "read_arxiv_paper",
+        "description": "Reads and extracts text content from an arXiv paper PDF.",
+        "arguments": {
+            "paper_id": { "type": "string", "description": "arXiv paper ID, e.g., '2106.12345'." },
+            "save_path": { "type": "string", "description": "Directory where the PDF is/will be saved (optional, default: './downloads')." }
+        },
+        "returns": { "type": "string", "description": "The extracted text content of the paper." }
+    },
+    {
+        "tool_name": "search_pubmed",
+        "description": "Searches academic papers from PubMed.",
+        "arguments": {
+            "query": { "type": "string", "description": "Search query string, e.g., 'machine learning'." },
+            "max_results": { "type": "integer", "description": "Maximum number of papers to return (optional, default: 10)." }
+        },
+        "returns": { "type": "array", "description": "List of paper metadata in dictionary format." }
+    },
+    {
+        "tool_name": "download_pubmed",
+        "description": "Attempts to download PDF of a PubMed paper (direct download not supported).",
+        "arguments": {
+            "paper_id": { "type": "string", "description": "PubMed ID (PMID)." },
+            "save_path": { "type": "string", "description": "Directory to save the PDF (optional, default: './downloads')." }
+        },
+        "returns": { "type": "string", "description": "Message indicating that direct PDF download is not supported." }
+    },
+    {
+        "tool_name": "read_pubmed_paper",
+        "description": "Attempts to read and extract text content from a PubMed paper (direct reading not supported).",
+        "arguments": {
+            "paper_id": { "type": "string", "description": "PubMed ID (PMID)." },
+            "save_path": { "type": "string", "description": "Directory where the PDF would be saved (unused)." }
+        },
+        "returns": { "type": "string", "description": "Message indicating that direct paper reading is not supported." }
+    },
+    {
+        "tool_name": "search_biorxiv",
+        "description": "Searches academic papers from bioRxiv.",
+        "arguments": {
+            "query": { "type": "string", "description": "Search query string, e.g., 'machine learning'." },
+            "max_results": { "type": "integer", "description": "Maximum number of papers to return (optional, default: 10)." }
+        },
+        "returns": { "type": "array", "description": "List of paper metadata in dictionary format." }
+    },
+    {
+        "tool_name": "download_biorxiv",
+        "description": "Downloads the PDF of a bioRxiv paper.",
+        "arguments": {
+            "paper_id": { "type": "string", "description": "bioRxiv DOI." },
+            "save_path": { "type": "string", "description": "Directory to save the PDF (optional, default: './downloads')." }
+        },
+        "returns": { "type": "string", "description": "Path to the downloaded PDF file." }
+    },
+    {
+        "tool_name": "read_biorxiv_paper",
+        "description": "Reads and extracts text content from a bioRxiv paper PDF.",
+        "arguments": {
+            "paper_id": { "type": "string", "description": "bioRxiv DOI." },
+            "save_path": { "type": "string", "description": "Directory where the PDF is/will be saved (optional, default: './downloads')." }
+        },
+        "returns": { "type": "string", "description": "The extracted text content of the paper." }
+    },
+    {
+        "tool_name": "search_medrxiv",
+        "description": "Searches academic papers from medRxiv.",
+        "arguments": {
+            "query": { "type": "string", "description": "Search query string, e.g., 'machine learning'." },
+            "max_results": { "type": "integer", "description": "Maximum number of papers to return (optional, default: 10)." }
+        },
+        "returns": { "type": "array", "description": "List of paper metadata in dictionary format." }
+    },
+    {
+        "tool_name": "download_medrxiv",
+        "description": "Downloads the PDF of a medRxiv paper.",
+        "arguments": {
+            "paper_id": { "type": "string", "description": "medRxiv DOI." },
+            "save_path": { "type": "string", "description": "Directory to save the PDF (optional, default: './downloads')." }
+        },
+        "returns": { "type": "string", "description": "Path to the downloaded PDF file." }
+    },
+    {
+        "tool_name": "read_medrxiv_paper",
+        "description": "Reads and extracts text content from a medRxiv paper PDF.",
+        "arguments": {
+            "paper_id": { "type": "string", "description": "medRxiv DOI." },
+            "save_path": { "type": "string", "description": "Directory where the PDF is/will be saved (optional, default: './downloads')." }
+        },
+        "returns": { "type": "string", "description": "The extracted text content of the paper." }
+    },
+    {
+        "tool_name": "search_iacr",
+        "description": "Searches academic papers from IACR ePrint Archive.",
+        "arguments": {
+            "query": { "type": "string", "description": "Search query string, e.g., 'cryptography', 'secret sharing'." },
+            "max_results": { "type": "integer", "description": "Maximum number of papers to return (optional, default: 10)." },
+            "fetch_details": { "type": "boolean", "description": "Whether to fetch detailed information for each paper (optional, default: true)." }
+        },
+        "returns": { "type": "array", "description": "List of paper metadata in dictionary format." }
+    },
+    {
+        "tool_name": "download_iacr",
+        "description": "Downloads the PDF of an IACR ePrint paper.",
+        "arguments": {
+            "paper_id": { "type": "string", "description": "IACR paper ID, e.g., '2009/101'." },
+            "save_path": { "type": "string", "description": "Directory to save the PDF (optional, default: './downloads')." }
+        },
+        "returns": { "type": "string", "description": "Path to the downloaded PDF file." }
+    },
+    {
+        "tool_name": "read_iacr_paper",
+        "description": "Reads and extracts text content from an IACR ePrint paper PDF.",
+        "arguments": {
+            "paper_id": { "type": "string", "description": "IACR paper ID, e.g., '2009/101'." },
+            "save_path": { "type": "string", "description": "Directory where the PDF is/will be saved (optional, default: './downloads')." }
+        },
+        "returns": { "type": "string", "description": "The extracted text content of the paper." }
+    },
+    {
+        "tool_name": "search_google_scholar",
+        "description": "Searches academic papers from Google Scholar.",
+        "arguments": {
+            "query": { "type": "string", "description": "Search query string, e.g., 'machine learning'." },
+            "max_results": { "type": "integer", "description": "Maximum number of papers to return (optional, default: 10)." }
+        },
+        "returns": { "type": "array", "description": "List of paper metadata in dictionary format." }
+    },
+    {
+        "tool_name": "search_semantic",
+        "description": "Searches academic papers from Semantic Scholar.",
+        "arguments": {
+            "query": { "type": "string", "description": "Search query string, e.g., 'machine learning'." },
+            "year": { "type": "string", "description": "Optional year filter (e.g., '2019', '2016-2020', '2010-', '-2015')." },
+            "max_results": { "type": "integer", "description": "Maximum number of papers to return (optional, default: 10)." }
+        },
+        "returns": { "type": "array", "description": "List of paper metadata in dictionary format." }
+    },
+    {
+        "tool_name": "download_semantic",
+        "description": "Downloads PDF of a Semantic Scholar paper.",
+        "arguments": {
+            "paper_id": { "type": "string", "description": "Semantic Scholar paper ID or related identifier (e.g., Semantic Scholar ID, DOI, ARXIV, ACL, PMID, PMCID, MAG, URL)." },
+            "save_path": { "type": "string", "description": "Directory to save the PDF (optional, default: './downloads')." }
+        },
+        "returns": { "type": "string", "description": "Path to the downloaded PDF file." }
+    },
+    {
+        "tool_name": "read_semantic_paper",
+        "description": "Reads and extracts text content from a Semantic Scholar paper PDF.",
+        "arguments": {
+            "paper_id": { "type": "string", "description": "Semantic Scholar paper ID or related identifier (e.g., Semantic Scholar ID, DOI, ARXIV, ACL, PMID, PMCID, MAG, URL)." },
+            "save_path": { "type": "string", "description": "Directory where the PDF is/will be saved (optional, default: './downloads')." }
+        },
+        "returns": { "type": "string", "description": "The extracted text content of the paper." }
+    }
+]

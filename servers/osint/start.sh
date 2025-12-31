@@ -1,0 +1,1 @@
+fastmcp run app.py --transport http --port $1

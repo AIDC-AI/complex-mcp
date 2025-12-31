@@ -1,0 +1,309 @@
+[
+    {
+        "tool_name": "create_tensor",
+        "description": "Create a NumPy tensor (matrix) with a specified shape and values.",
+        "arguments": {
+            "shape": "list[int] (Shape of the array, e.g., [2, 3])",
+            "values": "list[float] (Flat list of values to populate the array)",
+            "name": "string (Name to store the tensor under)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "A NumPy array with the specified shape and values."
+        }
+    },
+    {
+        "tool_name": "view_tensor",
+        "description": "View an immutable copy of a stored tensor by name.",
+        "arguments": {
+            "name": "string (Stored tensor name)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "The NumPy tensor as stored."
+        }
+    },
+    {
+        "tool_name": "delete_tensor",
+        "description": "Delete a tensor from memory by name.",
+        "arguments": {
+            "name": "string (Stored tensor name to delete)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Confirmation of deletion or an error if not found."
+        }
+    },
+    {
+        "tool_name": "add_matrices",
+        "description": "Element-wise addition of two stored tensors.",
+        "arguments": {
+            "name_a": "string (First tensor name)",
+            "name_b": "string (Second tensor name)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Resulting tensor after addition."
+        }
+    },
+    {
+        "tool_name": "subtract_matrices",
+        "description": "Element-wise subtraction of two stored tensors: name_a - name_b.",
+        "arguments": {
+            "name_a": "string (First tensor name)",
+            "name_b": "string (Second tensor name)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Resulting tensor after subtraction."
+        }
+    },
+    {
+        "tool_name": "multiply_matrices",
+        "description": "Matrix multiplication of two stored tensors.",
+        "arguments": {
+            "name_a": "string (First tensor name)",
+            "name_b": "string (Second tensor name)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Resulting tensor after matrix multiplication."
+        }
+    },
+    {
+        "tool_name": "scale_matrix",
+        "description": "Scale a stored tensor by a scalar factor.",
+        "arguments": {
+            "name": "string (Tensor name to scale)",
+            "scale_factor": "float (Scaling factor)",
+            "in_place": "bool (Whether to update the tensor in memory, default true)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Scaled tensor."
+        }
+    },
+    {
+        "tool_name": "matrix_inverse",
+        "description": "Compute the inverse of a stored square matrix.",
+        "arguments": {
+            "name": "string (Tensor name to invert)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Inverted matrix, if invertible."
+        }
+    },
+    {
+        "tool_name": "transpose",
+        "description": "Compute the transpose of a stored tensor.",
+        "arguments": {
+            "name": "string (Tensor name to transpose)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Transposed tensor."
+        }
+    },
+    {
+        "tool_name": "determinant",
+        "description": "Compute the determinant of a stored square matrix.",
+        "arguments": {
+            "name": "string (Matrix name)"
+        },
+        "returns": {
+            "type": "float",
+            "description": "Determinant value."
+        }
+    },
+    {
+        "tool_name": "rank",
+        "description": "Compute the rank of a stored tensor.",
+        "arguments": {
+            "name": "string (Tensor name)"
+        },
+        "returns": {
+            "type": "integer or list of integers",
+            "description": "Rank value or shape rank information."
+        }
+    },
+    {
+        "tool_name": "compute_eigen",
+        "description": "Compute eigenvalues and right eigenvectors of a stored square matrix.",
+        "arguments": {
+            "name": "string (Matrix name)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Dictionary with 'eigenvalues' and 'eigenvectors'."
+        }
+    },
+    {
+        "tool_name": "qr_decompose",
+        "description": "Compute the QR decomposition of a stored matrix.",
+        "arguments": {
+            "name": "string (Matrix name)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Dictionary with Q (orthogonal) and R (upper-triangular) matrices."
+        }
+    },
+    {
+        "tool_name": "svd_decompose",
+        "description": "Compute the Singular Value Decomposition (SVD) of a stored matrix.",
+        "arguments": {
+            "name": "string (Matrix name)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Dictionary with U, S (singular values), and V^T matrices."
+        }
+    },
+    {
+        "tool_name": "find_orthonormal_basis",
+        "description": "Find an orthonormal basis for the column space using QR decomposition.",
+        "arguments": {
+            "name": "string (Matrix name)"
+        },
+        "returns": {
+            "type": "list[list[float]]",
+            "description": "List of orthonormal basis vectors."
+        }
+    },
+    {
+        "tool_name": "change_basis",
+        "description": "Change the basis of a stored square matrix.",
+        "arguments": {
+            "name": "string (Matrix name)",
+            "new_basis": "list[list[float]] (Columns as new basis vectors)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Matrix representation in the new basis."
+        }
+    },
+    {
+        "tool_name": "vector_project",
+        "description": "Project a stored vector onto another vector.",
+        "arguments": {
+            "name": "string (Stored vector name)",
+            "new_vector": "list[float] (Vector to project onto)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Resulting projection vector."
+        }
+    },
+    {
+        "tool_name": "vector_dot_product",
+        "description": "Compute the dot product between two stored vectors.",
+        "arguments": {
+            "name_a": "string (First vector name)",
+            "name_b": "string (Second vector name)"
+        },
+        "returns": {
+            "type": "float",
+            "description": "Scalar result of dot product."
+        }
+    },
+    {
+        "tool_name": "vector_cross_product",
+        "description": "Compute the cross product of two stored vectors.",
+        "arguments": {
+            "name_a": "string (First vector name)",
+            "name_b": "string (Second vector name)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Resulting cross product vector."
+        }
+    },
+    {
+        "tool_name": "gradient",
+        "description": "Compute the symbolic gradient of a scalar function.",
+        "arguments": {
+            "f_str": "string (Expression, e.g., 'x**2 + y*z')"
+        },
+        "returns": {
+            "type": "string",
+            "description": "Symbolic gradient vector."
+        }
+    },
+    {
+        "tool_name": "curl",
+        "description": "Compute the symbolic curl of a vector field, optionally at a point.",
+        "arguments": {
+            "f_str": "string (Vector field expression)",
+            "point": "list[float], optional (Coordinates to evaluate numerically)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Symbolic curl and optionally the evaluated vector."
+        }
+    },
+    {
+        "tool_name": "divergence",
+        "description": "Compute the symbolic divergence of a vector field, optionally at a point.",
+        "arguments": {
+            "f_str": "string (Vector field expression)",
+            "point": "list[float], optional (Coordinates to evaluate numerically)"
+        },
+        "returns": {
+            "type": "object",
+            "description": "Symbolic divergence and optionally evaluated scalar."
+        }
+    },
+    {
+        "tool_name": "laplacian",
+        "description": "Compute the Laplacian symbolically for scalar or vector fields.",
+        "arguments": {
+            "f_str": "string (Expression for scalar or vector field)",
+            "is_vector": "bool, optional (Whether field is vector)"
+        },
+        "returns": {
+            "type": "string",
+            "description": "Symbolic Laplacian result (scalar or vector list)."
+        }
+    },
+    {
+        "tool_name": "directional_deriv",
+        "description": "Compute the symbolic directional derivative of a scalar field along a vector.",
+        "arguments": {
+            "f_str": "string (Scalar field expression)",
+            "u": "list[float] (Direction vector)",
+            "unit": "bool, optional (Normalize direction, default true)"
+        },
+        "returns": {
+            "type": "string",
+            "description": "Symbolic result of the directional derivative."
+        }
+    },
+    {
+        "tool_name": "plot_vector_field",
+        "description": "Plot a 3D vector field from a symbolic expression.",
+        "arguments": {
+            "f_str": "string (Vector field as '[u(x,y,z), v(x,y,z), w(x,y,z)]')",
+            "bounds": "list[float], optional (Plot bounds)",
+            "n": "int, optional (Grid resolution)"
+        },
+        "returns": {
+            "type": "image (PNG)",
+            "description": "3D quiver plot image of the vector field."
+        }
+    },
+    {
+        "tool_name": "plot_function",
+        "description": "Plot a 2D or 3D function from an expression string.",
+        "arguments": {
+            "expr_str": "string (Function of x or x, y)",
+            "xlim": "list[float], optional (X-axis limits)",
+            "ylim": "list[float], optional (Y-axis limits, for 3D)",
+            "grid": "int, optional (Resolution)"
+        },
+        "returns": {
+            "type": "image (PNG)",
+            "description": "2D line plot or 3D surface plot image."
+        }
+    }
+]
