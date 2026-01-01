@@ -9,8 +9,9 @@ from shortuuid import uuid
 #     sys.path.append(WORK_DIR)
 
 from shop import ShopSession
+from typing import Dict
 
 class LightShopSession:
-    def __init__(self, seed: int):
+    def __init__(self, seed: int, os_cfg: Dict[str, str]):
         self.session_id = f"session_{uuid()}"
-        self.shop_session = ShopSession(seed=seed)
+        self.shop_session = ShopSession(seed=seed, os_cfg=os_cfg)

@@ -342,7 +342,6 @@ class HumanAnnotator(ChatBackend):
         return result
 
 
-
 class AgentClient:
     def __init__(
         self,
@@ -354,6 +353,67 @@ class AgentClient:
         self.toolbox = toolbox
         self.system_prompt = system_prompt
     
+    async def __login(self, env: Dict[str, Any], session_id_dict: Dict[str, Any], results: Dict[str, Any]):
+        if len(env["apps"]) > 0:
+            system_app = "LightSystem"
+            login_info = await self.toolbox.call_with_server(
+                server_name=system_app,
+                tool_name="login",
+                arguments={
+                    "seed": env["seed"]
+                }
+            )
+            login_info: Dict[str, Any] = json.loads(login_info)
+            session_info = login_info.pop("session_info")
+            results["old_apps"][system_app] = session_info
+            logger.info(f"Logged into the app {system_app}: {login_info}")
+            session_id_dict[system_app] = login_info["session_id"]
+            system_url = self.toolbox.servers[system_app]["url"]
+            for app in env["apps"]:
+                if app in self.toolbox.servers:
+                    server = self.toolbox.servers[app]
+                    assert server["need_session"]
+                    login_info = await self.toolbox.call_with_server(
+                        server_name=app,
+                        tool_name="login",
+                        arguments={
+                            "seed": env["seed"],
+                            "os_cfg": {
+                                "session_id": session_id_dict[system_app],
+                                "url": system_url
+                            }
+                        }
+                    )
+                    
+                    login_info: Dict[str, Any] = json.loads(login_info)
+                    session_info = login_info.pop("session_info")
+                    results["old_apps"][app] = session_info
+
+                    logger.info(f"Logged into the app {app} : {login_info}")
+
+                    session_id = login_info["session_id"]
+                    session_id_dict[app] = session_id
+                else:
+                    raise RuntimeError(f"The app `{app}` has not been registered yet.")
+            env["apps"] = [system_app] + env["apps"]
+        
+    async def __logout(self, env: Dict[str, Any], session_id_dict: Dict[str, Any], results: Dict[str, Any]):
+        for app in env["apps"]:
+            if app in self.toolbox.servers:
+                server = self.toolbox.servers[app]
+                assert server["need_session"]
+                session_id = session_id_dict[app]
+                env_info = await self.toolbox.call_with_server(
+                    server_name=app,
+                    tool_name="logout",
+                    arguments={
+                        "session_id": session_id
+                    }
+                )
+                results["apps"][app] = json.loads(env_info)
+            else:
+                raise RuntimeError(f"The app `{app}` has not been registered yet.")
+
     async def process_query(
         self,
         query: str,
@@ -372,144 +432,113 @@ class AgentClient:
         results = {}
 
         results["old_apps"] = {}
+        results["apps"] = {}
         results["tool_cnt"] = defaultdict(lambda: defaultdict(int))
 
-        # Login
-        for app in env["apps"]:
-            if app in self.toolbox.servers:
-                server = self.toolbox.servers[app]
-                assert server["need_session"]
-                login_info = await self.toolbox.call_with_server(
-                    server_name=app,
-                    tool_name="login",
-                    arguments={
-                        "seed": env["seed"]
-                    }
-                )
-                
-                login_info = json.loads(login_info)
-                session_info = login_info.pop("session_info")
-                results["old_apps"][app] = session_info
+        try:
+            await self.__login(
+                env=env,
+                session_id_dict=session_id_dict,
+                results=results
+            )
 
-                logger.info(f"Logged into the app {app} : {login_info}")
-
-                session_id = login_info["session_id"]
-                session_id_dict[app] = session_id
-
-
-            else:
-                raise RuntimeError(f"The app `{app}` has not been registered yet.")
-
-        system_prompt = self.system_prompt
-        if self.toolbox:
-            extra_body["stop"] = TOOL_STOP_SEQ
-            if self.toolbox.method == "rag":
-                system_prompt = system_prompt.replace(
-                    "${CHOSEN_TOOLS}",
-                    "\n".join(map(lambda x: f"- {x}", self.toolbox.retrieve_tools(query=query)))
-                )
-            print(f"Tool number: {len(self.toolbox.tools)}")
-        if system_prompt:
-            messages.append({
-                "role": "system",
-                "content": system_prompt
-            })
-        messages.append({
-            "role": "user",
-            "content": query
-        })
-
-        for _ in range(max_turns):
-            resp = await self.llm.chat(messages)
-            msg: str = resp.choices[0].message.content
-
-            if self.toolbox and resp.choices[0].finish_reason == "stop" and \
-                TOOL_START_SEQ in msg and TOOL_STOP_SEQ not in msg:
-                msg += TOOL_STOP_SEQ
-            
-            if TOOL_STOP_SEQ in msg:
-                msg = msg[: msg.find(TOOL_STOP_SEQ) + len(TOOL_STOP_SEQ)]
-            
-            if verbose:
-                print(msg)
-
-            output.append(msg)
-            messages.append({
-                "role": "assistant",
-                "content": msg
-            })
-            
-            if msg.endswith(TOOL_STOP_SEQ) and self.toolbox:
-                tool_calling_req = parse_tool(msg)
-                if tool_calling_req is None:
-                    tool_resp = {
-                        "status": "error",
-                        "output": (
-                            "Incorrect tool call format. (Not a json or missing key words)"
-                            "Please provide 'name' and 'arguments' (If needed), e.g.: "
-                            "{'name': 'tool_name', 'arguments': {'arg1': 'val1', 'arg2': 'val2', ...} }"
-                        )
-                    }
-                elif "name" not in tool_calling_req:
-                    tool_resp = {
-                        "status": "error",
-                        "output": (
-                            "Tool call format is missing required fields. "
-                            "Please provide 'name' and 'arguments' (If needed), e.g.: "
-                            "{'name': 'tool_name', 'arguments': {'arg1': 'val1', 'arg2': 'val2', ...} }"
-                        )
-                    }
-                else:
-                    tool_name = tool_calling_req["name"]
-                    arguments = tool_calling_req.get("arguments", {})
-                    tool_resp = (await self.toolbox.call(
-                        tool_name,
-                        arguments,
-                        session_id_dict=session_id_dict
-                    )).__str__()
-                    try:
-                        tool_resp_dict = json.loads(tool_resp)
-                        status = tool_resp_dict["status"]
-                    except Exception as e:
-                        print(e) # TODO: delete
-                        status = "internel error"
-                    results["tool_cnt"][tool_name][status] += 1
-
-                format_tool_resp = f"<response>\n{tool_resp}\n</response>"
-
-                if verbose:
-                    print(format_tool_resp)
-
-                output.append(format_tool_resp)
+            system_prompt = self.system_prompt
+            if self.toolbox:
+                extra_body["stop"] = TOOL_STOP_SEQ
+                if self.toolbox.method == "rag":
+                    system_prompt = system_prompt.replace(
+                        "${CHOSEN_TOOLS}",
+                        "\n".join(map(lambda x: f"- {x}", self.toolbox.retrieve_tools(query=query)))
+                    )
+                print(f"Tool number: {len(self.toolbox.tools)}")
+            if system_prompt:
                 messages.append({
-                    "role": "user",
-                    "content": format_tool_resp
+                    "role": "system",
+                    "content": system_prompt
                 })
-            else:
-                if stop_tag and msg.strip().endswith(stop_tag):
-                    break # quit
-        
-        results["tool_cnt"] = {key: dict(val) for key, val in results["tool_cnt"].items()}
+            messages.append({
+                "role": "user",
+                "content": query
+            })
 
-        results["output"] = '\n'.join(output)
-        results["apps"] = {}
+            for _ in range(max_turns):
+                resp = await self.llm.chat(messages)
+                msg: str = resp.choices[0].message.content
 
-        # Logout
-        for app in env["apps"]:
-            if app in self.toolbox.servers:
-                server = self.toolbox.servers[app]
-                assert server["need_session"]
-                session_id = session_id_dict[app]
-                env_info = await self.toolbox.call_with_server(
-                    server_name=app,
-                    tool_name="logout",
-                    arguments={
-                        "session_id": session_id
-                    }
-                )
-                results["apps"][app] = json.loads(env_info)
-            else:
-                raise RuntimeError(f"The app `{app}` has not been registered yet.")
+                if self.toolbox and resp.choices[0].finish_reason == "stop" and \
+                    TOOL_START_SEQ in msg and TOOL_STOP_SEQ not in msg:
+                    msg += TOOL_STOP_SEQ
+                
+                if TOOL_STOP_SEQ in msg:
+                    msg = msg[: msg.find(TOOL_STOP_SEQ) + len(TOOL_STOP_SEQ)]
+                
+                if verbose:
+                    print(msg)
+
+                output.append(msg)
+                messages.append({
+                    "role": "assistant",
+                    "content": msg
+                })
+                
+                if msg.endswith(TOOL_STOP_SEQ) and self.toolbox:
+                    tool_calling_req = parse_tool(msg)
+                    if tool_calling_req is None:
+                        tool_resp = {
+                            "status": "error",
+                            "output": (
+                                "Incorrect tool call format. (Not a json or missing key words)"
+                                "Please provide 'name' and 'arguments' (If needed), e.g.: "
+                                "{'name': 'tool_name', 'arguments': {'arg1': 'val1', 'arg2': 'val2', ...} }"
+                            )
+                        }
+                    elif "name" not in tool_calling_req:
+                        tool_resp = {
+                            "status": "error",
+                            "output": (
+                                "Tool call format is missing required fields. "
+                                "Please provide 'name' and 'arguments' (If needed), e.g.: "
+                                "{'name': 'tool_name', 'arguments': {'arg1': 'val1', 'arg2': 'val2', ...} }"
+                            )
+                        }
+                    else:
+                        tool_name = tool_calling_req["name"]
+                        arguments = tool_calling_req.get("arguments", {})
+                        tool_resp = (await self.toolbox.call(
+                            tool_name,
+                            arguments,
+                            session_id_dict=session_id_dict
+                        )).__str__()
+                        try:
+                            tool_resp_dict = json.loads(tool_resp)
+                            status = tool_resp_dict["status"]
+                        except Exception as e:
+                            print(e) # TODO: delete
+                            status = "unknown"
+                        results["tool_cnt"][tool_name][status] += 1
+
+                    format_tool_resp = f"<response>\n{tool_resp}\n</response>"
+
+                    if verbose:
+                        print(format_tool_resp)
+
+                    output.append(format_tool_resp)
+                    messages.append({
+                        "role": "user",
+                        "content": format_tool_resp
+                    })
+                else:
+                    if stop_tag and msg.strip().endswith(stop_tag):
+                        break # quit
+            
+            results["tool_cnt"] = {key: dict(val) for key, val in results["tool_cnt"].items()}
+            results["output"] = '\n'.join(output)
+        finally:
+            await self.__logout(
+                env=env,
+                session_id_dict=session_id_dict,
+                results=results
+            )
 
         return results
 

@@ -1,0 +1,11 @@
+[
+    {
+        "tool_name": "now",
+        "description": "Get the current time",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a timestamp; on failure, output contains an error message."
+        }
+    }
+]

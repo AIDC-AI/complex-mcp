@@ -1,0 +1,19 @@
+servers:
+  - name: LightSystem
+    url: http://127.0.0.1:9000/mcp
+    desc: software/LightSystem/desc.json
+    use_sandbox: true
+    use: true
+
+  - name: LightTalk
+    url: http://127.0.0.1:8080/mcp
+    desc: software/LightTalk/desc.json
+    use_sandbox: true
+    use: true
+
+  - name: LightShop
+    url: http://127.0.0.1:8088/mcp
+    desc: software/LightShop/desc.json
+    use_sandbox: true
+    use: true
+

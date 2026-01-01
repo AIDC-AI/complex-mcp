@@ -23,8 +23,8 @@ def get_session(session_id: str):
     return session, None
 
 @mcp.tool
-async def login(seed: int):
-    session = LightShopSession(seed=seed)
+async def login(seed: int, os_cfg: Dict[str, str]):
+    session = LightShopSession(seed=seed, os_cfg=os_cfg)
     session_dict[session.session_id] = session
     logger.info(f"A new user logged in! [{session.session_id}]")
     return {

@@ -29,18 +29,6 @@ class TimeMachine:
         
         return new_dt.strftime("%Y-%m-%d %H:%M:%S")
 
-    def now(self):
-        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    def step(self):
-        return self.now()
-
 
 if __name__ == "__main__":
     time_machine = TimeMachine(random.Random(42))
-
-    print(time_machine.step())
-    print(time_machine.step())
-    print(time_machine.step())
-    print(time_machine.step())
-    print(time_machine.step())

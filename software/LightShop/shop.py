@@ -44,11 +44,16 @@ class Transaction:
     total: float
     info: Dict[str, Dict[str, int]] = field(default_factory=dict) # {sid: {cid: cnt}}
 
+from software.utils.core import OSConnector
 
 class ShopSession:
-    def __init__(self, seed: int):
+    def __init__(self, seed: int, os_cfg: Dict[str, str]):
         self.rng = random.Random(seed)
         self.time_machine = TimeMachine(rng=self.rng)
+        self.os = OSConnector(
+            session_id=os_cfg["session_id"],
+            url=os_cfg["url"]
+        )
         self.shops = self.init_shops()
 
         self.my_balance = self.rng.randint(8000, 100000)
@@ -286,7 +291,7 @@ class ShopSession:
 
         self.my_balance -= total_price
         trans = Transaction(
-            timestamp=self.time_machine.now(),
+            timestamp=self.os.step(),
             trid=f"trans_{self.uuid()}",
             total=total_price,
             info=dict(info)

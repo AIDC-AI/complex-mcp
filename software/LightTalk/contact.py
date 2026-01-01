@@ -62,13 +62,15 @@ if WORK_DIR not in sys.path:
     sys.path.append(WORK_DIR.__str__())
 
 from software.utils.time import TimeMachine
+from software.utils.core import OSConnector
 
 corpus_path = Path("software") / "LightTalk" / "corpus"
 
 class ContactSession:
-    def __init__(self, seed: int):
+    def __init__(self, seed: int, connector: OSConnector):
         self.rng = random.Random(seed)
-        self.time_machine = TimeMachine(self.rng)
+        self.os = connector
+        self.time_machine = TimeMachine(rng=self.rng)
 
         self.contacts_dict: Dict[str, Contact] = {}
         self.uid_dict = {}
@@ -132,7 +134,6 @@ class ContactSession:
         self.__network_err_rate = self.rng.uniform(0.1, 0.5)
         self.__network_acc = False
 
-       
 
     def __mock_moments(self):
         with open(corpus_path / "moment.yaml") as f:
@@ -311,7 +312,7 @@ class ContactSession:
         msg = Message(
             send_uid=self.my_uid,
             receive_uid=uid,
-            timestamp=self.time_machine.step(),
+            timestamp=self.os.step(),
             content=content,
             mid=f"msg_{self.uuid()}"
         )
@@ -561,7 +562,7 @@ class ContactSession:
                 send_uid=self.my_uid,
                 receive_moid=moid,
                 content=content,
-                timestamp=self.time_machine.step()
+                timestamp=self.os.step()
             )
             moment.comments.append(comment)
             return {
@@ -681,7 +682,7 @@ class ContactSession:
             send_uid=self.my_uid,
             receive_moid=moid,
             content=content,
-            timestamp=self.time_machine.step()
+            timestamp=self.os.step()
         )
 
         parent_comment.comments.append(new_reply)
@@ -844,7 +845,7 @@ class ContactSession:
             owner_uid=self.my_uid,
             content=content,
             img_urls=img_urls,
-            timestamp=self.time_machine.step(),
+            timestamp=self.os.step(),
             ip=self.my_ip
         )
 
@@ -1004,7 +1005,7 @@ class ContactSession:
         message = Message(
             send_uid=self.my_uid,
             receive_uid=receive_uid,
-            timestamp=self.time_machine.step(),
+            timestamp=self.os.step(),
             content=content,
             mid=f"msg_{self.uuid()}"
         )
@@ -1200,7 +1201,11 @@ class ContactSession:
 
 
 if __name__ == "__main__":
-    contact_session = ContactSession(seed=42)
+    connector = OSConnector(
+        session_id="session_6H8SWvjiHiErn3cWZjtLkV",
+        url="http://127.0.0.1:9000/mcp"
+    )
+    contact_session = ContactSession(seed=42, connector=connector)
 
     from pprint import pprint
 
