@@ -6,14 +6,31 @@ servers:
     use: true
 
   - name: LightTalk
-    url: http://127.0.0.1:8080/mcp
+    url: http://127.0.0.1:9001/mcp
     desc: software/LightTalk/desc.json
     use_sandbox: true
     use: true
 
   - name: LightShop
-    url: http://127.0.0.1:8088/mcp
+    url: http://127.0.0.1:9002/mcp
     desc: software/LightShop/desc.json
     use_sandbox: true
     use: true
+  
+  - name: LightWeather
+    url: http://127.0.0.1:9003/mcp
+    desc: software/LightWeather/desc.json
+    use_sandbox: true
+    use: true
 
+  - name: LightFlight
+    url: http://127.0.0.1:9004/mcp
+    desc: software/LightFlight/desc.json
+    use_sandbox: true
+    use: true
+
+  - name: LightStock
+    url: http://127.0.0.1:9005/mcp
+    desc: software/LightStock/desc.json
+    use_sandbox: true
+    use: true

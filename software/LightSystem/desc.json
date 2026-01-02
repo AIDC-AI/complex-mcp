@@ -7,5 +7,14 @@
             "type": "object",
             "description": "A dictionary containing status and output. On success, output is a timestamp; on failure, output contains an error message."
         }
+    },
+    {
+        "tool_name": "health",
+        "description": "Check if this LightSystem is work",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output."
+        }
     }
 ]

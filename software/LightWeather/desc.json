@@ -1,0 +1,149 @@
+[
+	{
+		"tool_name": "list_cities",
+		"description": "List available mock cities supported by LightWeather.",
+		"arguments": {},
+		"returns": {"type": "object", "description": "status + list of city names"}
+	},
+	{
+		"tool_name": "get_current_weather",
+		"description": "Get a mocked current weather observation for a city.",
+		"arguments": {
+			"location": {"type": "string", "description": "City name"}
+		},
+		"returns": {"type": "object", "description": "status + current weather object"}
+	},
+	{
+		"tool_name": "get_forecast",
+		"description": "Get a multi-day mock forecast for a city.",
+		"arguments": {
+			"location": {"type": "string", "description": "City name"},
+			"days": {"type": "integer", "description": "Number of days to forecast"}
+		},
+		"returns": {"type": "object", "description": "status + list of daily forecasts"}
+	},
+	{
+		"tool_name": "get_hourly_forecast",
+		"description": "Get an hourly mock forecast for a city.",
+		"arguments": {
+			"location": {"type": "string", "description": "City name"},
+			"hours": {"type": "integer", "description": "Number of hours to forecast"}
+		},
+		"returns": {"type": "object", "description": "status + list of hourly forecasts"}
+	},
+	{
+		"tool_name": "list_stations",
+		"description": "List available mock weather stations.",
+		"arguments": {},
+		"returns": {"type": "object", "description": "status + station list"}
+	},
+	{
+		"tool_name": "get_station_info",
+		"description": "Get metadata for a specific station.",
+		"arguments": {"station_id": {"type": "string", "description": "Station identifier"}},
+		"returns": {"type": "object", "description": "status + station info"}
+	},
+	{
+		"tool_name": "get_station_observation",
+		"description": "Get the latest mocked observation from a station.",
+		"arguments": {"station_id": {"type": "string", "description": "Station identifier"}},
+		"returns": {"type": "object", "description": "status + observation"}
+	},
+	{
+		"tool_name": "get_historical_weather",
+		"description": "Fetch mocked historical weather records for a location and period.",
+		"arguments": {"location": {"type": "string"}, "start": {"type": "string"}, "end": {"type": "string"}},
+		"returns": {"type": "object", "description": "status + list of historical records"}
+	},
+	{
+		"tool_name": "get_weather_alerts",
+		"description": "Return active alerts for a location.",
+		"arguments": {"location": {"type": "string"}},
+		"returns": {"type": "object", "description": "status + list of alerts"}
+	},
+	{
+		"tool_name": "create_alert",
+		"description": "Create a simple alert for a location and condition.",
+		"arguments": {"location": {"type": "string"}, "condition": {"type": "string"}, "threshold": {"type": "number"}},
+		"returns": {"type": "object", "description": "status + created alert"}
+	},
+	{
+		"tool_name": "delete_alert",
+		"description": "Delete an existing alert by id.",
+		"arguments": {"alert_id": {"type": "string"}},
+		"returns": {"type": "object", "description": "status + message"}
+	},
+	{
+		"tool_name": "list_alerts",
+		"description": "List all created alerts for the session.",
+		"arguments": {},
+		"returns": {"type": "object", "description": "status + list of alerts"}
+	},
+	{
+		"tool_name": "get_uv_index",
+		"description": "Get a mocked UV index for a location.",
+		"arguments": {"location": {"type": "string"}},
+		"returns": {"type": "object", "description": "status + UV value and level"}
+	},
+	{
+		"tool_name": "get_air_quality",
+		"description": "Get a mocked air quality index for a location.",
+		"arguments": {"location": {"type": "string"}},
+		"returns": {"type": "object", "description": "status + AQI and category"}
+	},
+	{
+		"tool_name": "get_sun_times",
+		"description": "Return mocked sunrise and sunset times for a date and location.",
+		"arguments": {"location": {"type": "string"}, "date": {"type": "string"}},
+		"returns": {"type": "object", "description": "status + sunrise/sunset times"}
+	},
+	{
+		"tool_name": "convert_temperature",
+		"description": "Convert temperature between C/F/K.",
+		"arguments": {"value": {"type": "number"}, "from_unit": {"type": "string"}, "to_unit": {"type": "string"}},
+		"returns": {"type": "object", "description": "status + converted numeric value"}
+	},
+	{
+		"tool_name": "estimate_travel_weather",
+		"description": "Estimate weather along a route (list of city names).",
+		"arguments": {"route": {"type": "array", "description": "List of location names"}},
+		"returns": {"type": "object", "description": "status + per-location weather"}
+	},
+	{
+		"tool_name": "compare_climate",
+		"description": "Return a simple climate comparison between two locations.",
+		"arguments": {"location1": {"type": "string"}, "location2": {"type": "string"}},
+		"returns": {"type": "object", "description": "status + differences in avg temp and rainfall"}
+	},
+	{
+		"tool_name": "get_precip_probability",
+		"description": "Return per-hour precipitation probabilities for the next N hours.",
+		"arguments": {"location": {"type": "string"}, "next_hours": {"type": "integer"}},
+		"returns": {"type": "object", "description": "status + hourly probabilities"}
+	},
+	{
+		"tool_name": "get_wind_forecast",
+		"description": "Return a mocked wind forecast for a location.",
+		"arguments": {"location": {"type": "string"}, "hours": {"type": "integer"}},
+		"returns": {"type": "object", "description": "status + wind forecast list"}
+	},
+	{
+		"tool_name": "get_climate_summary",
+		"description": "Return a mock climate summary for a given year and location.",
+		"arguments": {"location": {"type": "string"}, "year": {"type": "integer"}},
+		"returns": {"type": "object", "description": "status + climate summary"}
+	},
+	{
+		"tool_name": "set_primary_location",
+		"description": "Set a preferred primary location for the session.",
+		"arguments": {"location": {"type": "string"}},
+		"returns": {"type": "object", "description": "status + message"}
+	},
+	{
+		"tool_name": "get_primary_location",
+		"description": "Get the session's primary location, if set.",
+		"arguments": {},
+		"returns": {"type": "object", "description": "status + primary location or null"}
+	}
+]
+

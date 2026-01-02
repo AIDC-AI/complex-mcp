@@ -1,0 +1,83 @@
+conditions:
+  - id: sunny
+    name: Sunny
+    description: "Clear sky with abundant sunshine. Little to no cloud cover."
+  - id: partly_cloudy
+    name: Partly Cloudy
+    description: "Sun mixed with clouds. Mild temperatures and light breeze."
+  - id: cloudy
+    name: Cloudy
+    description: "Overcast skies, limited sunshine. Cooler temperatures."
+  - id: rain
+    name: Rain
+    description: "Precipitation in the form of rain. Intensity ranges from drizzle to heavy showers."
+  - id: thunderstorm
+    name: Thunderstorm
+    description: "Thunderstorms with lightning, heavy rain, gusty winds, and possible hail."
+  - id: snow
+    name: Snow
+    description: "Snowfall with varying accumulation rates depending on temperature and humidity."
+
+advisories:
+  - id: heat_warning
+    title: "Heat Advisory"
+    content: "High temperatures expected. Stay hydrated and avoid strenuous outdoor activities."
+  - id: flood_warning
+    title: "Flood Warning"
+    content: "Heavy rain may cause flooding in low-lying areas. Avoid driving through flooded roads."
+  - id: wind_warning
+    title: "High Wind Warning"
+    content: "Strong gusts expected. Secure loose objects and be cautious of falling debris."
+  - id: snow_warning
+    title: "Snow Advisory"
+    content: "Accumulating snow expected. Road conditions may deteriorate."
+
+cities:
+  - name: San Francisco
+    coords: [37.7749, -122.4194]
+    tz: PST
+  - name: New York
+    coords: [40.7128, -74.0060]
+    tz: EST
+  - name: London
+    coords: [51.5074, -0.1278]
+    tz: GMT
+  - name: Tokyo
+    coords: [35.6895, 139.6917]
+    tz: JST
+  - name: Sydney
+    coords: [-33.8688, 151.2093]
+    tz: AEST
+
+stations:
+  - id: st_sf_1
+    name: SF Downtown Station
+    city: San Francisco
+  - id: st_ny_1
+    name: NYC Central Station
+    city: New York
+  - id: st_ldn_1
+    name: London Bridge Station
+    city: London
+
+climate_samples:
+  - city: San Francisco
+    avg_temp: 15
+    rainfall_mm: 600
+  - city: New York
+    avg_temp: 12
+    rainfall_mm: 1200
+  - city: London
+    avg_temp: 11
+    rainfall_mm: 800
+  - city: Tokyo
+    avg_temp: 16
+    rainfall_mm: 1500
+  - city: Sydney
+    avg_temp: 20
+    rainfall_mm: 1000
+
+descriptions:
+  uv_low: "Low UV index — safe for most people."
+  uv_medium: "Moderate UV index — wear sunscreen if outside for long periods."
+  uv_high: "High UV index — protection against sun damage is recommended."

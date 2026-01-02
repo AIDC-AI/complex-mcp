@@ -45,7 +45,7 @@ def main(args):
     )
 
     if custom:
-        apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop"}]
+        apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop", "LightWeather", "LightFlight", "LightStock"}]
 
         seed = int(input("> seed: "))
         query = f"{input('> instruct: ')}\nAfter you finish the task, output an [END] in the final."

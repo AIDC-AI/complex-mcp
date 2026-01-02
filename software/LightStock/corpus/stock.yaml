@@ -1,0 +1,49 @@
+markets:
+  - code: NASDAQ
+    name: NASDAQ
+  - code: NYSE
+    name: NYSE
+  - code: OTC
+    name: OTC Markets
+
+companies:
+  - symbol: AAPL
+    name: Apple Inc.
+    sector: Technology
+  - symbol: MSFT
+    name: Microsoft Corp.
+    sector: Technology
+  - symbol: GOOGL
+    name: Alphabet Inc.
+    sector: Communication
+  - symbol: AMZN
+    name: Amazon.com Inc.
+    sector: Consumer Discretionary
+  - symbol: TSLA
+    name: Tesla Inc.
+    sector: Automotive
+  - symbol: JPM
+    name: JPMorgan Chase & Co.
+    sector: Financials
+
+sample_news:
+  - symbol: AAPL
+    headlines:
+      - "Apple releases new product line"
+  - symbol: TSLA
+    headlines:
+      - "Tesla posts record deliveries"
+
+analyst_ratings:
+  - symbol: AAPL
+    rating: Buy
+    target: 180
+  - symbol: MSFT
+    rating: Hold
+    target: 310
+
+dividends:
+  - symbol: AAPL
+    yield_pct: 0.6
+  - symbol: MSFT
+    yield_pct: 0.8
