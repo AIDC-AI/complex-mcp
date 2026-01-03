@@ -10,13 +10,20 @@ WORK_DIR = Path('.').__str__()
 if WORK_DIR not in sys.path:
     sys.path.append(WORK_DIR)
 
+import random
+from typing import Dict, List, Any
+from pathlib import Path
+import yaml
+
 from software.utils.core import OSConnector
 from software.utils.time import TimeMachine
+from datetime import datetime, timedelta
 
 CORPUS_PATH = Path("software") / "LightStock" / "corpus"
 
 
 class StockSession:
+    """Deterministic StockSession: build price series and snapshots at init; later calls read/update state deterministically."""
     def __init__(self, seed: int, os_cfg: Dict[str, str]):
         self.rng = random.Random(seed)
         self.os = OSConnector(session_id=os_cfg["session_id"], url=os_cfg["url"])
@@ -37,12 +44,43 @@ class StockSession:
         self.cash = round(self.rng.uniform(1000, 100000), 2)
         self.alerts: Dict[str, Dict[str, Any]] = {}
 
+        # price series and orderbook snapshots per symbol
+        self._price_series: Dict[str, List[float]] = {}
+        self._order_books: Dict[str, Dict[str, Any]] = {}
+        self._price_dates: Dict[str, List[str]] = {}
+        for sym in self.companies.keys():
+            base = round(self.rng.uniform(20, 500), 2)
+            series = [round(base * (1 + self.rng.uniform(-0.05, 0.05)), 2)]
+            # generate 60 days
+            for _ in range(59):
+                last = series[-1]
+                series.append(round(max(1.0, last * (1 + self.rng.uniform(-0.03, 0.03))), 2))
+            # generate deterministic, evenly-spaced daily timestamps ending at now
+            now_str = self.os.now()
+            now_dt = datetime.fromisoformat(now_str)
+            n = len(series)
+            # oldest first, last date aligns to current date (day precision)
+            dates = [
+                (now_dt.date() - timedelta(days=(n - 1 - i))).isoformat()
+                for i in range(n)
+            ]
+            self._price_series[sym] = series
+            self._price_dates[sym] = dates
+            bids = [[round(series[-1] * (1 - i*0.001), 2), self.rng.randint(10,500)] for i in range(5)]
+            asks = [[round(series[-1] * (1 + i*0.001), 2), self.rng.randint(10,500)] for i in range(5)]
+            self._order_books[sym] = {"bids": bids, "asks": asks}
+
     def uuid(self) -> str:
         alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
         return ''.join(self.rng.choices(alphabet, k=12))
 
     def get_session_dict(self):
-        return {"portfolio": self.portfolio, "orders": self.orders, "watchlist": self.watchlist, "cash": self.cash}
+        return {
+            "portfolio": list(self.portfolio.values()),
+            "orders": list(self.orders.values()),
+            "watchlist": self.watchlist,
+            "cash": self.cash
+        }
 
     def list_markets(self) -> Dict[str, Any]:
         return {"status": "ok", "output": list(self.markets.values())}
@@ -51,31 +89,34 @@ class StockSession:
         return {"status": "ok", "output": list(self.companies.values())}
 
     def get_quote(self, symbol: str) -> Dict[str, Any]:
-        c = self.companies.get(symbol)
-        if not c:
+        if symbol not in self._price_series:
             return {"status": "failed", "output": "Symbol not found"}
-        price = round(self.rng.uniform(5, 3500), 2)
-        change = round(self.rng.uniform(-5, 5), 2)
+        price = self._price_series[symbol][-1]
+        prev = self._price_series[symbol][-2] if len(self._price_series[symbol]) > 1 else price
+        change = round(price - prev, 2)
         return {"status": "ok", "output": {"symbol": symbol, "price": price, "change": change}}
 
     def get_historical(self, symbol: str, days: int = 30) -> Dict[str, Any]:
-        if symbol not in self.companies:
+        if symbol not in self._price_series:
             return {"status": "failed", "output": "Symbol not found"}
+        series = self._price_series[symbol][-days:]
+        dates = self._price_dates.get(symbol, [])[-days:]
         data = []
-        for d in range(days):
-            data.append({"date": self.time_machine.gen(), "close": round(self.rng.uniform(5, 3500),2)})
+        for d, p in zip(dates, series):
+            data.append({"date": d, "close": p})
         return {"status": "ok", "output": data}
 
     def place_order(self, symbol: str, side: str, qty: int, price: float | None = None) -> Dict[str, Any]:
-        if symbol not in self.companies:
+        if symbol not in self._price_series:
             return {"status": "failed", "output": "Symbol not found"}
-        cost = (price or round(self.rng.uniform(5, 3500),2)) * qty
+        market_price = self._price_series[symbol][-1]
+        exec_price = price if price is not None else market_price
+        cost = exec_price * qty
         if side.lower() == "buy" and cost > self.cash:
             return {"status": "failed", "output": "Insufficient cash"}
         oid = f"order_{self.uuid()}"
-        order = {"order_id": oid, "symbol": symbol, "side": side, "qty": qty, "price": price or None, "status": "filled"}
+        order = {"order_id": oid, "symbol": symbol, "side": side, "qty": qty, "price": exec_price, "status": "filled"}
         self.orders[oid] = order
-        # Update portfolio and cash
         if side.lower() == "buy":
             self.portfolio[symbol] = self.portfolio.get(symbol, 0) + qty
             self.cash -= cost
@@ -104,10 +145,12 @@ class StockSession:
 
     def get_portfolio(self) -> Dict[str, Any]:
         total_value = 0
+        positions = {}
         for s, qty in self.portfolio.items():
-            price = round(self.rng.uniform(5, 3500),2)
+            price = self._price_series.get(s, [0])[-1]
+            positions[s] = {"qty": qty, "price": price}
             total_value += price * qty
-        return {"status": "ok", "output": {"positions": self.portfolio, "cash": self.cash, "est_value": round(total_value + self.cash,2)}}
+        return {"status": "ok", "output": {"positions": positions, "cash": self.cash, "est_value": round(total_value + self.cash,2)}}
 
     def deposit_funds(self, amount: float) -> Dict[str, Any]:
         self.cash += amount
@@ -126,7 +169,7 @@ class StockSession:
         return {"status": "ok", "output": c}
 
     def search_stocks(self, keyword: str) -> Dict[str, Any]:
-        results = [c for c in self.companies.keys() if keyword.upper() in c or keyword.lower() in self.companies[c]["name"].lower()]
+        results = [sym for sym, info in self.companies.items() if keyword.upper() in sym or keyword.lower() in info["name"].lower()]
         return {"status": "ok", "output": results}
 
     def get_watchlist(self) -> Dict[str, Any]:
@@ -181,16 +224,19 @@ class StockSession:
         return {"status": "ok", "output": history}
 
     def get_market_status(self) -> Dict[str, Any]:
-        return {"status": "ok", "output": {"open": True, "server_time": self.time_machine.gen()}}
+        return {"status": "ok", "output": {"open": True, "server_time": self.os.now()}}
 
     def simulate_trade(self, symbol: str, side: str, qty: int) -> Dict[str, Any]:
-        price = round(self.rng.uniform(5,3500),2)
+        if symbol not in self._price_series:
+            return {"status": "failed", "output": "Symbol not found"}
+        price = self._price_series[symbol][-1]
         return {"status": "ok", "output": {"symbol": symbol, "side": side, "qty": qty, "sim_price": price}}
 
     def get_order_book(self, symbol: str) -> Dict[str, Any]:
-        bids = [[round(self.rng.uniform(5,3500),2), self.rng.randint(1,1000)] for _ in range(5)]
-        asks = [[round(self.rng.uniform(5,3500),2), self.rng.randint(1,1000)] for _ in range(5)]
-        return {"status": "ok", "output": {"bids": bids, "asks": asks}}
+        ob = self._order_books.get(symbol)
+        if not ob:
+            return {"status": "failed", "output": "Symbol not found"}
+        return {"status": "ok", "output": ob}
 
     def health(self) -> Dict[str, Any]:
         return {"status": "ok", "output": "ok"}

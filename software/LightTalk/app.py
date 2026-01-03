@@ -169,11 +169,11 @@ async def comment_moment(uid: str, moid: str, content: str, session_id: str):
     return session.contact_session.comment_moment(uid, moid, content)
 
 @mcp.tool
-async def comment_comment(uid: str, moid: str, content: str, session_id: str):
+async def comment_comment(uid: str, moid: str, cid: str, content: str, session_id: str):
     session, err = get_session(session_id)
     if err: return err
 
-    return session.contact_session.comment_comment(uid, moid, content)
+    return session.contact_session.comment_comment(uid=uid, moid=moid, cid=cid, content=content)
 
 @mcp.tool
 async def list_all_tags(session_id: str):

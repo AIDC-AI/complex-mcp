@@ -1,10 +1,9 @@
 import random
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any
 from pathlib import Path
 import yaml
-
 import sys
-from pathlib import Path
+from datetime import datetime, timedelta
 
 WORK_DIR = Path('.').__str__()
 if WORK_DIR not in sys.path:
@@ -17,15 +16,17 @@ CORPUS_PATH = Path("software") / "LightWeather" / "corpus"
 
 
 class WeatherSession:
+    """WeatherSession builds a deterministic sandbox at init using the provided seed.
+    All subsequent calls read from the generated state so repeated calls within
+    the same session are consistent.
+    """
+
     def __init__(self, seed: int, os_cfg: Dict[str, str]):
         self.rng = random.Random(seed)
-        self.os = OSConnector(
-            session_id=os_cfg["session_id"],
-            url=os_cfg["url"]
-        )
+        self.os = OSConnector(session_id=os_cfg["session_id"], url=os_cfg["url"])
         self.time_machine = TimeMachine(rng=self.rng)
 
-        # Load corpus data
+        # load corpus
         with open(CORPUS_PATH / "weather.yaml") as f:
             info = yaml.safe_load(f)
 
@@ -35,82 +36,138 @@ class WeatherSession:
         self.stations = {s["id"]: s for s in info.get("stations", [])}
         self.climate_samples = {c["city"]: c for c in info.get("climate_samples", [])}
 
-        # State
+        # session state (deterministically generated now)
+        self.base_time = self.os.now()
         self.alerts: Dict[str, Dict[str, Any]] = {}
         self.preferences: Dict[str, Any] = {}
-        self.session_id = os_cfg.get("session_id", f"sess_{self.uuid()}")
+
+        # Pre-generate consistent weather data per city/station
+        self._current_weather: Dict[str, Dict[str, Any]] = {}
+        self._daily_forecasts: Dict[str, List[Dict[str, Any]]] = {}
+        self._hourly_forecasts: Dict[str, List[Dict[str, Any]]] = {}
+        self._precip_probs: Dict[str, List[Dict[str, Any]]] = {}
+        self._uv: Dict[str, Dict[str, Any]] = {}
+        self._aqi: Dict[str, Dict[str, Any]] = {}
+        self._sun_times: Dict[str, Dict[str, Any]] = {}
+        self._station_obs: Dict[str, Dict[str, Any]] = {}
+        self._historical: Dict[str, List[Dict[str, Any]]] = {}
+
+        self._generate_state()
+    
+    def get_session_dict(self):
+        return {
+            "alerts": list(self.alerts.values()),
+            "preferences": list(self.preferences.values())
+        }
+
+    def _now_dt(self) -> datetime:
+        return datetime.strptime(self.base_time, "%Y-%m-%d %H:%M:%S")
 
     def uuid(self) -> str:
         alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
         return ''.join(self.rng.choices(alphabet, k=12))
 
-    def _now(self) -> str:
-        # Use OSConnector's now (which delegates to the MCP server) to simulate real clock
-        return self.os.now()
+    def _generate_state(self):
+        now = self.base_time
+        base_dt = self._now_dt()
 
+        # per-city state
+        for cname, cinfo in self.cities.items():
+            sample = self.climate_samples.get(cname, {})
+            avg = sample.get("avg_temp", 15)
+
+            # current weather
+            cond = self.rng.choice(list(self.conditions.values())) if self.conditions else {"id": "unknown", "name": "Unknown"}
+            temp = round(avg + self.rng.uniform(-8, 8), 1)
+            wind = round(self.rng.uniform(0, 80), 1)
+            humidity = round(self.rng.uniform(20, 95), 1)
+            self._current_weather[cname] = {
+                "location": cname,
+                "timestamp": now,
+                "condition": cond,
+                "temperature_c": temp,
+                "wind_kph": wind,
+                "humidity": humidity
+            }
+
+            # daily forecasts (7 days)
+            dfore = []
+            for d in range(7):
+                date_str = (base_dt + timedelta(days=d)).strftime("%Y-%m-%d")
+                dcond = self.rng.choice(list(self.conditions.values()))
+                dtemp = round(avg + self.rng.uniform(-8, 8), 1)
+                precip = round(max(0.0, self.rng.gauss(3, 8)), 1)
+                dfore.append({"date": date_str, "condition": dcond, "temp_c": dtemp, "precip_mm": precip})
+            self._daily_forecasts[cname] = dfore
+
+            # hourly forecasts (48 hours)
+            hfore = []
+            for h in range(48):
+                ts = (base_dt + timedelta(hours=h)).strftime("%Y-%m-%d %H:%M:%S")
+                hcond = self.rng.choice(list(self.conditions.values()))
+                htemp = round(avg + self.rng.uniform(-6, 6), 1)
+                pprob = round(self.rng.uniform(0, 1), 2)
+                hfore.append({"timestamp": ts, "condition": hcond, "temp_c": htemp, "precip_prob": pprob})
+            self._hourly_forecasts[cname] = hfore
+
+            # precip probability short list
+            probs = []
+            for h in range(24):
+                probs.append({"hour_offset": h, "prob": round(self.rng.uniform(0, 1), 2)})
+            self._precip_probs[cname] = probs
+
+            # UV and AQI
+            uvv = round(self.rng.uniform(0, 11), 1)
+            self._uv[cname] = {"uv": uvv, "level": "low" if uvv < 3 else ("moderate" if uvv < 6 else ("high" if uvv < 8 else "very high"))}
+            aqi = int(max(0, min(500, int(self.rng.gauss(50, 60)))))
+            self._aqi[cname] = {"aqi": aqi, "category": "Good" if aqi <= 50 else ("Moderate" if aqi <= 100 else ("Unhealthy" if aqi <= 200 else "Very Unhealthy"))}
+
+            # sun times (mock)
+            self._sun_times[cname] = {"sunrise": (base_dt + timedelta(hours=6)).strftime("%Y-%m-%d %H:%M:%S"), "sunset": (base_dt + timedelta(hours=18)).strftime("%Y-%m-%d %H:%M:%S")}
+
+            # historical samples
+            hist = []
+            for i in range(30):
+                hist.append({"date": (base_dt - timedelta(days=i)).strftime("%Y-%m-%d"), "temp_c": round(avg + self.rng.uniform(-10, 10), 1), "condition": self.rng.choice(list(self.conditions.values()))})
+            self._historical[cname] = hist
+
+        # per-station observations (snapshot)
+        for sid, sinfo in self.stations.items():
+            obs = {
+                "timestamp": now,
+                "temperature_c": round(10 + self.rng.uniform(-10, 15), 1),
+                "humidity": round(self.rng.uniform(10, 95), 1),
+                "wind_kph": round(self.rng.uniform(0, 80), 1),
+                "pressure_hpa": round(1000 + self.rng.uniform(-30, 30), 1),
+                "status": self.rng.choice(["online", "offline", "maintenance"])
+            }
+            self._station_obs[sid] = obs
+
+    # --- API methods read from pre-generated state ---
     def list_cities(self) -> Dict[str, Any]:
         return {"status": "ok", "output": list(self.cities.keys())}
 
     def get_current_weather(self, location: str) -> Dict[str, Any]:
-        now = self._now()
-        city = self.cities.get(location)
-        if not city:
+        w = self._current_weather.get(location)
+        if not w:
             return {"status": "failed", "output": f"Location {location} not found"}
-
-        condition = self.rng.choice(list(self.conditions.values()))
-        temp = round(self.climate_samples.get(location, {}).get("avg_temp", 15) + self.rng.uniform(-10, 10), 1)
-        wind_kph = round(self.rng.uniform(0, 60), 1)
-        humidity = round(self.rng.uniform(20, 95), 1)
-
-        return {
-            "status": "ok",
-            "output": {
-                "location": location,
-                "timestamp": now,
-                "condition": condition,
-                "temperature_c": temp,
-                "wind_kph": wind_kph,
-                "humidity": humidity
-            }
-        }
+        # update timestamp to current OS time but keep other values
+        try:
+            w2 = dict(w)
+            w2["timestamp"] = self.os.now()
+            return {"status": "ok", "output": w2}
+        except Exception:
+            return {"status": "ok", "output": w}
 
     def get_forecast(self, location: str, days: int = 3) -> Dict[str, Any]:
-        city = self.cities.get(location)
-        if not city:
+        if location not in self._daily_forecasts:
             return {"status": "failed", "output": f"Location {location} not found"}
-
-        base_temp = self.climate_samples.get(location, {}).get("avg_temp", 15)
-        forecasts = []
-        base_time = self._now()
-        for d in range(days):
-            cond = self.rng.choice(list(self.conditions.values()))
-            temp = round(base_temp + self.rng.uniform(-8, 8), 1)
-            precip_mm = round(max(0.0, self.rng.gauss(3, 8)), 1)
-            forecasts.append({
-                "day_offset": d,
-                "date": self.time_machine.add_secs(base_time, min_secs=86400 * d, max_secs=86400 * d + 10),
-                "condition": cond,
-                "temp_c": temp,
-                "precip_mm": precip_mm
-            })
-
-        return {"status": "ok", "output": forecasts}
+        return {"status": "ok", "output": self._daily_forecasts[location][:days]}
 
     def get_hourly_forecast(self, location: str, hours: int = 12) -> Dict[str, Any]:
-        city = self.cities.get(location)
-        if not city:
+        if location not in self._hourly_forecasts:
             return {"status": "failed", "output": f"Location {location} not found"}
-
-        base_temp = self.climate_samples.get(location, {}).get("avg_temp", 15)
-        hourly = []
-        base_time = self._now()
-        for h in range(hours):
-            cond = self.rng.choice(list(self.conditions.values()))
-            temp = round(base_temp + self.rng.uniform(-6, 6), 1)
-            precip_prob = round(self.rng.uniform(0, 1), 2)
-            hourly.append({"hour_offset": h, "timestamp": self.time_machine.add_secs(base_time, min_secs=3600 * h, max_secs=3600 * h + 10), "condition": cond, "temp_c": temp, "precip_prob": precip_prob})
-
-        return {"status": "ok", "output": hourly}
+        return {"status": "ok", "output": self._hourly_forecasts[location][:hours]}
 
     def list_stations(self) -> Dict[str, Any]:
         return {"status": "ok", "output": list(self.stations.values())}
@@ -119,37 +176,28 @@ class WeatherSession:
         st = self.stations.get(station_id)
         if not st:
             return {"status": "failed", "output": f"Station {station_id} not found"}
-        # mock coords and status
-        return {"status": "ok", "output": {**st, "status": self.rng.choice(["online", "offline", "maintenance"])}}
+        st2 = dict(st)
+        st2["status"] = self._station_obs.get(station_id, {}).get("status", "unknown")
+        return {"status": "ok", "output": st2}
 
     def get_station_observation(self, station_id: str) -> Dict[str, Any]:
-        st = self.stations.get(station_id)
-        if not st:
+        obs = self._station_obs.get(station_id)
+        if not obs:
             return {"status": "failed", "output": f"Station {station_id} not found"}
-
-        obs = {
-            "timestamp": self._now(),
-            "temperature_c": round(10 + self.rng.uniform(-10, 15), 1),
-            "humidity": round(self.rng.uniform(10, 95), 1),
-            "wind_kph": round(self.rng.uniform(0, 80), 1),
-            "pressure_hpa": round(1000 + self.rng.uniform(-30, 30), 1)
-        }
-        return {"status": "ok", "output": obs}
+        # refresh timestamp while keeping readings stable for session
+        try:
+            obs2 = dict(obs)
+            obs2["timestamp"] = self.os.now()
+            return {"status": "ok", "output": obs2}
+        except Exception:
+            return {"status": "ok", "output": obs}
 
     def get_historical_weather(self, location: str, start: str, end: str) -> Dict[str, Any]:
-        # start/end are strings; we won't parse precisely — just return random historic samples
-        if location not in self.cities:
+        if location not in self._historical:
             return {"status": "failed", "output": f"Location {location} not found"}
-
-        k = self.rng.randint(3, 20)
-        records = []
-        for _ in range(k):
-            records.append({"date": self.time_machine.gen(), "temp_c": round(self.rng.uniform(-10, 35), 1), "condition": self.rng.choice(list(self.conditions.values()))})
-
-        return {"status": "ok", "output": records}
+        return {"status": "ok", "output": self._historical[location]}
 
     def get_weather_alerts(self, location: str) -> Dict[str, Any]:
-        # return active alerts that match location
         results = [a for a in self.alerts.values() if a.get("location") == location]
         return {"status": "ok", "output": results}
 
@@ -157,7 +205,7 @@ class WeatherSession:
         if location not in self.cities:
             return {"status": "failed", "output": f"Location {location} not found"}
         aid = f"alert_{self.uuid()}"
-        alert = {"id": aid, "location": location, "condition": condition, "threshold": threshold, "created_at": self._now()}
+        alert = {"id": aid, "location": location, "condition": condition, "threshold": threshold, "created_at": self.os.now()}
         self.alerts[aid] = alert
         return {"status": "ok", "output": alert}
 
@@ -171,57 +219,46 @@ class WeatherSession:
         return {"status": "ok", "output": list(self.alerts.values())}
 
     def get_uv_index(self, location: str) -> Dict[str, Any]:
-        if location not in self.cities:
+        if location not in self._uv:
             return {"status": "failed", "output": f"Location {location} not found"}
-        val = round(self.rng.uniform(0, 11), 1)
-        desc = "low" if val < 3 else ("moderate" if val < 6 else ("high" if val < 8 else "very high"))
-        return {"status": "ok", "output": {"uv": val, "level": desc}}
+        return {"status": "ok", "output": self._uv[location]}
 
     def get_air_quality(self, location: str) -> Dict[str, Any]:
-        if location not in self.cities:
+        if location not in self._aqi:
             return {"status": "failed", "output": f"Location {location} not found"}
-        aqi = int(max(0, min(500, self.rng.gauss(50, 60))))
-        category = "Good" if aqi <= 50 else ("Moderate" if aqi <= 100 else ("Unhealthy" if aqi <= 200 else "Very Unhealthy"))
-        return {"status": "ok", "output": {"aqi": aqi, "category": category}}
+        return {"status": "ok", "output": self._aqi[location]}
 
     def get_sun_times(self, location: str, date: str) -> Dict[str, Any]:
-        if location not in self.cities:
+        if location not in self._sun_times:
             return {"status": "failed", "output": f"Location {location} not found"}
-        # Mock sunrise/sunset times relative to the provided date
-        sunrise = date + " 06:00:00"
-        sunset = date + " 18:00:00"
-        return {"status": "ok", "output": {"sunrise": sunrise, "sunset": sunset}}
+        return {"status": "ok", "output": self._sun_times[location]}
 
     def convert_temperature(self, value: float, from_unit: str, to_unit: str) -> Dict[str, Any]:
         fu = from_unit.lower()
         tu = to_unit.lower()
         if fu == tu:
             return {"status": "ok", "output": value}
-        # convert to c then to target
         if fu == "f":
             c = (value - 32) * 5.0 / 9.0
         elif fu == "k":
             c = value - 273.15
         else:
             c = value
-
         if tu == "f":
             out = c * 9.0 / 5.0 + 32
         elif tu == "k":
             out = c + 273.15
         else:
             out = c
-
         return {"status": "ok", "output": round(out, 2)}
 
     def estimate_travel_weather(self, route: List[str]) -> Dict[str, Any]:
-        # route is list of city names
         legs = []
         for loc in route:
             if loc not in self.cities:
                 legs.append({"location": loc, "status": "unknown"})
                 continue
-            cw = self.get_current_weather(loc)["output"]
+            cw = self._current_weather.get(loc)
             legs.append({"location": loc, "weather": cw})
         return {"status": "ok", "output": legs}
 
@@ -234,19 +271,16 @@ class WeatherSession:
         return {"status": "ok", "output": diff}
 
     def get_precip_probability(self, location: str, next_hours: int = 6) -> Dict[str, Any]:
-        if location not in self.cities:
+        if location not in self._precip_probs:
             return {"status": "failed", "output": f"Location {location} not found"}
-        probs = []
-        for h in range(next_hours):
-            probs.append({"hour_offset": h, "prob": round(self.rng.uniform(0, 1), 2)})
-        return {"status": "ok", "output": probs}
+        return {"status": "ok", "output": self._precip_probs[location][:next_hours]}
 
     def get_wind_forecast(self, location: str, hours: int = 12) -> Dict[str, Any]:
-        if location not in self.cities:
+        if location not in self._hourly_forecasts:
             return {"status": "failed", "output": f"Location {location} not found"}
         winds = []
-        for h in range(hours):
-            winds.append({"hour_offset": h, "speed_kph": round(self.rng.uniform(0, 100), 1), "gust_kph": round(self.rng.uniform(0, 140), 1)})
+        for entry in self._hourly_forecasts[location][:hours]:
+            winds.append({"hour_offset": None, "speed_kph": entry.get("wind_kph", round(self.rng.uniform(0, 100), 1)), "gust_kph": round(self.rng.uniform(0, 140), 1)})
         return {"status": "ok", "output": winds}
 
     def get_climate_summary(self, location: str, year: int = 2024) -> Dict[str, Any]:

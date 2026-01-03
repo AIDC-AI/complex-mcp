@@ -1,5 +1,5 @@
 import random
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
 from pathlib import Path
 import yaml
 
@@ -32,22 +32,74 @@ class FlightSession:
         self.sample_flights = info.get("sample_flights", [])
         self.promos = {p["code"]: p for p in info.get("promo_codes", [])}
 
+        # persistent session state
         self.bookings: Dict[str, Dict[str, Any]] = {}
         self.holds: Dict[str, Dict[str, Any]] = {}
         self.wallet_balance = round(self.rng.uniform(200, 20000), 2)
         self.loyalty_accounts = {}
         self.preferences = {}
 
+        # Pre-generate deterministic catalog and state for read-only endpoints
+        self.flight_catalog: Dict[str, Dict[str, Any]] = {}
+        self.routes_index: Dict[Tuple[str, str], List[str]] = {}
+        self.seat_maps: Dict[str, Dict[str, str]] = {}
+        self.operational_status: Dict[str, str] = {}
+        self.delay_estimates: Dict[str, int] = {}
+        self.baggage_info: Dict[str, Dict[str, Any]] = {}
+        self._generate_catalog()
+
     def uuid(self) -> str:
         alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
         return ''.join(self.rng.choices(alphabet, k=12))
 
+    def _generate_catalog(self):
+        # add explicit sample flights
+        for f in self.sample_flights:
+            fn = f.get("flight_no")
+            price = round(f.get("base_price", 200) * (1 + self.rng.uniform(-0.2, 0.5)), 2)
+            self.flight_catalog[fn] = {**f, "price": price}
+            key = (f.get("origin"), f.get("dest"))
+            self.routes_index.setdefault(key, []).append(fn)
+
+            # seat map
+            seats = {f"{r}{c}": "available" for r in range(1, 31) for c in ["A","B","C","D","E","F"]}
+            booked = self.rng.sample(list(seats.keys()), k=int(len(seats) * 0.1))
+            for s in booked:
+                seats[s] = "booked"
+            self.seat_maps[fn] = seats
+
+            self.operational_status[fn] = self.rng.choice(["on_time", "delayed", "cancelled"])
+            self.delay_estimates[fn] = self.rng.randint(0, 180) if self.operational_status[fn] != "on_time" else 0
+            self.baggage_info[fn] = {"allowance": "1 checked + 1 carry-on", "fee_per_extra_kg": 30}
+
+        # generate additional synthetic flights for common origin/dest pairs
+        codes = list(self.airports.keys())
+        for i in range(min(10, max(0, len(codes) - 1))):
+            o = codes[self.rng.randrange(len(codes))]
+            d = codes[self.rng.randrange(len(codes))]
+            if o == d:
+                continue
+            fn = f"FL{self.uuid()}"
+            duration = self.rng.randint(60, 900)
+            price = round(self.rng.uniform(100, 1500), 2)
+            airline = self.rng.choice(list(self.airlines.keys())) if self.airlines else "XX"
+            self.flight_catalog[fn] = {"flight_no": fn, "airline": airline, "origin": o, "dest": d, "duration_min": duration, "price": price}
+            self.routes_index.setdefault((o, d), []).append(fn)
+            seats = {f"{r}{c}": "available" for r in range(1, 31) for c in ["A","B","C","D","E","F"]}
+            booked = self.rng.sample(list(seats.keys()), k=int(len(seats) * 0.08))
+            for s in booked:
+                seats[s] = "booked"
+            self.seat_maps[fn] = seats
+            self.operational_status[fn] = self.rng.choice(["on_time", "delayed"])
+            self.delay_estimates[fn] = 0 if self.operational_status[fn] == "on_time" else self.rng.randint(5, 240)
+            self.baggage_info[fn] = {"allowance": "1 checked + 1 carry-on", "fee_per_extra_kg": 25}
+
     def get_session_dict(self):
         return {
-            "bookings": self.bookings,
-            "holds": self.holds,
+            "bookings": list(self.bookings.values()),
+            "holds": list(self.holds.values()),
             "wallet_balance": self.wallet_balance,
-            "preferences": self.preferences
+            "preferences": list(self.preferences.values())
         }
 
     def list_airlines(self) -> Dict[str, Any]:
@@ -57,25 +109,19 @@ class FlightSession:
         return {"status": "ok", "output": list(self.airports.values())}
 
     def search_flights(self, origin: str, dest: str, date: str, passengers: int = 1) -> Dict[str, Any]:
-        # Return mock matching flights from samples
+        key = (origin, dest)
+        flight_nos = self.routes_index.get(key, [])
         results = []
-        for f in self.sample_flights:
-            if f["origin"] == origin and f["dest"] == dest:
-                price = max(50, f["base_price"] * (1 + self.rng.uniform(-0.3, 0.6)))
-                results.append({"flight_no": f["flight_no"], "airline": f["airline"], "duration_min": f["duration_min"], "price": round(price * passengers, 2)})
-        # If none, synthesize one
-        if not results:
-            f = self.rng.choice(self.sample_flights)
-            pf = round(f["base_price"] * (1 + self.rng.uniform(0, 1)), 2)
-            results = [{"flight_no": f["flight_no"], "airline": f["airline"], "duration_min": f["duration_min"], "price": pf}]
-
+        for fn in flight_nos:
+            f = self.flight_catalog[fn]
+            results.append({"flight_no": fn, "airline": f.get("airline"), "duration_min": f.get("duration_min"), "price": round(f.get("price", 0) * passengers, 2)})
         return {"status": "ok", "output": results}
 
     def get_flight_details(self, flight_no: str) -> Dict[str, Any]:
-        for f in self.sample_flights:
-            if f["flight_no"] == flight_no:
-                return {"status": "ok", "output": f}
-        return {"status": "failed", "output": f"Flight {flight_no} not found"}
+        f = self.flight_catalog.get(flight_no)
+        if not f:
+            return {"status": "failed", "output": f"Flight {flight_no} not found"}
+        return {"status": "ok", "output": f}
 
     def hold_seat(self, flight_no: str, seat_class: str, hold_minutes: int = 15) -> Dict[str, Any]:
         hid = f"hold_{self.uuid()}"
@@ -145,12 +191,9 @@ class FlightSession:
         return {"status": "ok", "output": {"flight_no": flight_no, "rules": "Mock fare rules: refundable conditions vary."}}
 
     def get_seat_map(self, flight_no: str) -> Dict[str, Any]:
-        # return simple seat map
-        seats = {f"{r}{c}": "available" for r in range(1, 31) for c in ["A","B","C","D","E","F"]}
-        # randomly mark some booked
-        booked = self.rng.sample(list(seats.keys()), k= int(len(seats)*0.1))
-        for s in booked:
-            seats[s] = "booked"
+        seats = self.seat_maps.get(flight_no)
+        if not seats:
+            return {"status": "failed", "output": f"Flight {flight_no} not found"}
         return {"status": "ok", "output": {"flight_no": flight_no, "seats": seats}}
 
     def check_in(self, booking_id: str) -> Dict[str, Any]:
@@ -220,15 +263,15 @@ class FlightSession:
         return {"status": "ok", "output": {"ticket": ticket, "booking_id": booking_id, "issue": issue}}
 
     def get_operational_status(self, flight_no: str) -> Dict[str, Any]:
-        return {"status": "ok", "output": {"flight_no": flight_no, "status": self.rng.choice(["on_time","delayed","cancelled"])}}
+        status = self.operational_status.get(flight_no, "unknown")
+        return {"status": "ok", "output": {"flight_no": flight_no, "status": status}}
 
     def get_delay_estimate(self, flight_no: str) -> Dict[str, Any]:
-        if self.rng.uniform(0,1) < 0.7:
-            return {"status": "ok", "output": {"flight_no": flight_no, "delay_min": 0}}
-        return {"status": "ok", "output": {"flight_no": flight_no, "delay_min": self.rng.randint(10,240)}}
+        d = self.delay_estimates.get(flight_no, 0)
+        return {"status": "ok", "output": {"flight_no": flight_no, "delay_min": d}}
 
     def get_baggage_info(self, flight_no: str) -> Dict[str, Any]:
-        return {"status": "ok", "output": {"allowance": "1 checked + 1 carry-on", "fee_per_extra_kg": 30}}
+        return {"status": "ok", "output": self.baggage_info.get(flight_no, {"allowance": "1 checked + 1 carry-on", "fee_per_extra_kg": 30})}
 
     def add_baggage(self, booking_id: str, kg: int) -> Dict[str, Any]:
         b = self.bookings.get(booking_id)

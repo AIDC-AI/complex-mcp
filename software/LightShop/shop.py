@@ -574,7 +574,7 @@ class ShopSession:
             )
 
         return {
-            "status": "failed",
+            "status": "ok",
             "output": starred_items
         }
     

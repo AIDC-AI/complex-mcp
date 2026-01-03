@@ -1033,7 +1033,7 @@ class ContactSession:
             content=f"<img str={img_url} />"
         )
     
-    def send_image_to_group(self, gid: str, img_url: str, at: List[str] | str):
+    def send_image_to_group(self, gid: str, img_url: str, at: List[str] | str = []):
         return self.send_message_to_group(
             gid=gid,
             content=f"<img str={img_url} />"

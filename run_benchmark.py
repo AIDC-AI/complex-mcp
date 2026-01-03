@@ -1,4 +1,4 @@
-from client.agent import OpenAIBackend, AgentClient, Toolbox
+from client.agent import OpenAIBackend, HumanAnnotator, AgentClient, Toolbox
 from benchmark.judge import judge_env
 from dotenv import load_dotenv
 from argparse import ArgumentParser
@@ -36,8 +36,10 @@ def main(args):
     custom = args.__getattribute__("custom")
 
     toolbox = parse_toolbox(tool_config_path) if tool_config_path else None
-
-    llm = OpenAIBackend(model=model)
+    if model == "human":
+        llm = HumanAnnotator()
+    else:
+        llm = OpenAIBackend(model=model)
     agent = AgentClient(
         llm=llm,
         toolbox=toolbox,
@@ -73,6 +75,7 @@ def main(args):
     avg_misbehave_rate = 0
     acc_cnt = 0
     avg_valid_tc = 0
+    avg_error_tc = 0
     avg_invalid_tc = 0
 
     for i in range(len(dataset)):
@@ -106,11 +109,13 @@ def main(args):
         avg_misbehave_rate += judge_result["misbehave"] / judge_result["total"] if judge_result["total"] else (judge_result["misbehave"])
         for tool_cnt_info in tool_cnt.values():
             avg_valid_tc += tool_cnt_info.get("ok", 0)
+            avg_error_tc += tool_cnt_info.get("error", 0)
             avg_invalid_tc += tool_cnt_info.get("failed", 0)
 
     avg_recall_rate /= len(dataset)
     avg_misbehave_rate /= len(dataset)
     avg_valid_tc /= len(dataset)
+    avg_error_tc /= len(dataset)
     avg_invalid_tc /= len(dataset)
 
     print(f"Model: {model}")
@@ -118,6 +123,7 @@ def main(args):
     print(f"\t\tavg. misbehave rate:\t{avg_misbehave_rate}")
     print(f"\t\taccuracy:\t{acc_cnt / len(dataset)}")
     print(f"\t\tvalid tool calling count:\t{avg_valid_tc}")
+    print(f"\t\terror tool calling count:\t{avg_error_tc}")
     print(f"\t\tinvalid tool calling count:\t{avg_invalid_tc}")
 
 if __name__ == "__main__":
