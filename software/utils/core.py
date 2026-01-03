@@ -193,3 +193,13 @@ if __name__ == "__main__":
     )
 
     print(connector.gen_past(k=10))
+
+class DummyOSConnector:
+    def __init__(self):
+        pass
+
+    def now(self):
+        return ""
+    
+    def step(self):
+        return ""

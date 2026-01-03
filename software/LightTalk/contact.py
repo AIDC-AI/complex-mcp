@@ -62,12 +62,12 @@ if WORK_DIR not in sys.path:
     sys.path.append(WORK_DIR.__str__())
 
 from software.utils.time import TimeMachine
-from software.utils.core import OSConnector
+from software.utils.core import OSConnector, DummyOSConnector
 
 corpus_path = Path("software") / "LightTalk" / "corpus"
 
 class ContactSession:
-    def __init__(self, seed: int, connector: OSConnector):
+    def __init__(self, seed: int, connector: OSConnector | DummyOSConnector):
         self.rng = random.Random(seed)
         self.os = connector
         self.time_machine = TimeMachine(rng=self.rng)
@@ -1201,10 +1201,7 @@ class ContactSession:
 
 
 if __name__ == "__main__":
-    connector = OSConnector(
-        session_id="session_6H8SWvjiHiErn3cWZjtLkV",
-        url="http://127.0.0.1:9000/mcp"
-    )
+    connector = DummyOSConnector()
     contact_session = ContactSession(seed=42, connector=connector)
 
     from pprint import pprint

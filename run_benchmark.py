@@ -2,10 +2,13 @@ from client.agent import OpenAIBackend, HumanAnnotator, AgentClient, Toolbox
 from benchmark.judge import judge_env
 from dotenv import load_dotenv
 from argparse import ArgumentParser
+from prompt_toolkit import prompt
+from typing import Dict, Any
 from pathlib import Path
 import json
 
 import sys
+import os
 import yaml
 import asyncio
 
@@ -30,10 +33,22 @@ def parse_toolbox(tool_config_path: str | Path):
     
     return toolbox
 
+def add_data(query_result: Dict[str, Any]):
+    dataset_path = Path("benchmark") / "data" / "data.parquet"
+    if os.path.exists(dataset_path):
+        df = pd.read_parquet(dataset_path)
+    else:
+        df = pd.DataFrame()
+    new_df = pd.DataFrame(query_result)
+    df = pd.concat([df, new_df])
+
+    df.to_parquet(dataset_path)
+
 def main(args):
     model = args.__getattribute__("model")
     tool_config_path = args.__getattribute__("tool_config")
     custom = args.__getattribute__("custom")
+    generate = args.__getattribute__("generate")
 
     toolbox = parse_toolbox(tool_config_path) if tool_config_path else None
     if model == "human":
@@ -47,10 +62,11 @@ def main(args):
     )
 
     if custom:
-        apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop", "LightWeather", "LightFlight", "LightStock"}]
-
-        seed = int(input("> seed: "))
-        query = f"{input('> instruct: ')}\nAfter you finish the task, output an [END] in the final."
+        # apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop", "LightWeather", "LightFLight", "LightStock"}]
+        apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop"}]
+        seed = int(prompt("> seed: "))
+        level = int(prompt("> level: "))
+        query = f"{prompt('> instruct: ')}\nAfter you finish the task, or you think you can't solve this task, output an [END] in the final."
 
         task = agent.process_query(
             query=query,
@@ -66,6 +82,19 @@ def main(args):
         result = asyncio.run(task)
         print(result["tool_cnt"])
 
+        if generate:
+            query_result = {
+                "seed": [seed],
+                "query": [query],
+                "apps": [json.dumps(apps)],
+                "level": [level],
+                "output": [json.dumps(result["output"])],
+                "tool_cnt": [json.dumps(result["tool_cnt"])],
+                "gt_env": [json.dumps(result["apps"])]
+            }
+            ok = prompt(">>> Pass this query? [Y/n] ")
+            if ok.strip().lower() == "y":
+                add_data(query_result)
         return        
 
     data_path = Path("benchmark") / "data" / "data.parquet"
@@ -82,7 +111,7 @@ def main(args):
         data = dataset.iloc[i]
         query = data["query"]
         seed = int(data["seed"])
-        apps = data["apps"]
+        apps = json.loads(data["apps"])
         gt_env = json.loads(data["gt_env"])
 
         task = agent.process_query(
@@ -131,6 +160,7 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--model", default="gpt-4o", type=str)
     parser.add_argument("-t", "--tool-config", type=str, required=False)
     parser.add_argument("-c", "--custom", action="store_true", default=False)
+    parser.add_argument("-g", "--generate", action="store_true", default=False)
 
     args = parser.parse_args()
     load_dotenv()
