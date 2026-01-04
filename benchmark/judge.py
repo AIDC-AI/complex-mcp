@@ -1,4 +1,5 @@
 from typing import List, Dict, Any
+from software.utils.dist import lev_sim
 
 def exact_match(x: str, y: str):
     return x == y
@@ -9,7 +10,10 @@ def fuzzy_match(x: str, y: str):
     if y is None:
         return x is None
 
-    return y.lower().strip() in x.lower().strip()
+    x = x.lower().strip()
+    y = y.lower().strip()
+
+    return y in x or lev_sim(x, y) > 0.8
 
 exclude_keys = {
     "timestamp",

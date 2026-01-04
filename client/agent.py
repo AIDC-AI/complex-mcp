@@ -25,7 +25,7 @@ colorlog.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
 
 class Toolbox:
-    def __init__(self, tools: Dict[str, Dict[str, Any]] = {}, rag_cls = None, method: Literal["list_all", "rag", "fetch"] = "list_all", *args, **kwargs):
+    def __init__(self, tools: Dict[str, Dict[str, Any]] = {}, rag_cls = None, method: Literal["list_all", "provide", "rag", "fetch"] = "list_all", *args, **kwargs):
         self.tools = tools
         self.clients = {}
         self.servers = {}
@@ -144,6 +144,11 @@ class Toolbox:
             tool_desc["returns"] = tool["returns"]
         return tool_desc
     
+    def get_tool_descs(self, key_names: List[str]) -> str:
+        tools_desc = [self.__get_desc_of_one_tool(key_name) for key_name in key_names if key_name in self.tools]
+
+        return '\n'.join(map(lambda x: f"- {x}", tools_desc))
+    
     def get_system_prompt(self):
         SYSTEM_PROMPT = (
             "You are an AI assistant with access to a set of tools (APIs). "
@@ -153,9 +158,12 @@ class Toolbox:
             f"{TOOL_STOP_SEQ}\n"
             "Below is the list of available tools and their descriptions:\n"
         )
+
         if self.method == "list_all":
             tool_desc_list = [self.__get_desc_of_one_tool(key_name).__str__() for key_name in self.tools]
             SYSTEM_PROMPT += '\n'.join(map(lambda x: f"- {x}", tool_desc_list))
+        elif self.method == "provide":
+            SYSTEM_PROMPT += '${PROVIDE_TOOLS}'
         elif self.method == "rag":
             SYSTEM_PROMPT += '${CHOSEN_TOOLS}'
         elif self.method == "fetch":
@@ -285,6 +293,8 @@ class OpenAIBackend(ChatBackend):
             **extra_body
         }
         resp = await self.client.chat.completions.create(**payload)
+
+        assert resp.choices[0].message.content
 
         return resp
 
@@ -423,8 +433,11 @@ class AgentClient:
         env: Dict[str, Any] = {
             "apps": [],
             "seed": 42
-        }
+        },
+        provide_tools: List[str] | None = None
     ) -> str:
+        assert (provide_tools is None) ^ (self.toolbox.method == "provide")
+
         messages = []
         output = []
         extra_body = {}
@@ -450,8 +463,14 @@ class AgentClient:
                         "${CHOSEN_TOOLS}",
                         "\n".join(map(lambda x: f"- {x}", self.toolbox.retrieve_tools(query=query)))
                     )
+                elif self.toolbox.method == "provide":
+                    system_prompt = system_prompt.replace(
+                        "${PROVIDE_TOOLS}",
+                        self.toolbox.get_tool_descs(key_names=provide_tools)
+                    )
                 print(f"Tool number: {len(self.toolbox.tools)}")
             if system_prompt:
+                print(system_prompt)
                 messages.append({
                     "role": "system",
                     "content": system_prompt
@@ -547,49 +566,13 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv()
 
-    toolbox = Toolbox(rag_cls=None, method="list_all")
+    toolbox = Toolbox(rag_cls=None, method="provide")
 
     toolbox.register_server(
         server_name="MathServer",
         server_url="http://127.0.0.1:8000/mcp"
     )
 
-    toolbox.register_server(
-        server_name="TimeServer",
-        server_url="http://127.0.0.1:8001/mcp",
-        # desc_path="servers/time/desc.json"
-    )
-
-    toolbox.register_server(
-        server_name="WeatherServer",
-        server_url="http://127.0.0.1:8002/mcp",
-        # desc_path="servers/weather/desc.json"
-    )
-
-    toolbox.register_server(
-        server_name="CarServer",
-        server_url="http://127.0.0.1:8003/mcp",
-        # desc_path="servers/car/desc.json"
-    )
-    
-    # toolbox.register_server(
-    #     server_name="WikiServer",
-    #     server_url="http://127.0.0.1:8004/sse"
-    # )
-
-    toolbox.register_server(
-        server_name="LightTalk",
-        server_url="http://127.0.0.1:8080/mcp",
-        desc_path="software/LightTalk/desc.json",
-        use_sandbox=True
-    )
-
-    toolbox.register_server(
-        server_name="LightShop",
-        server_url="http://127.0.0.1:8088/mcp",
-        desc_path="software/LightShop/desc.json",
-        use_sandbox=True
-    )
 
     print(toolbox.get_system_prompt())
 
@@ -602,18 +585,12 @@ if __name__ == "__main__":
 
     result = asyncio.run(
         client.process_query(
-            query="Find the most expensive cloth in LightShop and bug it. After you finish your task, output an `[END]` in the final",
-            env={
-                "apps": ["LightTalk", "LightShop"],
-                "seed": 42
-            },
+            query="What is the value of 213213 + 3214213, after you finish this task, output an [END] in the end",
             verbose=True,
             stop_tag="[END]",
-            max_turns=100
+            max_turns=100,
+            provide_tools=["add", "sub"]
         )
     )
-
-    # print(result["old_apps"])
-    # print(result["apps"])
 
     

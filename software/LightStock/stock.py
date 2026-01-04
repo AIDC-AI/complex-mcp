@@ -15,7 +15,7 @@ from typing import Dict, List, Any
 from pathlib import Path
 import yaml
 
-from software.utils.core import OSConnector
+from software.utils.core import OSConnector, DummyOSConnector
 from software.utils.time import TimeMachine
 from datetime import datetime, timedelta
 

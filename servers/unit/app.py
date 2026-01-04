@@ -368,10 +368,20 @@ def list_supported_units(
     return all_units
 
 
-def main() -> None:
+def main(transport, port) -> None:
     """Main entry point for the MCP server."""
-    app.run(show_banner=False,transport="http",port=8004)
+    app.run(show_banner=False, transport=transport, port=port)
 
+import argparse
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--transport", type=str, default="streamable-http")
+    parser.add_argument("--port", type=int)
+
+    args = parser.parse_args()
+
+    transport = args.transport
+    port = args.port
+
+    main(transport, port)

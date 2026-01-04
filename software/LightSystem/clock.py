@@ -47,3 +47,5 @@ class ClockSession:
 
 if __name__ == "__main__":
     clock_session = ClockSession(seed=42)
+
+    print(clock_session.now())

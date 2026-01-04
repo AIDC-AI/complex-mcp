@@ -67,9 +67,12 @@ from software.utils.core import OSConnector, DummyOSConnector
 corpus_path = Path("software") / "LightTalk" / "corpus"
 
 class ContactSession:
-    def __init__(self, seed: int, connector: OSConnector | DummyOSConnector):
+    def __init__(self, seed: int, os_cfg: Dict[str, str]):
         self.rng = random.Random(seed)
-        self.os = connector
+        self.os = OSConnector(
+            session_id=os_cfg["session_id"],
+            url=os_cfg["url"]
+        ) if os_cfg else DummyOSConnector()
         self.time_machine = TimeMachine(rng=self.rng)
 
         self.contacts_dict: Dict[str, Contact] = {}
@@ -291,8 +294,8 @@ class ContactSession:
         name: str
     ) -> str:
         uid = self.uid_dict.get(name)
-        contact = self.contacts_dict[uid]
         if uid:
+            contact = self.contacts_dict[uid]
             return {
                 "status": "ok",
                 "output": uid + (" (blocked)" if contact.blocked else "")
@@ -1201,8 +1204,7 @@ class ContactSession:
 
 
 if __name__ == "__main__":
-    connector = DummyOSConnector()
-    contact_session = ContactSession(seed=42, connector=connector)
+    contact_session = ContactSession(seed=42, os_cfg=None)
 
     from pprint import pprint
 

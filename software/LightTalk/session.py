@@ -11,10 +11,6 @@ class LightTalkSession:
         os_cfg: Dict[str, str]
     ):
         self.session_id = f"session_{uuid()}"
-        connector = OSConnector(
-            session_id=os_cfg["session_id"],
-            url=os_cfg["url"]
-        )
-        self.contact_session = ContactSession(seed=seed, connector=connector)
+        self.contact_session = ContactSession(seed=seed, os_cfg=os_cfg)
     
     

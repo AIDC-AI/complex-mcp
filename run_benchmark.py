@@ -14,19 +14,19 @@ import asyncio
 
 import pandas as pd
 
-def parse_toolbox(tool_config_path: str | Path):
+def parse_toolbox(tool_config_path: str | Path, method: str):
     config = {}
     with open(tool_config_path) as f:
         data = yaml.safe_load(f)
         config["servers"] = data["servers"]
 
-    toolbox = Toolbox()
+    toolbox = Toolbox(method=method)
     for server in config["servers"]:
         if not server["use"]: continue
         server_args = {
             "server_name": server["name"],
             "server_url": server["url"],
-            "desc_path": server["desc"],
+            "desc_path": server.get("desc"),
             "use_sandbox": server.get("use_sandbox", False)
         }
         toolbox.register_server(**server_args)
@@ -49,8 +49,11 @@ def main(args):
     tool_config_path = args.__getattribute__("tool_config")
     custom = args.__getattribute__("custom")
     generate = args.__getattribute__("generate")
+    distribution = args.__getattribute__("distribution") # TODO add distributed tools
 
-    toolbox = parse_toolbox(tool_config_path) if tool_config_path else None
+    method = "list_all" if distribution == -1 else "provide"
+
+    toolbox = parse_toolbox(tool_config_path, method) if tool_config_path else None
     if model == "human":
         llm = HumanAnnotator()
     else:
@@ -63,10 +66,10 @@ def main(args):
 
     if custom:
         # apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop", "LightWeather", "LightFLight", "LightStock"}]
-        apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop"}]
+        apps = [app for app in toolbox.servers if app in {"LightTalk"}]
         seed = int(prompt("> seed: "))
         level = int(prompt("> level: "))
-        query = f"{prompt('> instruct: ')}\nAfter you finish the task, or you think you can't solve this task, output an [END] in the final."
+        query = f"{prompt('> instruct: ')}\nOnce you've completed the task—or if you believe it's unsolvable—output [END] at the end."
 
         task = agent.process_query(
             query=query,
@@ -113,6 +116,8 @@ def main(args):
         seed = int(data["seed"])
         apps = json.loads(data["apps"])
         gt_env = json.loads(data["gt_env"])
+        gt_tool_cnt = json.loads(data["tool_cnt"])
+        provide_tools = list(gt_tool_cnt.keys())
 
         task = agent.process_query(
             query=query,
@@ -122,7 +127,8 @@ def main(args):
             env={
                 "apps": apps,
                 "seed": seed
-            }
+            },
+            provide_tools=provide_tools if toolbox.method == "provide" else None
         )
 
         result = asyncio.run(task)
@@ -161,6 +167,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--tool-config", type=str, required=False)
     parser.add_argument("-c", "--custom", action="store_true", default=False)
     parser.add_argument("-g", "--generate", action="store_true", default=False)
+    parser.add_argument("-d", "--distribution", type=int, default=-1, help="0: no other tools; -1: all tools' description will be put in system prompt; n: n tools' description will be put in system prompt")
 
     args = parser.parse_args()
     load_dotenv()

@@ -44,7 +44,7 @@ class Transaction:
     total: float
     info: Dict[str, Dict[str, int]] = field(default_factory=dict) # {sid: {cid: cnt}}
 
-from software.utils.core import OSConnector
+from software.utils.core import OSConnector, DummyOSConnector
 
 class ShopSession:
     def __init__(self, seed: int, os_cfg: Dict[str, str]):
@@ -53,7 +53,7 @@ class ShopSession:
         self.os = OSConnector(
             session_id=os_cfg["session_id"],
             url=os_cfg["url"]
-        )
+        ) if os_cfg else DummyOSConnector()
         self.shops = self.init_shops()
 
         self.my_balance = self.rng.randint(8000, 100000)
@@ -592,13 +592,8 @@ class ShopSession:
 
 
 if __name__ == "__main__":
-    shop_session = ShopSession(seed=4102)
+    shop_session = ShopSession(seed=42, os_cfg=None)
 
     from pprint import pprint
 
-    pprint(shop_session.get_cart_summary())
-
-    # pprint(shop_session.fuzzy_search_items("orange"))
-    # pprint(shop_session.get_shop_id_by_name("Melon Meadows"))
-    # pprint(shop_session.star_item(sid="shop_CxuuYfVx7cv7ksFCVb97V9", tid="item_85NW6EUM7m7LmA2yb5vVBV"))
-    # pprint(shop_session.get_my_starred_items())
+    pprint(shop_session.get_session_dict())
