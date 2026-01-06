@@ -51,7 +51,7 @@ class Toolbox:
             }
     
     @retry(
-        stop=stop_after_attempt(3),
+        stop=stop_after_attempt(10),
         wait=wait_exponential(multiplier=1, min=2, max=10),
         reraise=True,
         before_sleep=before_sleep_log(logger, logging.WARNING),
@@ -152,7 +152,7 @@ class Toolbox:
     def get_system_prompt(self):
         SYSTEM_PROMPT = (
             "You are an AI assistant with access to a set of tools (APIs). "
-            "When you need to use a tool, invoke it by outputting a JSON object in the following format:\n"
+            f"When you need to use a tool, invoke it by outputting a JSON object enclosed by {TOOL_START_SEQ} and {TOOL_STOP_SEQ} in the following format:\n"
             f"{TOOL_START_SEQ}\n"
             "{\"name\": \"tool_name\", \"arguments\": {\"arg1\": value1, \"arg2\": value2, ...}}\n"
             f"{TOOL_STOP_SEQ}\n"
@@ -275,7 +275,7 @@ class OpenAIBackend(ChatBackend):
         )
     
     @retry(
-        stop=stop_after_attempt(3),
+        stop=stop_after_attempt(10),
         wait=wait_exponential(multiplier=1, min=2, max=10),
         reraise=True,
         before_sleep=before_sleep_log(logger, logging.WARNING),
@@ -470,7 +470,7 @@ class AgentClient:
                     )
                 print(f"Tool number: {len(self.toolbox.tools)}")
             if system_prompt:
-                print(system_prompt)
+                # print(system_prompt)
                 messages.append({
                     "role": "system",
                     "content": system_prompt
@@ -506,7 +506,7 @@ class AgentClient:
                         tool_resp = {
                             "status": "error",
                             "output": (
-                                "Incorrect tool call format. (Not a json or missing key words)"
+                                "Incorrect tool call format. (Not a json or missing key words) "
                                 "Please provide 'name' and 'arguments' (If needed), e.g.: "
                                 "{'name': 'tool_name', 'arguments': {'arg1': 'val1', 'arg2': 'val2', ...} }"
                             )

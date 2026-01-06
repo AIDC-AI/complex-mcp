@@ -286,7 +286,10 @@ class ContactSession:
         contacts_list = result["output"]
         page = min(len(contacts_list) // PAGE_SIZE, page)
 
-        return contacts_list[PAGE_SIZE * page : PAGE_SIZE * (page + 1)]
+        return {
+            "status": "ok",
+            "output": contacts_list[PAGE_SIZE * page : PAGE_SIZE * (page + 1)]
+        }
 
     @network_trouble()
     def get_uid_from_name(

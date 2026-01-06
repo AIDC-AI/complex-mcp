@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 from prompt_toolkit import prompt
 from typing import Dict, Any
 from pathlib import Path
+import random
 import json
 
 import sys
@@ -49,9 +50,9 @@ def main(args):
     tool_config_path = args.__getattribute__("tool_config")
     custom = args.__getattribute__("custom")
     generate = args.__getattribute__("generate")
-    distribution = args.__getattribute__("distribution") # TODO add distributed tools
+    distraction = args.__getattribute__("distraction")
 
-    method = "list_all" if distribution == -1 else "provide"
+    method = "list_all" if distraction == -1 else "provide"
 
     toolbox = parse_toolbox(tool_config_path, method) if tool_config_path else None
     if model == "human":
@@ -65,8 +66,9 @@ def main(args):
     )
 
     if custom:
+        assert method != "provide"
         # apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop", "LightWeather", "LightFLight", "LightStock"}]
-        apps = [app for app in toolbox.servers if app in {"LightTalk"}]
+        apps = [app for app in toolbox.servers if app in {"LightShop"}]
         seed = int(prompt("> seed: "))
         level = int(prompt("> level: "))
         query = f"{prompt('> instruct: ')}\nOnce you've completed the task—or if you believe it's unsolvable—output [END] at the end."
@@ -118,6 +120,10 @@ def main(args):
         gt_env = json.loads(data["gt_env"])
         gt_tool_cnt = json.loads(data["tool_cnt"])
         provide_tools = list(gt_tool_cnt.keys())
+        if distraction > 0:
+            distra_tools = list(set(toolbox.tools.keys()) - set(provide_tools))
+            provide_tools += random.sample(distra_tools, k=min(len(distra_tools), distraction))
+            random.shuffle(provide_tools)
 
         task = agent.process_query(
             query=query,
@@ -167,7 +173,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--tool-config", type=str, required=False)
     parser.add_argument("-c", "--custom", action="store_true", default=False)
     parser.add_argument("-g", "--generate", action="store_true", default=False)
-    parser.add_argument("-d", "--distribution", type=int, default=-1, help="0: no other tools; -1: all tools' description will be put in system prompt; n: n tools' description will be put in system prompt")
+    parser.add_argument("-d", "--distraction", type=int, default=-1, help="0: no other tools; -1: all tools' description will be put in system prompt; n: n tools' description will be put in system prompt")
 
     args = parser.parse_args()
     load_dotenv()

@@ -13,7 +13,7 @@ def fuzzy_match(x: str, y: str):
     x = x.lower().strip()
     y = y.lower().strip()
 
-    return y in x or lev_sim(x, y) > 0.8
+    return y in x or lev_sim(x, y) > 0.7
 
 exclude_keys = {
     "timestamp",
