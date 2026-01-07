@@ -15,6 +15,30 @@ servers:
     use_sandbox: false
     use: true
   
+  - name: StatsServer
+    url: http://127.0.0.1:8003/mcp
+    use_sandbox: false
+    use: true
+
+  - name: LangServer
+    url: http://127.0.0.1:8004/mcp
+    use_sandbox: false
+    use: true
+  
+  - name: CryptoServer
+    url: http://127.0.0.1:8005/mcp
+    use_sandbox: false
+    use: true
+  
+  - name: GraphServer
+    url: http://127.0.0.1:8006/mcp
+    use_sandbox: false
+    use: true
+  
+  - name: ChemServer
+    url: http://127.0.0.1:8007/mcp
+    use_sandbox: false
+    use: true
 
   # MCP-based Software
   - name: LightSystem

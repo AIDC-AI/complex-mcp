@@ -9,7 +9,7 @@ WORK_DIR = Path('.').__str__()
 if WORK_DIR not in sys.path:
     sys.path.append(WORK_DIR)
 
-from software.utils.core import OSConnector
+from software.utils.core import OSConnector, DummyOSConnector
 from software.utils.time import TimeMachine
 
 CORPUS_PATH = Path("software") / "LightWeather" / "corpus"
@@ -21,9 +21,9 @@ class WeatherSession:
     the same session are consistent.
     """
 
-    def __init__(self, seed: int, os_cfg: Dict[str, str]):
+    def __init__(self, seed: int, os_cfg: Dict[str, str] | None = None):
         self.rng = random.Random(seed)
-        self.os = OSConnector(session_id=os_cfg["session_id"], url=os_cfg["url"])
+        self.os = OSConnector(session_id=os_cfg["session_id"], url=os_cfg["url"]) if os_cfg else DummyOSConnector()
         self.time_machine = TimeMachine(rng=self.rng)
 
         # load corpus
@@ -51,13 +51,14 @@ class WeatherSession:
         self._sun_times: Dict[str, Dict[str, Any]] = {}
         self._station_obs: Dict[str, Dict[str, Any]] = {}
         self._historical: Dict[str, List[Dict[str, Any]]] = {}
+        self._wind = {}
 
         self._generate_state()
     
     def get_session_dict(self):
         return {
             "alerts": list(self.alerts.values()),
-            "preferences": list(self.preferences.values())
+            "preferences": self.preferences
         }
 
     def _now_dt(self) -> datetime:
@@ -130,6 +131,11 @@ class WeatherSession:
             for i in range(30):
                 hist.append({"date": (base_dt - timedelta(days=i)).strftime("%Y-%m-%d"), "temp_c": round(avg + self.rng.uniform(-10, 10), 1), "condition": self.rng.choice(list(self.conditions.values()))})
             self._historical[cname] = hist
+
+            winds = []
+            for i in range(24 * 7):
+                winds.append({"hour_offset": i + 1, "speed_kph": round(self.rng.uniform(0, 100), 1), "gust_kph": round(self.rng.uniform(0, 140), 1)})
+            self._wind[cname] = winds
 
         # per-station observations (snapshot)
         for sid, sinfo in self.stations.items():
@@ -205,7 +211,7 @@ class WeatherSession:
         if location not in self.cities:
             return {"status": "failed", "output": f"Location {location} not found"}
         aid = f"alert_{self.uuid()}"
-        alert = {"id": aid, "location": location, "condition": condition, "threshold": threshold, "created_at": self.os.now()}
+        alert = {"id": aid, "location": location, "condition": condition, "threshold": threshold, "timestamp": self.os.now()}
         self.alerts[aid] = alert
         return {"status": "ok", "output": alert}
 
@@ -276,12 +282,10 @@ class WeatherSession:
         return {"status": "ok", "output": self._precip_probs[location][:next_hours]}
 
     def get_wind_forecast(self, location: str, hours: int = 12) -> Dict[str, Any]:
-        if location not in self._hourly_forecasts:
+        if location not in self._wind:
             return {"status": "failed", "output": f"Location {location} not found"}
-        winds = []
-        for entry in self._hourly_forecasts[location][:hours]:
-            winds.append({"hour_offset": None, "speed_kph": entry.get("wind_kph", round(self.rng.uniform(0, 100), 1)), "gust_kph": round(self.rng.uniform(0, 140), 1)})
-        return {"status": "ok", "output": winds}
+        
+        return self._wind[location][:hours]
 
     def get_climate_summary(self, location: str, year: int = 2024) -> Dict[str, Any]:
         if location not in self.cities:
@@ -298,3 +302,14 @@ class WeatherSession:
 
     def get_primary_location(self) -> Dict[str, Any]:
         return {"status": "ok", "output": self.preferences.get("primary_location", None)}
+    
+
+if __name__ == "__main__":
+    weather_session = WeatherSession(seed=12)
+
+    # print(weather_session.list_cities())
+
+    location = "New York"
+
+    print(weather_session.get_wind_forecast(location=location))
+    print(weather_session.get_wind_forecast(location=location))

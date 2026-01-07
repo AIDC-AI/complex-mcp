@@ -40,6 +40,26 @@ fastmcp run servers/osint/app.py --transport http --port 8002 &
 PIDS+=($!)
 sleep 1
 
+fastmcp run servers/stats/app.py --transport http --port 8003 &
+PIDS+=($!)
+sleep 1
+
+fastmcp run servers/lang/app.py --transport http --port 8004 &
+PIDS+=($!)
+sleep 1
+
+fastmcp run servers/crypto/app.py --transport http --port 8005 &
+PIDS+=($!)
+sleep 1
+
+fastmcp run servers/graphs/app.py --transport http --port 8006 &
+PIDS+=($!)
+sleep 1
+
+fastmcp run servers/chem/app.py --transport http --port 8007 &
+PIDS+=($!)
+sleep 1
+
 echo "All MCP servers started successfully. Press Ctrl+C to shut down all servers."
 
 # Wait for all processes

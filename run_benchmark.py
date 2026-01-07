@@ -67,8 +67,8 @@ def main(args):
 
     if custom:
         assert method != "provide"
-        # apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop", "LightWeather", "LightFLight", "LightStock"}]
-        apps = [app for app in toolbox.servers if app in {"LightShop"}]
+        apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop", "LightWeather", "LightFLight", "LightStock"}]
+        # apps = [app for app in toolbox.servers if app in {"LightShop"}]
         seed = int(prompt("> seed: "))
         level = int(prompt("> level: "))
         query = f"{prompt('> instruct: ')}\nOnce you've completed the task—or if you believe it's unsolvable—output [END] at the end."
@@ -174,6 +174,7 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--custom", action="store_true", default=False)
     parser.add_argument("-g", "--generate", action="store_true", default=False)
     parser.add_argument("-d", "--distraction", type=int, default=-1, help="0: no other tools; -1: all tools' description will be put in system prompt; n: n tools' description will be put in system prompt")
+    parser.add_argument("-i", "--instruct-gen", type=int, default=1, help="instruction generation") # TODO: Instruction generation
 
     args = parser.parse_args()
     load_dotenv()

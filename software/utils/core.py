@@ -186,6 +186,16 @@ class OSConnector:
     def shutdown(cls):
         cls._thread_executor.shutdown(wait=True)
 
+class DummyOSConnector:
+    def __init__(self):
+        pass
+
+    def now(self):
+        return "2026-01-01 08:00:00"
+    
+    def step(self):
+        return self.now()
+
 if __name__ == "__main__":
     connector = OSConnector(
         session_id="session_6H8SWvjiHiErn3cWZjtLkV",
@@ -193,13 +203,3 @@ if __name__ == "__main__":
     )
 
     print(connector.gen_past(k=10))
-
-class DummyOSConnector:
-    def __init__(self):
-        pass
-
-    def now(self):
-        return ""
-    
-    def step(self):
-        return ""
