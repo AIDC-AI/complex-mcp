@@ -23,6 +23,20 @@
         }
     },
     {
+        "tool_name": "fuzzy_search_uids_from_name",
+        "description": "Perform a fuzzy (approximate) search to find user IDs (UIDs) in LightTalk based on a partial or misspelled contact name.",
+        "arguments": {
+            "name": {
+                "type": "string",
+                "description": "The contact name or partial name to perform fuzzy matching on (e.g., handles typos, nicknames, or similar spellings)."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of matching UIDs along with their display names; on failure (e.g., no matches or invalid input), output contains an error message."
+        }
+    },
+    {
         "tool_name": "send_message",
         "description": "Send a message to a specific contact in LightTalk using their UID.",
         "arguments": {

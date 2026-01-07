@@ -373,7 +373,7 @@ class ShopSession:
 
         for shop in self.shops.values():
             for item in shop.items.values():
-                if item_name in item.name.lower() or lev_sim(item_name, item.name.lower()) > 0.6:
+                if item_name in item.name.lower() or lev_sim(item_name, item.name.lower()) > 0.4:
                     results.append(
                         {
                             "tid": item.tid,

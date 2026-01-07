@@ -308,6 +308,22 @@ class ContactSession:
                 "status": "failed",
                 "output": f"Contact {name} not found"
             }
+    
+    @network_trouble()
+    def fuzzy_search_uids_from_name(
+        self,
+        name: str
+    ):
+        name = name.lower()
+        results = []
+        for contact in self.contacts_dict.values():
+            if name in contact.name.lower():
+                results.append(f"{contact.name} ({contact.uid})" + (" (blocked)" if contact.blocked else ""))
+        
+        return {
+            "status": "ok",
+            "output": results
+        }
 
     @network_trouble()
     def send_message(
@@ -1211,4 +1227,4 @@ if __name__ == "__main__":
 
     from pprint import pprint
 
-    pprint(contact_session.get_session_dict())
+    pprint(contact_session.fuzzy_search_uids_from_name(name="de"))

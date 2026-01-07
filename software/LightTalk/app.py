@@ -71,6 +71,13 @@ async def get_uid_from_name(name: str, session_id: str):
     return session.contact_session.get_uid_from_name(name)
 
 @mcp.tool
+async def fuzzy_search_uids_from_name(name: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.fuzzy_search_uids_from_name(name)
+
+@mcp.tool
 async def send_message(uid: str, content: str, session_id: str):
     session, err = get_session(session_id)
     if err: return err

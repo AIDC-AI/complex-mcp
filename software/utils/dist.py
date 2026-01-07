@@ -8,7 +8,7 @@ def lev_sim(x: str, y: str):
 
 if __name__ == "__main__":
     
-    x = "hello, world!"
-    y = "hello, word!"
+    x = "grape (1kg)"
+    y = "grapes"
 
     print(lev_sim(x, y))
