@@ -40,7 +40,7 @@ async def remove_punctuation(text: str) -> str:
 @mcp.tool
 async def count_words(text: str) -> int:
     """Return the number of word tokens in `text` using the server tokenizer."""
-    return len(tokenize.__wrapped__(text))
+    return len(tokenize.fn(text))
 
 
 @mcp.tool
@@ -49,7 +49,7 @@ async def word_freq(text: str) -> dict:
 
     Tokens are lowercased so counts are case-insensitive.
     """
-    toks = [t.lower() for t in tokenize.__wrapped__(text)]
+    toks = [t.lower() for t in tokenize.fn(text)]
     freq = {}
     for t in toks:
         freq[t] = freq.get(t, 0) + 1
@@ -69,7 +69,7 @@ async def sentence_split(text: str) -> list[str]:
 @mcp.tool
 async def simple_summarize(text: str, max_sentences: int = 3) -> str:
     """Very small extractive summarizer by sentence length heuristic."""
-    sents = sentence_split.__wrapped__(text)
+    sents = sentence_split.fn(text)
     ranked = sorted(sents, key=lambda s: len(s), reverse=True)
     return " ".join(ranked[:max_sentences])
 
@@ -102,8 +102,8 @@ async def jaccard_similarity(a: str, b: str) -> float:
 
     Returns a float in [0, 1], 1.0 when both inputs have identical token sets.
     """
-    sa = set(tokenize.__wrapped__(a))
-    sb = set(tokenize.__wrapped__(b))
+    sa = set(tokenize.fn(a))
+    sb = set(tokenize.fn(b))
     if not sa and not sb:
         return 1.0
     return len(sa & sb) / len(sa | sb)
@@ -115,7 +115,7 @@ async def ngrams(text: str, n: int = 2) -> list[str]:
 
     If there are fewer than `n` tokens an empty list is returned.
     """
-    toks = tokenize.__wrapped__(text)
+    toks = tokenize.fn(text)
     return [" ".join(toks[i : i + n]) for i in range(max(0, len(toks) - n + 1))]
 
 
@@ -140,21 +140,21 @@ async def title_case(text: str) -> str:
 @mcp.tool
 async def snake_case(text: str) -> str:
     """Convert `text` to `snake_case` by lowercasing and joining word tokens with underscores."""
-    toks = [t.lower() for t in tokenize.__wrapped__(text) if re.match(r"\w+", t)]
+    toks = [t.lower() for t in tokenize.fn(text) if re.match(r"\w+", t)]
     return "_".join(toks)
 
 
 @mcp.tool
 async def camel_case(text: str) -> str:
     """Convert `text` to `camelCase` using word tokens (lower-first, capitalize-following)."""
-    toks = [t.lower() for t in tokenize.__wrapped__(text) if re.match(r"\w+", t)]
+    toks = [t.lower() for t in tokenize.fn(text) if re.match(r"\w+", t)]
     return toks[0] + "".join(w.capitalize() for w in toks[1:]) if toks else ""
 
 
 @mcp.tool
 async def slugify(text: str) -> str:
     """Create a URL-friendly slug from `text`: lowercase, remove punctuation, replace spaces with hyphens."""
-    s = remove_punctuation.__wrapped__(text).lower()
+    s = remove_punctuation.fn(text).lower()
     s = re.sub(r"\s+", "-", s)
     return s.strip("-")
 
@@ -220,7 +220,7 @@ async def truncate(text: str, length: int = 100) -> str:
 @mcp.tool
 async def read_time_estimate(text: str, wpm: int = 200) -> float:
     """Estimate reading time in minutes for `text` assuming `wpm` words per minute."""
-    words = count_words.__wrapped__(text)
+    words = count_words.fn(text)
     return words / wpm
 
 
@@ -228,7 +228,7 @@ async def read_time_estimate(text: str, wpm: int = 200) -> float:
 async def remove_stopwords(text: str) -> str:
     """Remove a small set of common English stopwords from `text` and return the filtered text."""
     stop = {"the","and","is","in","to","a","of","it","for","on"}
-    toks = [t for t in tokenize.__wrapped__(text) if t.lower() not in stop]
+    toks = [t for t in tokenize.fn(text) if t.lower() not in stop]
     return " ".join(toks)
 
 
@@ -240,7 +240,7 @@ async def simple_paraphrase(text: str) -> str:
     """
     # small, rule-based synonym swaps
     syn = {"quick":"fast","buy":"purchase","error":"mistake","use":"utilize"}
-    toks = tokenize.__wrapped__(text)
+    toks = tokenize.fn(text)
     return " ".join(syn.get(t.lower(), t) for t in toks)
 
 

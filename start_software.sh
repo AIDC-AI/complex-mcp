@@ -57,6 +57,11 @@ PIDS+=($!)
 echo "LightStock started (PID: $!, Port: 9005)"
 sleep 1
 
+fastmcp run software/LightNews/app.py --transport http --port 9006 &
+PIDS+=($!)
+echo "LightNews started (PID: $!, Port 9006)"
+sleep 1
+
 echo "All applications started successfully. Press Ctrl+C to shut down all applications."
 
 # Wait for all processes

@@ -67,7 +67,7 @@ def main(args):
 
     if custom:
         assert method != "provide"
-        apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop", "LightWeather", "LightFLight", "LightStock"}]
+        apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop", "LightWeather", "LightFLight", "LightStock", "LightNews"}]
         # apps = [app for app in toolbox.servers if app in {"LightShop"}]
         seed = int(prompt("> seed: "))
         level = int(prompt("> level: "))

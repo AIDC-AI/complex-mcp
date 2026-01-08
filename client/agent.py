@@ -532,8 +532,8 @@ class AgentClient:
                             tool_resp_dict = json.loads(tool_resp)
                             status = tool_resp_dict["status"]
                         except Exception as e:
-                            print(e) # TODO: delete
-                            status = "unknown"
+                            # print(e)
+                            status = "ok"
                         results["tool_cnt"][tool_name][status] += 1
 
                     format_tool_resp = f"<response>\n{tool_resp}\n</response>"

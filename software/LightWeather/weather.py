@@ -211,7 +211,7 @@ class WeatherSession:
         if location not in self.cities:
             return {"status": "failed", "output": f"Location {location} not found"}
         aid = f"alert_{self.uuid()}"
-        alert = {"id": aid, "location": location, "condition": condition, "threshold": threshold, "timestamp": self.os.now()}
+        alert = {"aid": aid, "location": location, "condition": condition, "threshold": threshold, "timestamp": self.os.now()}
         self.alerts[aid] = alert
         return {"status": "ok", "output": alert}
 

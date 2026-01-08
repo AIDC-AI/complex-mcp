@@ -195,6 +195,9 @@ class DummyOSConnector:
     
     def step(self):
         return self.now()
+    
+    def gen_past(self, start_year: int = 2026, k: int = 1):
+        return [self.now()] * k
 
 if __name__ == "__main__":
     connector = OSConnector(

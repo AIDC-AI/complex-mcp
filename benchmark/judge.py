@@ -17,8 +17,12 @@ def fuzzy_match(x: str, y: str):
 
 exclude_keys = {
     "timestamp",
-    "mid", "moid", "cid", "gid",
-    "sid", "tid", "caid"
+    "mid", "moid", "cid", "gid", # LightTalk
+    "sid", "tid", "caid", # LightShop
+    "aid", # LightWeather
+    "hold_id", "booking_id", # LightFlight
+    "order_id", "alert_id", # LightStock
+    "nid" # LightNews
 }
 
 eq_methods = {

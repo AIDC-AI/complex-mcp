@@ -1,0 +1,89 @@
+[
+    {
+        "tool_name": "list_all_sections",
+        "description": "Retrieve a list of all available news sections (categories) in LightNews, such as 'World', 'Technology', 'Sports', etc.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of section names; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_last_k_news",
+        "description": "Fetch the most recent K news articles from a specific section in LightNews.",
+        "arguments": {
+            "section": {
+                "type": "string",
+                "description": "The name of the news section to fetch articles from (e.g., 'Politics', 'Entertainment')."
+            },
+            "k": {
+                "type": "integer",
+                "description": "The number of latest news articles to retrieve (must be a positive integer)."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of news articles (including title, summary, publish time, and NID); on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "search",
+        "description": "Search for news articles in a specific section using keywords, with optional date range filtering.",
+        "arguments": {
+            "section": {
+                "type": "string",
+                "description": "The news section to search within."
+            },
+            "query": {
+                "type": "string",
+                "description": "The keyword or phrase to search for in article titles and content."
+            },
+            "maxn": {
+                "type": "integer",
+                "description": "Maximum number of results to return (must be a positive integer)."
+            },
+            "begin_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Optional start date for the search range in ISO format (YYYY-MM-DD). If omitted, no lower bound is applied."
+            },
+            "end_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Optional end date for the search range in ISO format (YYYY-MM-DD). If omitted, no upper bound is applied."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of matching news articles (with NID, title, snippet, and publish date); on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_details",
+        "description": "Retrieve the full content and metadata of a specific news article in LightNews using its unique ID.",
+        "arguments": {
+            "nid": {
+                "type": "string",
+                "description": "The unique news article ID (NID) of the article to fetch details for."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes the article's title, full body text, author, publish time, section, and associated media; on failure (e.g., invalid or non-existent NID), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_news_url",
+        "description": "Retrieve the shareable URL for a specific news article in LightNews using its unique ID.",
+        "arguments": {
+            "nid": {
+                "type": "string",
+                "description": "The unique news article ID (NID) of the article to get the URL for."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is the full URL string to the news article; on failure (e.g., invalid NID), output contains an error message."
+        }
+    }
+]
