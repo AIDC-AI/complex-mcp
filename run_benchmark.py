@@ -174,7 +174,7 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--custom", action="store_true", default=False)
     parser.add_argument("-g", "--generate", action="store_true", default=False)
     parser.add_argument("-d", "--distraction", type=int, default=-1, help="0: no other tools; -1: all tools' description will be put in system prompt; n: n tools' description will be put in system prompt")
-    parser.add_argument("-i", "--instruct-gen", type=int, default=1, help="instruction generation") # TODO: Instruction generation
+    parser.add_argument("-i", "--instruct-gen", type=int, default=1, help="instruction generation, difficulty level") # TODO: Instruction generation
 
     args = parser.parse_args()
     load_dotenv()

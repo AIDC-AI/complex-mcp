@@ -60,7 +60,7 @@ class NewsSession:
         for section, file in files.items():
             with open(CORPUS_PATH / file) as f:
                 news_list = yaml.safe_load(f)
-                news_cnt = self.rng.randint(20, 40)
+                news_cnt = self.rng.randint(40, 60)
                 sel_news_list = self.rng.sample(news_list, k=news_cnt)
                 timestamps = self.os.gen_past(start_year=2025, k=news_cnt)
                 news_item_list = []

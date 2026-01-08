@@ -260,8 +260,172 @@
 
 - title: "Swim Team Partners with Lifeguard Training Program"
   abstract: "Athletes earn certification while giving back."
-  content: "Ten swimmers completed 30 hours of CPR, first aid, and water rescue training. They’ll staff the town pool this summer and assist at youth swim camps. The program covers exam fees for those who commit to one season of service."
+  content: "Ten swimmers completed 30 hours of CPR, first aid, and water rescue training. They'll staff the town pool this summer and assist at youth swim camps. The program covers exam fees for those who commit to one season of service."
 
 - title: "Volleyball Team Builds Backyard Court for Practice"
-  abstract: "Players and parents install sand and net at coach’s home."
+  abstract: "Players and parents install sand and net at coach's home."
   content: "Donated materials and weekend labor created a regulation-size court with proper drainage. Evening scrimmages improved their transition game noticeably. Neighbors donated string lights for night visibility."
+
+- title: "Community 5K Run Features All Age Groups"
+  abstract: "Walkers, joggers, and serious runners participate."
+  content: "Approximately 300 participants ran the scenic route through town. Age-group winners received medals; all finishers got certificates. Post-race gathering celebrated community fitness."
+
+- title: "Local Soccer Club Expands Teams for Youth"
+  abstract: "New divisions created for younger players."
+  content: "Club added under-8 and under-10 teams to existing programs. Coaches emphasized fun and skill development over winning. Spring season sign-ups exceeded expectations."
+
+- title: "Tennis Tournament Draws Players from Surrounding Towns"
+  abstract: "Competition held at municipal courts."
+  content: "Singles and doubles matches entertained spectators throughout the day. Players competed across age and skill brackets. Local restaurant sponsored food and refreshments."
+
+- title: "Baseball League Season Begins with Opening Day"
+  abstract: "Teams take field for competitive play."
+  content: "Youth and adult leagues kicked off with opening ceremonies. Local band played national anthem; mayors threw ceremonial first pitches. Family-friendly atmosphere with concessions."
+
+- title: "Cyclist Training Group Prepares for Century Ride"
+  abstract: "100-mile ride benefits local charity."
+  content: "Group trained twice weekly building endurance. Support vehicles and rest stops planned for event day. Fundraising campaign raising awareness and pledges."
+
+- title: "Martial Arts Classes Teach Self-Defense"
+  abstract: "Karate and Taekwondo instruction for all ages."
+  content: "Classes progress from white belt through black belt levels. Instructors emphasize discipline and respect alongside techniques. Belt promotions celebrated monthly."
+
+- title: "Gymnastics Team Wins Regional Championship"
+  abstract: "Young athletes showcase skills at competition."
+  content: "Team placed first in floor exercise, vault, and beam events. Individual athletes competed at advanced levels. State competition invitation received."
+
+- title: "Bowling League Tournaments Throughout the Season"
+  abstract: "Competitive and recreational divisions offered."
+  content: "Weekly tournaments with cash prizes for winners. Handicap system ensures fair competition. Social atmosphere encourages all skill levels."
+
+- title: "Pickleball Club Grows in Popularity"
+  abstract: "Paddle sport attracts players of all ages."
+  content: "Courts added at community center to meet demand. Beginner clinics available for newcomers. Weekly play times scheduled mornings and evenings."
+
+- title: "Football Team Prepares for Season with Strength Training"
+  abstract: "Conditioning program builds power and endurance."
+  content: "Team practices three times weekly during offseason. Weight training and conditioning emphasized injury prevention. Coaches reviewed plays and game strategy."
+
+- title: "Youth Basketball League Registration Opens"
+  abstract: "Divisions for different age and skill levels."
+  content: "Season runs through winter with games and practices twice weekly. All participants guaranteed playing time. Sportsmanship awards complement athletic achievement recognition."
+
+- title: "Crossfit Box Hosts Community Fitness Challenge"
+  abstract: "Timed workouts test strength and endurance."
+  content: "Scaled versions accommodate different fitness levels. Participants cheered each other on in supportive atmosphere. Winners received gift certificates to local businesses."
+
+- title: "Rock Climbing Club Practices Indoor and Outdoor Routes"
+  abstract: "Members develop skills and tackle challenges."
+  content: "Indoor gym provides year-round practice; outdoor climbs on weekends. Belay certification required for safety. Community aspect fosters friendships among members."
+
+- title: "Swimming Lessons Available for All Ages"
+  abstract: "Community pool offers certified instruction."
+  content: "Classes from beginner to advanced competitive levels. Small class sizes ensure individual attention. Parent-child classes available for bonding."
+
+- title: "Triathlon Training Program Builds Confidence"
+  abstract: "Swim, bike, run preparation for competition."
+  content: "Program combines coaching, group training, and peer support. Beginners learn fundamentals; experienced athletes fine-tune technique. Local race used as goal event."
+
+- title: "Rugby Club Recruits New Members"
+  abstract: "Full-contact team sport expands locally."
+  content: "Club welcomes players with rugby experience and newcomers. Training emphasizes teamwork and technique over size. Community league schedule fills calendar."
+
+- title: "Hockey Team Travels to Regional Tournament"
+  abstract: "Winter athletes compete against strong opponents."
+  content: "Team practiced intensively for playoff competition. High energy games showcased skill and determination. Coaching staff proud of athletes' commitment."
+
+- title: "Softball League Celebrates Extended Season"
+  abstract: "Fall and spring divisions attract participants."
+  content: "Leagues expanded offering more games and play opportunities. Coed divisions encouraged mixed-gender participation. Community bonds strengthen through shared passion for sport."
+
+- title: "Yoga and Stretching Class Complements Athletic Training"
+  abstract: "Flexibility and recovery for sports enthusiasts."
+  content: "Classes focus on injury prevention and flexibility improvement. Athletes attend alongside general fitness seekers. Instructor emphasizes mind-body connection."
+
+- title: "Track and Field Club Prepares Young Athletes"
+  abstract: "Sprints, distance, and field events coached."
+  content: "Coaches worked with individual athletes on technique. Group training built team cohesion. Friendly competition between teammates motivated improvement."
+
+- title: "Water Aerobics Class Builds Fitness with Low Impact"
+  abstract: "Joint-friendly exercise in community pool."
+  content: "Classes appeal to older adults and injury-recovery patients. Warm water and buoyancy reduce strain. Social aspect of water fitness appreciated by participants."
+
+- title: "Dance Fitness Classes Offer Exercise with Music"
+  abstract: "Cardio workout through dance movements."
+  content: "Classes ranged from hip-hop to Latin rhythms. Beginner-friendly atmosphere with high energy. Participants reported improved mood and fitness."
+
+- title: "Ultimate Frisbee Tournament Brings Teams Together"
+  abstract: "Competitive and recreational divisions played."
+  content: "Teams showcased athletic skill and creative throws. Sportsmanship emphasized in officiating. Family members watched from sidelines cheering teammates."
+
+- title: "Senior Fitness Program Promotes Active Aging"
+  abstract: "Low-impact exercises designed for older adults."
+  content: "Classes at senior center offered three times weekly. Balance, strength, and flexibility emphasized for fall prevention. Social component valued equally with physical benefits."
+
+- title: "Disc Golf Course Opened for Community Recreation"
+  abstract: "Free-to-play frisbee golf on town land."
+  content: "18-hole course winds through park. Players completed rounds competing for low scores. Family and casual play encouraged alongside competitive rounds."
+
+- title: "Archery Club Targets Bull's-eye"
+  abstract: "Ancient sport attracts recreational enthusiasts."
+  content: "Indoor range provides year-round practice. Beginner classes teach stance and technique. Competition events against neighboring clubs planned."
+
+- title: "Running Club Organizes Community 10K"
+  abstract: "Organized fun run benefits local charity."
+  content: "Approximately 200 participants ran the course. Walkers welcomed alongside competitive runners. Finisher medals and refreshments celebrated all participants."
+
+- title: "Surfing Lessons Begin at Nearby Beach"
+  abstract: "Instructors teach water sports basics."
+  content: "Group lessons taught paddle and balance techniques. Beginner boards provided for lesson participants. Summer camp options planned for youth."
+
+- title: "Basketball Court Renovated with New Surface"
+  abstract: "Improved facility enhances community play."
+  content: "Court resurfaced with professional-grade material. Line markings refreshed for clarity. Community organized opening tournament to christen facility."
+
+- title: "Horseback Riding Lessons Offered at Local Stable"
+  abstract: "Equestrian instruction for all experience levels."
+  content: "Instructors teach horsemanship and riding technique. Gentle horses appropriate for beginners. Trail rides organized for experienced riders."
+
+- title: "Badminton Club Organizes Recreational Play"
+  abstract: "Racquet sport attracts mixed-ability players."
+  content: "Weekly play sessions in community center gym. Competitive ladder system tracks rankings. Social matches encouraged casual participation."
+
+- title: "Baseball Camp Brings Professional Coaches to Town"
+  abstract: "Summer instruction from experienced players."
+  content: "Camp covered hitting, fielding, and base running fundamentals. Youth ages 8-16 participated in morning sessions. Evening championship game showcased skill development."
+
+- title: "Squash Club Expands Court Usage"
+  abstract: "Added hours accommodate growing membership."
+  content: "Courts now open for play most evenings and weekends. Beginner clinics introduced new players to the sport. Ladder competitions motivated skill improvement."
+
+- title: "Cross Country Team Trains for Competitive Season"
+  abstract: "Distance runners prepare for autumn races."
+  content: "Team practiced on trail routes throughout the region. Coaches emphasized proper pacing and mental toughness. Community support and spectators motivated athletes."
+
+- title: "Basketball League Playoffs Determine Champions"
+  abstract: "Competitive season concludes with title games."
+  content: "Multiple divisions held exciting playoff matches. Crowds filled community center for final games. Championship trophies awarded to winning teams."
+
+- title: "Lacrosse Team Establishes Youth Program"
+  abstract: "Growing sport attracts new participants."
+  content: "Beginner and intermediate teams created for youth interest. Coaches taught fundamental skills and game strategy. Spring season built foundation for program growth."
+
+- title: "Skateboard Park Renovated and Rededicated"
+  abstract: "Improved facility attracts youth skaters."
+  content: "New ramps and features added based on skater input. Safety equipment requirements enforced. Community event celebrated reopening with demos."
+
+- title: "Competitive Runners Form Training Group"
+  abstract: "Marathon and half-marathon preparation."
+  content: "Group met three times weekly with varied distances and paces. Experienced runners mentored beginners. Upcoming races provided motivation for training."
+
+- title: "Sports Medicine Clinic Opens"
+  abstract: "Athletic injury treatment and prevention services."
+  content: "Physical therapists and physicians specialized in sports injuries. Injury prevention workshops offered to athletes. Rehabilitation programs aided injured athletes' recovery."
+
+- title: "Cycling Event Attracts Hundreds of Riders"
+  abstract: "Community-wide bike ride celebration."
+  content: "Multiple route options accommodated different skill levels. Support stations provided water and snacks. Family participation encouraged with short route option."
+
+- title: "Rugby Sevens Tournament Draws Regional Teams"
+  abstract: "Fast-paced matches feature shorter format."
+  content: "Seven-per-side teams competed in bracket-style tournament. Skill and strategy displayed in exciting rugby. Community support evident in enthusiastic spectators."

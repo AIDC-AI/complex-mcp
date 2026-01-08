@@ -276,4 +276,376 @@
 
 - title: "LightTown Talent Showcase Open to All Ages"
   abstract: "Sing, dance, juggle, or share poetry on stage."
-  content: "Performers get three minutes to present any family-friendly act. Sign-up is first-come on event day, and a sound technician ensures smooth audio. Judges award ribbons in categories like ‘Most Creative,’ ‘Bravest First-Timer,’ and ‘Crowd Favorite.’"
+  content: "Performers get three minutes to present any family-friendly act. Sign-up is first-come on event day, and a sound technician ensures smooth audio. Judges award ribbons in categories like 'Most Creative,' 'Bravest First-Timer,' and 'Crowd Favorite.'"
+
+- title: "Weekend Breakfast Market at Riverside Pavilion"
+  abstract: "Fresh pastries, smoothies, and local coffee every Saturday."
+  content: "Vendors gather at Riverside Pavilion to sell breakfast items from area bakeries and farms. Musicians play live acoustic sets during morning hours. Proceeds split between vendors and park maintenance fund."
+
+- title: "Vintage Market Fair Takes Over Central Plaza"
+  abstract: "Clothing, furniture, and collectibles from 50+ vendors."
+  content: "Shoppers can browse carefully curated vintage items with booth owners offering negotiable pricing. A certified appraiser on-site can assess antiques for authenticity. Food trucks provide lunch options for all-day browsers."
+
+- title: "Rainbow Pride Month Celebration Expands"
+  abstract: "Month-long events culminate in downtown parade and festival."
+  content: "LightTown's LGBTQ+ community and allies organized weekly events including film screenings, panel discussions, and artist showcases. The main parade will feature local organizations, floats, and live performances. All events are family-friendly and free to attend."
+
+- title: "Evening Outdoor Fitness Classes Begin in Spring"
+  abstract: "Yoga, Zumba, and bootcamp offered in parks."
+  content: "Certified instructors lead free classes Monday through Thursday at rotating locations. Bring your own mat or towel; no equipment needed. Classes are donation-based to support community recreation programs."
+
+- title: "Spring Concert Series Kicks Off at Town Square"
+  abstract: "Local and visiting musicians perform every Friday evening."
+  content: "The season opens with a folk duo performing originals and covers. Following weeks feature rock, classical, and world music acts. Picnicking encouraged; local vendors sell beverages and snacks."
+
+- title: "Community Talent Search for Summer Festival"
+  abstract: "Musicians, comedians, and performers needed."
+  content: "LightTown is seeking local talent to headline the Summer Festival. Auditions held at the recreation center; performers compete for paid slots and promotional opportunities. Application deadline is two weeks away."
+
+- title: "Documentary Screening: 'Stories of LightTown'"
+  abstract: "Filmmaker showcases ordinary residents' extraordinary lives."
+  content: "The 90-minute film features interviews with longtime residents, small business owners, and community leaders. Director will hold a Q&A session after screening at the library. Free popcorn for early arrivals."
+
+- title: "Outdoor Theater Returns for Summer Season"
+  abstract: "Family-friendly movies projected on big screen in park."
+  content: "Every other Saturday evening, a different film plays under the stars at Oakwood Park. Bring blankets, chairs, and snacks—alcohol not permitted. Concessions available at reasonable prices, with proceeds supporting the theater program."
+
+- title: "LightTown Craft Beer Festival Debuts"
+  abstract: "Local and regional breweries showcase selections."
+  content: "Attendees can sample craft beers from 20+ breweries while enjoying live music and food truck options. Designated driver program offers free soda and coffee. Must be 21+ with valid ID to participate."
+
+- title: "Children's Theater Workshop Produces Summer Show"
+  abstract: "Kids ages 6–12 put on musical performance."
+  content: "Workshop teaches acting, singing, and dance before culminating in a public performance. Rehearsals held after school; all experience levels welcome. Tickets available at the door or online; scholarships for families in need."
+
+- title: "Watercolor Painting Class in the Park"
+  abstract: "Local artist teaches beginners every Tuesday morning."
+  content: "Held at Riverside Park near the gazebo, classes focus on painting nature and landscapes. All materials provided; no experience necessary. First class free to try it out; registration after that."
+
+- title: "Spoken Word Poetry Night at Book Nook"
+  abstract: "Open mic featuring local poets and visiting artists."
+  content: "Monthly event welcomes performers and audience members of all experience levels. Sign-up begins at 6:30 p.m.; poets get 10 minutes on stage. Featured poet receives small honorarium and complimentary book from the store."
+
+- title: "Street Mural Project Beautifies Downtown Alleys"
+  abstract: "Artists and volunteers paint collaborative designs."
+  content: "Three downtown alleyways will be transformed into outdoor art galleries. Community members vote on mural themes; artists then execute designs over several weekends. Supplies and scaffolding provided by the city."
+
+- title: "Family Movie Marathon at the Library"
+  abstract: "Back-to-back screenings of classic films for all ages."
+  content: "The library hosts a quarterly movie day with four films showing from 10 a.m. to 5 p.m. Bring pillows and blankets; snacks available for purchase. Admission is free; advance registration recommended."
+
+- title: "Sunrise Yoga Sessions on the Beach"
+  abstract: "Waterfront meditation and movement to greet the day."
+  content: "Guided by certified instructors, beach yoga happens weekday mornings at the Willow Creek overlook. Mats provided or bring your own. Free for the first month; donations accepted thereafter."
+
+- title: "Retro Video Game Tournament at Recreation Center"
+  abstract: "Classic games compete for prizes and bragging rights."
+  content: "Players of all ages compete in Pac-Man, Donkey Kong, and other arcade classics. Entry fee is $10 per person; portion goes to youth gaming scholarships. Spectating is free; concessions available."
+
+- title: "Native Plant Walk and Propagation Workshop"
+  abstract: "Learn to grow local plants for your garden."
+  content: "Naturalists lead a walk through the botanical garden, identifying native species and their ecological roles. Participants then propagate seedlings to take home. All materials provided."
+
+- title: "Community Salsa Dance Night in Downtown Square"
+  abstract: "Free lessons followed by dancing under the stars."
+  content: "A professional instructor teaches basic steps from 7–8 p.m., then a DJ plays Latin music for social dancing until 10 p.m. No partner needed; everyone gets a chance to learn."
+
+- title: "Historical Photo Exhibit at Town Museum"
+  abstract: "Archive highlights LightTown's first 100 years."
+  content: "Curators restored and displayed rare photographs from 1920–2020. Exhibition runs for three months with special weekend tours by museum volunteers. Admission is free; donations support ongoing archival work."
+
+- title: "Storytelling Festival Draws Performers from Across the Region"
+  abstract: "Three-day event celebrates the oral tradition."
+  content: "Professional storytellers perform for adults and children in multiple venues. Workshops teach techniques for crafting engaging stories. Early registration includes festival pass, t-shirt, and souvenir program."
+
+- title: "Summer Book Club Launches at Farmer's Market"
+  abstract: "Weekly discussions between vendor stalls."
+  content: "Members select books by group vote and meet Wednesdays to discuss over coffee and fresh fruit. First meeting is free to observe; regular members pay small monthly fee."
+
+- title: "Outdoor Percussion Orchestra Practices in Park"
+  abstract: "Community musicians welcome; instruments provided."
+  content: "Musicians of any skill level meet twice weekly to rehearse pieces for an upcoming performance. Practice focuses on rhythm and ensemble playing. Public performance scheduled for end of summer."
+
+- title: "Lantern Festival Lights Up the Night"
+  abstract: "Hundreds release glowing lanterns into evening sky."
+  content: "Participants write wishes on paper lanterns before release at dusk. The event creates a magical sight while raising awareness for environmental conservation. A portion of proceeds goes to local cleanup efforts."
+
+- title: "Comedy Night Fundraiser at Community Center"
+  abstract: "Local comedians and national touring act headline."
+  content: "The evening raises funds for youth arts programs. Tickets include one drink and appetizers. Doors open at 7 p.m.; show starts at 8 p.m. 21+ event with valid ID required."
+
+- title: "Children's Science Festival with Hands-On Experiments"
+  abstract: "Interactive booths teach physics, chemistry, and biology."
+  content: "Over 20 booths let kids explore bubbles, magnets, and robot races. Demonstrations run hourly with participation encouraged. Free admission; small fee for take-home experiment kits."
+
+- title: "Moonlight Hike Along Forest Trail"
+  abstract: "Naturalist-led walk with glow sticks and snacks."
+  content: "Evening hike explores nocturnal wildlife and uses minimal light to preserve night vision. Binoculars and field guides provided. Easy pace suitable for families and seniors; 1.5-mile loop."
+
+- title: "Live Jazz on the Green Concert Series"
+  abstract: "Friday evenings feature regional jazz ensembles."
+  content: "Picnicking encouraged on the grass near the gazebo. No glass containers; coolers welcome. Series runs through August with different trio or quartet each week."
+
+- title: "Community Art Auction Benefits Local School Programs"
+  abstract: "Local artists donate works; proceeds go entirely to schools."
+  content: "Hundreds of pieces in all media—paintings, sculptures, photography—go on the block. Professional auctioneer handles the fast-paced sale. Preview reception held the evening before."
+
+- title: "Outdoor Symphony Under the Stars"
+  abstract: "Full orchestra performs greatest hits and popular classics."
+  content: "The regional symphony performs in Central Plaza with lawn seating available. Bring blankets and pillows. Free admission; donations support the orchestra."
+
+- title: "Heritage Craft Demonstration Fair"
+  abstract: "Artisans showcase traditional skills like weaving and pottery."
+  content: "Visitors watch craftspeople create items and can try simple techniques. Handmade goods available for purchase at fair prices. Kids' craft station with low-cost projects."
+
+- title: "Sunset Photography Walk Downtown"
+  abstract: "Photographer leads group capturing golden hour light."
+  content: "Participants learn composition and lighting techniques while exploring downtown architecture. All skill levels welcome; bring your own camera or use smartphone. Shared images posted online later."
+
+- title: "Evening Astronomy Program at Park Observatory"
+  abstract: "Telescopes and laser pointers reveal constellations."
+  content: "Volunteers help attendees find planets, star clusters, and deep sky objects. Short presentations explain what we're viewing. Clear nights preferred; indoor presentation available on cloudy days."
+
+- title: "Flash Mob Performance Surprises Shoppers"
+  abstract: "Dancers and musicians converge unexpectedly downtown."
+  content: "The spontaneous musical performance gets crowds involved with a simple dance routine. Video will be edited and shared on social media. Performances happen monthly in different locations."
+
+- title: "Open Air Market Celebrates Local Producers"
+  abstract: "Farmers, bakers, and makers gather weekly."
+  content: "Year-round market features seasonal produce, baked goods, crafts, and prepared foods. SNAP/EBT accepted with bonus dollars available. Community information booths also present."
+
+- title: "Evening Meditation and Tai Chi Classes in Park"
+  abstract: "Free sessions teach mind-body connection and relaxation."
+  content: "Instructor leads gentle movements and breathing exercises suitable for all ages and abilities. Classes held three evenings weekly during warm months. Mats provided or bring your own."
+
+- title: "Cultural Food Festival Showcases Immigrant Cuisines"
+  abstract: "Dishes from a dozen countries sampled by attendees."
+  content: "Local families from various ethnic backgrounds prepare traditional recipes. Live music and dance performances accompany the meals. Recipes available; some cooks offer occasional cooking classes."
+
+- title: "Street Fair with Games, Crafts, and Entertainment"
+  abstract: "Family-friendly day of activities throughout downtown."
+  content: "Spinning prize wheel, face painting, balloon artists, and lawn games entertain kids. Local musicians perform on multiple stages. Food vendors represent diverse cuisines and dietary preferences."
+
+- title: "River Cleanup and Kayak Adventure Combined"
+  abstract: "Paddlers collect trash while enjoying scenic route."
+  content: "Groups paddle down Willow Creek picking up litter with nets and grabbers. Equipment provided for non-paddlers who assist from shore. Event teaches environmental stewardship alongside recreation."
+
+- title: "Garden Party Tea Social in Historic Mansion Courtyard"
+  abstract: "Fancy hats and fancy cakes at afternoon tea service."
+  content: "Dressed-up attendees enjoy multiple tea courses, live string quartet, and hat contest. Proceeds support mansion restoration. Seating limited; reservations required well in advance."
+
+- title: "Drum Circle Returns to Central Plaza"
+  abstract: "Rhythmic gathering brings people together through music."
+  content: "Drummers of all experience levels bring hand drums or borrow from the growing collection. Facilitator helps build group rhythms and grooves. Event builds community connection and musical expression."
+
+- title: "Acoustic Brunch Series Launches Downtown"
+  abstract: "Local musicians perform live while you enjoy breakfast."
+  content: "Every Sunday morning, a different acoustic act plays at a rotating downtown café. Performers include solo singers, duos, and small ensembles. Audiences encouraged to stay for meals at host venue."
+
+- title: "Community Mural Walking Tour and Reception"
+  abstract: "Explore downtown's newest public art installations."
+  content: "Guided tours highlight the stories and artists behind recent murals painted throughout LightTown. Walking tour followed by reception with light refreshments downtown. Maps available for self-guided tours."
+
+- title: "Outdoor Mobile Library and Book Fair"
+  abstract: "Library on wheels visits neighborhoods weekly."
+  content: "A converted bus serves as a mobile library branch stopping at parks and community centers. Residents can check out books, attend story times, and register for programs. Special focus on bringing services to underserved areas."
+
+- title: "Night Market Experience in Central Plaza"
+  abstract: "Evening bazaar features food, crafts, and entertainment."
+  content: "Vendors sell handmade items, street food, and beverages under string lights. Local musicians and performers entertain shoppers throughout the evening. Atmosphere is festive and family-friendly."
+
+- title: "Spring Planting Festival at Community Garden"
+  abstract: "Volunteers help prepare beds for growing season."
+  content: "Master Gardeners provide seedlings, tools, and instruction for plot preparation. All skill levels welcome; experienced gardeners mentor newcomers. Light refreshments provided; tools available for checkout."
+
+- title: "Twilight Farmers Market Offers Evening Shopping"
+  abstract: "Extended hours accommodate working residents."
+  content: "The farmers market now runs until 7 p.m. on Saturdays for those who cannot attend morning sessions. All the usual vendors present with full selection of produce and prepared foods."
+
+- title: "LightTown Music Academy Hosts Student Showcase"
+  abstract: "Young musicians perform pieces studied this semester."
+  content: "Students from all levels—beginner to advanced—perform solos and ensembles. Free admission; refreshments sold to support music scholarships. Proud families fill the auditorium."
+
+- title: "Summer Outdoor Concert Series Begins"
+  abstract: "Weekly live music in downtown plaza."
+  content: "Local and regional musicians perform across multiple genres from pop to folk. Lawn seating encouraged; bring blankets and picnic dinners. Concessions available with proceeds supporting youth music programs."
+
+- title: "Community Garden Expansion Project Approved"
+  abstract: "New raised beds added for resident gardeners."
+  content: "The town has approved expansion of the community garden to add 15 new plots. Sign-ups open for interested gardeners. Tools, seeds, and water are provided; harvest can be shared or kept."
+
+- title: "LightTown Film Festival Call for Submissions Opens"
+  abstract: "Local filmmakers encouraged to submit short films."
+  content: "The festival welcomes documentaries, animations, and narrative films under 30 minutes. Submission deadline is in three weeks. Winning films will be screened at the downtown theater."
+
+- title: "Dance Workshop Series Featuring Ballet and Jazz"
+  abstract: "Professional instructors teach technique and choreography."
+  content: "Six-week workshop series covers basic ballet and jazz fundamentals. Classes held twice weekly with beginner and intermediate options. Final showcase performance allows students to display their progress."
+
+- title: "Paint and Sip Night at Downtown Gallery"
+  abstract: "Create artwork while enjoying beverages."
+  content: "Local artist leads group painting session with step-by-step instruction. Participants of all abilities create a finished piece to take home. Alcoholic and non-alcoholic beverages available for purchase."
+
+- title: "Nature Sound Recording Workshop"
+  abstract: "Learn to capture sounds of forest and wildlife."
+  content: "Audio enthusiast teaches recording techniques using smartphones and equipment. Group walks through nature preserves recording ambient sounds. Participants create personal audio journals of natural spaces."
+
+- title: "Outdoor Fitness Bootcamp Expands Classes"
+  abstract: "New morning and evening sessions added."
+  content: "Due to popularity, the bootcamp now offers three sessions weekly. High-intensity interval training combined with strength exercises. All fitness levels accommodated with modifications."
+
+- title: "Community Mosaic Tiling Exhibition Opens"
+  abstract: "Finished public art installations on display."
+  content: "The downtown mosaic project completed with contributions from hundreds of community members. Exhibition photos show the creation process and final installation. Virtual gallery available online."
+
+- title: "Writer's Workshop and Story Slam Event"
+  abstract: "Share creative writing and hear local authors."
+  content: "Workshop provides tips on storytelling, character development, and editing. Story Slam follows where writers read 5-minute pieces to an audience. Informal and supportive environment for all writers."
+
+- title: "Kids' Outdoor Adventure Camp Registration Opens"
+  abstract: "Week-long camp with hiking, games, and nature skills."
+  content: "Children ages 6-12 learn outdoor skills including navigation, knot-tying, and wildlife identification. Daily adventures include foraging walks and campfire cookouts. Full day with lunch and snacks included."
+
+- title: "Community Orchestra Recruitment Drive"
+  abstract: "Musicians of all levels invited to join."
+  content: "The community orchestra seeks string, brass, and wind players. Rehearsals held weekly; performance opportunities throughout the season. No audition required; all skill levels welcome."
+
+- title: "Outdoor Watercolor Exhibit and Artist Talk"
+  abstract: "Local watercolorists display works and discuss techniques."
+  content: "Gallery exhibit features paintings of local landscapes and nature scenes. Artist reception includes talk on watercolor techniques and inspiration. Paintings available for purchase."
+
+- title: "Community Cleanup Day Expands to Multiple Sites"
+  abstract: "Volunteers needed at parks, trails, and riverbanks."
+  content: "Organized groups work to remove litter and invasive plants across LightTown. Supplies provided including gloves, bags, and tools. Refreshments served at each site after cleanup."
+
+- title: "Outdoor Meditation and Mindfulness Retreat"
+  abstract: "Full-day wellness experience in natural setting."
+  content: "Guided meditation, yoga, nature walks, and wellness talks throughout the day. Vegetarian meals provided. Calm atmosphere encourages inner reflection and community connection."
+
+- title: "Community Theater Auditions for Summer Production"
+  abstract: "Open calls for all roles and crew positions."
+  content: "Theater group seeking actors, musicians, and technical crew for summer musical. Auditions held over two weekends; no experience necessary. Production opens in three months."
+
+- title: "Outdoor Sculpture Art Walk Installs New Works"
+  abstract: "Contemporary artists create site-specific installations."
+  content: "New sculptures added to the trail showcasing diverse artistic visions. Many pieces interactive or incorporate natural materials. Walking guide available at visitor center."
+
+- title: "Community Beekeeping Class Series"
+  abstract: "Learn about honeybees and sustainable practices."
+  content: "Four-week course covers bee biology, hive management, and honey production. Class includes visits to active apiaries in LightTown. Graduates encouraged to start home hives."
+
+- title: "Outdoor Photography Portfolio Review Day"
+  abstract: "Professional photographers provide feedback on work."
+  content: "Photographers bring portfolios for critique from established professionals. Helpful feedback on composition, storytelling, and technical skills. Networking opportunity with other photographers."
+
+- title: "Community Dance Festival Announces Performers"
+  abstract: "Multiple dance groups perform throughout the day."
+  content: "Ballet, contemporary, hip-hop, and traditional dance companies perform. Free outdoor performances in downtown plaza. Audience can vote for favorite performers."
+
+- title: "Outdoor Herb Gardening Workshop"
+  abstract: "Grow culinary and medicinal herbs in containers."
+  content: "Expert teaches herb selection, growing conditions, and harvest. Participants plant starter herbs in containers to take home. Recipe handout included with workshop."
+
+- title: "Community Book Festival Celebrates Authors and Readers"
+  abstract: "Multi-day event with authors, readings, and book sales."
+  content: "Local and visiting authors give readings and panel discussions. Independent bookstore sets up shop with special event pricing. Kids' activities and teen zones provide full-day entertainment."
+
+- title: "Outdoor Science Demonstration Series"
+  abstract: "Interactive experiments explore physics and nature."
+  content: "Scientist leads weekly demonstrations with audience participation. Topics include gravity, magnetism, weather, and ecology. Educational and entertaining for all ages."
+
+- title: "Community Songwriting Workshop and Open Mic"
+  abstract: "Learn songwriting basics then share with audience."
+  content: "Workshop covers melody, lyrics, and structure. Participants can perform original songs at the open mic that follows. Supportive environment for beginning songwriters."
+
+- title: "Riverside Picnic and Live Music Series"
+  abstract: "Casual gatherings with local musicians performing."
+  content: "Weekly picnics feature different acoustic performers each week. Bring your own picnic or purchase from food vendors. Family-friendly atmosphere with lawn games available."
+
+- title: "Community Ukulele Jam Session"
+  abstract: "All skill levels welcome to bring and play ukuleles."
+  content: "Open jam session for ukulele enthusiasts. Beginner songs to advanced arrangements played in relaxed setting. Spare ukuleles available for borrowing."
+
+- title: "Outdoor Painting Challenge Event"
+  abstract: "Artists compete to create masterpiece in limited time."
+  content: "Local artists given theme and two hours to complete painting. Audience votes on winners in various categories. Paintings auctioned off with proceeds to art education programs."
+
+- title: "Community Wellness Walk and Talk Series"
+  abstract: "Guided walks with health professionals."
+  content: "Health experts lead nature walks discussing nutrition, fitness, and mental wellness. Walks are 2-3 miles at easy pace. Free resource materials provided at end of walk."
+
+- title: "Outdoor Storytelling Festival Returns"
+  abstract: "Storytellers perform tales under the open sky."
+  content: "Multiple storytellers perform traditional and original stories. Audience sits on lawn enjoying afternoon of entertainment. Stories suitable for all ages."
+
+- title: "Community Tree Planting Initiative"
+  abstract: "Residents plant native trees around LightTown."
+  content: "Volunteers plant trees in parks and along streets to increase urban forest. Free native seedlings provided to households for personal yards. Educational talks on tree benefits included."
+
+- title: "Outdoor Fitness Festival with Multiple Activities"
+  abstract: "Sample different exercise classes and wellness activities."
+  content: "Demo classes in yoga, pilates, dance, and martial arts. Local fitness professionals lead 15-minute taster sessions. Healthy snack samples from local vendors."
+
+- title: "Community Chalk Drawing Challenge"
+  abstract: "Artists create temporary sidewalk masterpieces."
+  content: "Individual artists and teams compete with chalk art on Main Street. Public voting determines winners. All chalk art washed away at end of event."
+
+- title: "Outdoor Photography Exhibition of Community Life"
+  abstract: "Photos showcase people and events around LightTown."
+  content: "Exhibition features work from community photographers documenting town events and daily life. Photos printed large-scale for public gallery. Artist talks scheduled weekends."
+
+- title: "Community Jazz Jam Night Outdoors"
+  abstract: "Jazz musicians improvise together under stars."
+  content: "Local jazz musicians gather for collaborative improvisation sessions. Audience enjoys live music in outdoor amphitheater. Casual and spontaneous performances."
+
+- title: "Outdoor Knitting Circle Workshops"
+  abstract: "Learn knitting and connect with other crafters."
+  content: "Experienced knitters teach basics to beginners. Ongoing circle meets weekly to work on projects. All ages and skill levels welcome; projects on display."
+
+- title: "Community Outdoor Cooking Challenge"
+  abstract: "Chefs compete preparing meals over fire."
+  content: "Local cooks demonstrate various outdoor cooking techniques. Competition judges on flavor, creativity, and technique. Audience samples finished dishes."
+
+- title: "Outdoor Music and Movement for Toddlers"
+  abstract: "Parent-child activities with music and dance."
+  content: "Early childhood music specialist leads interactive session. Babies and toddlers enjoy songs, rhythms, and movement. Parent-child bonding emphasized throughout."
+
+- title: "Community Outdoor Trivia Night Series"
+  abstract: "Teams compete answering questions on various topics."
+  content: "Weekly trivia themes range from local history to pop culture. Teams compete for prizes and bragging rights. Casual atmosphere with food and drinks available."
+
+- title: "Outdoor Fiber Festival Celebrates Textiles"
+  abstract: "Spinners, weavers, and dyers demonstrate crafts."
+  content: "Artisans demonstrate fiber arts from raw materials to finished goods. Workshops teach basic spinning and dyeing techniques. Handmade textile items available for purchase."
+
+- title: "Community Outdoor Baking Competition"
+  abstract: "Bakers create treats for friendly competition."
+  content: "Amateur bakers compete in categories like cookies, breads, and pies. Judges score on taste, appearance, and originality. Winning entries featured in local bakery."
+
+- title: "Outdoor Nature Documentary Screening Series"
+  abstract: "Films about wildlife and conservation shown outdoors."
+  content: "Monthly outdoor screenings feature acclaimed nature documentaries. Post-screening discussions led by conservation experts. Family-friendly content with picnic seating."
+
+- title: "Community Outdoor Tai Chi Class Series"
+  abstract: "Free classes teaching gentle martial art."
+  content: "Certified instructor leads traditional Tai Chi movements in the park. Suitable for all ages and fitness levels. Morning sessions offer peaceful way to start the day."
+
+- title: "Outdoor Artist Residency Program Launches"
+  abstract: "Selected artists create works in public view."
+  content: "Local artists chosen to create sculptures, paintings, or installations in parks. Artists share process with community throughout project. Finished works remain as public art."
+
+- title: "Community Outdoor Salsa Night Series"
+  abstract: "Lessons and social dancing in plaza."
+  content: "Professional instructor teaches salsa basics. DJ provides music for social dancing after lesson. Couples and singles welcome; mixer events for solo dancers."
+
+- title: "Outdoor Sustainability Workshop Series"
+  abstract: "Learn about environmental living practices."
+  content: "Workshops cover topics like composting, water conservation, and renewable energy. Local experts share practical tips for reducing environmental impact. Resource guides provided."
+
+- title: "Community Outdoor Pottery Demonstration"
+  abstract: "Ceramic artists create and teach techniques."
+  content: "Potters demonstrate wheel-throwing and hand-building techniques. Visitors can try molding clay under guidance. Finished pieces displayed and some available for purchase."
+
+- title: "Outdoor Community Concert Finale Event"
+  abstract: "Season concludes with all-star musical performance."
+  content: "Featuring all musicians who performed during the season plus special guests. Extended evening performance celebrating community music. Food and drinks available all evening."
