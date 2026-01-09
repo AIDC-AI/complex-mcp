@@ -273,10 +273,3 @@ async def count_chars(text: str) -> int:
 async def template_render(template: str, values: dict) -> str:
     """Render a simple Python `str.format` template using `values` mapping."""
     return template.format(**values)
-
-
-@mcp.tool
-async def clamp(value: int, min_val: int, max_val: int) -> int:
-    """Clamp integer `value` between `min_val` and `max_val` and return the clamped value."""
-    return max(min_val, min(value, max_val))
-

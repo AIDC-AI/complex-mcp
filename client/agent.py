@@ -149,7 +149,7 @@ class Toolbox:
 
         return '\n'.join(map(lambda x: f"- {x}", tools_desc))
     
-    def get_system_prompt(self):
+    def get_system_prompt(self, discard_tools: bool = False):
         SYSTEM_PROMPT = (
             "You are an AI assistant with access to a set of tools (APIs). "
             f"When you need to use a tool, invoke it by outputting a JSON object enclosed by {TOOL_START_SEQ} and {TOOL_STOP_SEQ} in the following format:\n"
@@ -158,6 +158,8 @@ class Toolbox:
             f"{TOOL_STOP_SEQ}\n"
             "Below is the list of available tools and their descriptions:\n"
         )
+        if discard_tools:
+            return SYSTEM_PROMPT
 
         if self.method == "list_all":
             tool_desc_list = [self.__get_desc_of_one_tool(key_name).__str__() for key_name in self.tools]
@@ -179,7 +181,8 @@ class Toolbox:
         
         self.servers[server_name] = {
             "url": server_url,
-            "need_session": use_sandbox
+            "need_session": use_sandbox,
+            "tools": []
         }
 
         if desc_path:
@@ -194,6 +197,7 @@ class Toolbox:
                     while key_name in self.tools:
                         key_name = f"{server_name}_{key_name}"
                     
+                    self.servers[server_name]["tools"].append(key_name)
                     self.tools[key_name] = {**tool_desc, **{
                         "server": {
                             "name": server_name,
@@ -223,7 +227,8 @@ class Toolbox:
                 key_name = tool_name[:]
                 while key_name in self.tools:
                     key_name = f"{server_name}_{key_name}"
-
+                
+                self.servers[server_name]["tools"].append(key_name)
                 self.tools[key_name] = {
                     "tool_name": tool_name,
                     "description": tool.description,
@@ -361,6 +366,12 @@ class AgentClient:
     ):
         self.llm = llm
         self.toolbox = toolbox
+        self.system_prompt = system_prompt
+    
+    def set_system_prompt(
+        self,
+        system_prompt: str
+    ):
         self.system_prompt = system_prompt
     
     async def __login(self, env: Dict[str, Any], session_id_dict: Dict[str, Any], results: Dict[str, Any]):
@@ -572,7 +583,6 @@ if __name__ == "__main__":
         server_name="MathServer",
         server_url="http://127.0.0.1:8000/mcp"
     )
-
 
     print(toolbox.get_system_prompt())
 

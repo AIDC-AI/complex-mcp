@@ -1,6 +1,0 @@
-instructs:
-  - content: Happy Women's Day to all the women on your cowoker list! After you finish this task, output an '[END]' in the end.
-    seed: 42
-    apps: [LightTalk]
-    level: 1
-
