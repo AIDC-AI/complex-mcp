@@ -14,6 +14,8 @@ import yaml
 import asyncio
 
 import pandas as pd
+from shortuuid import uuid
+from datetime import datetime
 
 def parse_toolbox(tool_config_path: str | Path, method: str):
     config = {}
@@ -33,6 +35,14 @@ def parse_toolbox(tool_config_path: str | Path, method: str):
         toolbox.register_server(**server_args)
     
     return toolbox
+
+def parse_query(output: str):
+    i = output.find("<query>")
+    j = output.find("</query>")
+    if i < 0 or i >= j:
+        return None
+    
+    return output[i + len("<query>") : j]
 
 def add_data(query_result: Dict[str, Any]):
     dataset_path = Path("benchmark") / "data" / "data.parquet"
@@ -155,6 +165,23 @@ def gen_instruct_by_llm(agent: AgentClient):
         )
 
         result = asyncio.run(task)
+        output = result["output"]
+        query = parse_query(output)
+        instructs.append({
+            "seed": seed,
+            "apps": apps,
+            "query": query.strip()
+        })
+
+    file_path = Path("benchmark") / "instruct" / f"inst_{uuid()[:8]}.yaml"
+    data = {
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "level": level,
+        "instructs": instructs
+    }
+
+    with open(file_path, "w") as f:
+        yaml.safe_dump(data, f)
 
 
 def main(args):
