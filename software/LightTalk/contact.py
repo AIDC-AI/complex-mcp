@@ -62,7 +62,7 @@ if WORK_DIR not in sys.path:
     sys.path.append(WORK_DIR.__str__())
 
 from software.utils.time import TimeMachine
-from software.utils.core import OSConnector, DummyOSConnector
+from software.utils.core import OSConnector, DummyOSConnector, uuid_rng
 
 corpus_path = Path("software") / "LightTalk" / "corpus"
 
@@ -259,8 +259,7 @@ class ContactSession:
         return results
     
     def uuid(self):
-        alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-        return ''.join(self.rng.choices(alphabet, k=22))
+        return uuid_rng(self.rng)
     
     @network_trouble()
     def get_all_contacts(self) -> List[Dict[str, str]]:
@@ -1223,8 +1222,8 @@ class ContactSession:
 
 
 if __name__ == "__main__":
-    contact_session = ContactSession(seed=42, os_cfg=None)
+    contact_session = ContactSession(seed=100, os_cfg=None)
 
     from pprint import pprint
 
-    pprint(contact_session.fuzzy_search_uids_from_name(name="de"))
+    pprint(contact_session.fuzzy_search_uids_from_name(name="x"))

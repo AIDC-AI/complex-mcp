@@ -1,7 +1,10 @@
+from dataclasses import dataclass, field, asdict
+from datetime import datetime
+from typing import List, Dict, Any, Optional, Tuple
+from collections import defaultdict
 import random
-from typing import Dict, List, Any, Tuple
-from pathlib import Path
 import yaml
+import math
 
 import sys
 from pathlib import Path
@@ -10,317 +13,349 @@ WORK_DIR = Path('.').__str__()
 if WORK_DIR not in sys.path:
     sys.path.append(WORK_DIR)
 
-
-from software.utils.core import OSConnector, DummyOSConnector
 from software.utils.time import TimeMachine
+from software.utils.core import OSConnector, DummyOSConnector, uuid_rng
+
+@dataclass
+class Flight:
+    fid: str
+    departure: str
+    arrival: str
+    departure_airport: str
+    arrival_airport: str
+    departure_time: str
+    arrival_time: str
+    duration: int  # 分钟
+    price: float
+    seat_count: Dict[str, int] = field(default_factory=dict)  # 舱等: 剩余座位数
+
+@dataclass
+class Airport:
+    aid: str
+    name: str
+    city: str
+    code: str
+    _coord: Tuple[int, int]
+    star: bool = field(default=False)
+
+@dataclass
+class BookingItem:
+    bid: str
+    fid: str
+    seat_class: str
+    passenger_count: int
+    total_price: float
+
+@dataclass
+class BookingRecord:
+    timestamp: str
+    brid: str
+    total: float
+    flights: Dict[str, Dict[str, int]] = field(default_factory=dict)  # {fid: {seat_class: passenger_count}}
+
 
 CORPUS_PATH = Path("software") / "LightFlight" / "corpus"
-
 
 class FlightSession:
     def __init__(self, seed: int, os_cfg: Dict[str, str]):
         self.rng = random.Random(seed)
-        self.os = OSConnector(session_id=os_cfg["session_id"], url=os_cfg["url"]) if os_cfg else DummyOSConnector()
         self.time_machine = TimeMachine(rng=self.rng)
+        self.os = OSConnector(
+            session_id=os_cfg["session_id"],
+            url=os_cfg["url"]
+        ) if os_cfg else DummyOSConnector()
 
-        with open(CORPUS_PATH / "flight.yaml") as f:
-            info = yaml.safe_load(f)
+        self.airports, self.airports_in_cities = self.init_airports()
+        self.flights, self.flights_by_arrival, self.flights_by_departure = self.init_flights()
 
-        self.airlines = {a["code"]: a for a in info.get("airlines", [])}
-        self.airports = {a["code"]: a for a in info.get("airports", [])}
-        self.fares = info.get("fare_classes", [])
-        self.sample_flights = info.get("sample_flights", [])
-        self.promos = {p["code"]: p for p in info.get("promo_codes", [])}
+        self.my_balance = self.rng.randint(5000, 50000)
+        self.bookings_wait_for_checkout: List[BookingItem] = []
+        self.current_bookings: List[BookingItem] = []
+        self.booking_history: List[BookingRecord] = []
+        self.__mock_booking()
 
-        # persistent session state
-        self.bookings: Dict[str, Dict[str, Any]] = {}
-        self.holds: Dict[str, Dict[str, Any]] = {}
-        self.wallet_balance = round(self.rng.uniform(200, 20000), 2)
-        self.loyalty_accounts = {}
-        self.preferences = {}
+        self.my_starred_flights = set()
+        self.my_starred_airports = set()
 
-        # Pre-generate deterministic catalog and state for read-only endpoints
-        self.flight_catalog: Dict[str, Dict[str, Any]] = {}
-        self.routes_index: Dict[Tuple[str, str], List[str]] = {}
-        self.seat_maps: Dict[str, Dict[str, str]] = {}
-        self.operational_status: Dict[str, str] = {}
-        self.delay_estimates: Dict[str, int] = {}
-        self.baggage_info: Dict[str, Dict[str, Any]] = {}
-        
-        # Pre-compute random data for methods to ensure deterministic behavior after init
-        self._precomputed_prices: Dict[str, float] = {}  # flight_no -> price for book_flight
-        self._precomputed_refunds: Dict[str, float] = {}  # flight_no -> default refund ratio
-        self._precomputed_upgrades: Dict[str, float] = {}  # flight_no -> default upgrade cost
-        self._precomputed_travel_times: Dict[Tuple[str, str], float] = {}  # (origin, dest) -> hours
-        self._precomputed_connections: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}  # (origin, dest) -> connections
-        
-        self._generate_catalog()
+        self.enter_password = False
+    
+    def uuid(self, prefix: str):
+        return f"{prefix}_{uuid_rng(self.rng)}"
 
-    def uuid(self) -> str:
-        alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-        return ''.join(self.rng.choices(alphabet, k=12))
-
-    def _generate_catalog(self):
-        # Pre-generate price lookup for each flight for deterministic book_flight
-        for f in self.sample_flights:
-            fn = f.get("flight_no")
-            price = round(f.get("base_price", 200) * (1 + self.rng.uniform(-0.2, 0.5)), 2)
-            self._precomputed_prices[fn] = price
-            self._precomputed_refunds[fn] = self.rng.uniform(0, 1)
-            self._precomputed_upgrades[fn] = round(self.rng.uniform(20, 500), 2)
-            self.flight_catalog[fn] = {**f, "price": price}
-            key = (f.get("origin"), f.get("dest"))
-            self.routes_index.setdefault(key, []).append(fn)
-
-            # seat map
-            seats = {f"{r}{c}": "available" for r in range(1, 31) for c in ["A","B","C","D","E","F"]}
-            booked = self.rng.sample(list(seats.keys()), k=int(len(seats) * 0.1))
-            for s in booked:
-                seats[s] = "booked"
-            self.seat_maps[fn] = seats
-
-            self.operational_status[fn] = self.rng.choice(["on_time", "delayed", "cancelled"])
-            self.delay_estimates[fn] = self.rng.randint(0, 180) if self.operational_status[fn] != "on_time" else 0
-            self.baggage_info[fn] = {"allowance": "1 checked + 1 carry-on", "fee_per_extra_kg": 30}
-
-        # generate additional synthetic flights for common origin/dest pairs
-        codes = list(self.airports.keys())
-        for i in range(min(10, max(0, len(codes) - 1))):
-            o = codes[self.rng.randrange(len(codes))]
-            d = codes[self.rng.randrange(len(codes))]
-            if o == d:
-                continue
-            fn = f"FL{self.uuid()}"
-            duration = self.rng.randint(60, 900)
-            price = round(self.rng.uniform(100, 1500), 2)
-            self._precomputed_prices[fn] = price
-            self._precomputed_refunds[fn] = self.rng.uniform(0, 1)
-            self._precomputed_upgrades[fn] = round(self.rng.uniform(20, 500), 2)
-            airline = self.rng.choice(list(self.airlines.keys())) if self.airlines else "XX"
-            self.flight_catalog[fn] = {"flight_no": fn, "airline": airline, "origin": o, "dest": d, "duration_min": duration, "price": price}
-            self.routes_index.setdefault((o, d), []).append(fn)
-            seats = {f"{r}{c}": "available" for r in range(1, 31) for c in ["A","B","C","D","E","F"]}
-            booked = self.rng.sample(list(seats.keys()), k=int(len(seats) * 0.08))
-            for s in booked:
-                seats[s] = "booked"
-            self.seat_maps[fn] = seats
-            self.operational_status[fn] = self.rng.choice(["on_time", "delayed"])
-            self.delay_estimates[fn] = 0 if self.operational_status[fn] == "on_time" else self.rng.randint(5, 240)
-            self.baggage_info[fn] = {"allowance": "1 checked + 1 carry-on", "fee_per_extra_kg": 25}
-        
-        # Pre-generate travel times and connections for all airport pairs
-        for o in self.airports.keys():
-            for d in self.airports.keys():
-                if o != d:
-                    self._precomputed_travel_times[(o, d)] = round(self.rng.uniform(1, 20), 1)
-                    via = self.rng.choice(list(self.airports.keys()))
-                    self._precomputed_connections[(o, d)] = [{"via": via, "total_duration": self.rng.randint(200, 1200)}]
-
-    def get_session_dict(self):
+    def get_session_dict(self) -> Dict[str, Any]:
         return {
-            "bookings": list(self.bookings.values()),
-            "holds": list(self.holds.values()),
-            "wallet_balance": self.wallet_balance,
-            "preferences": self.preferences
+            "my_balance": self.my_balance,
+            "bookings": self.current_bookings,
+            "history": self.booking_history
         }
 
-    def list_airlines(self) -> Dict[str, Any]:
-        return {"status": "ok", "output": list(self.airlines.values())}
+    def init_airports(self) -> Tuple[List[Airport], Dict[str, str]]:
+        airports_list = []
+        airports_in_cities = defaultdict(list)
+        with open(CORPUS_PATH / "airports.yaml") as f:
+            airports = yaml.safe_load(f)["airports"]
+            for airport in airports:
+                aid = airport["aid"]
+                name = airport["name"]
+                city = airport["city"]
+                code = airport["code"]
+                _coord = airport["_coord"]
 
-    def list_airports(self) -> Dict[str, Any]:
-        return {"status": "ok", "output": list(self.airports.values())}
+                airport_item = Airport(
+                    aid=aid,
+                    name=name,
+                    city=city,
+                    code=code,
+                    _coord=_coord
+                )
+                airports_list.append(airport_item)
+                airports_in_cities[city].append(name)
+        
+        return airports_list, airports_in_cities
 
-    def search_flights(self, origin: str, dest: str, date: str, passengers: int = 1) -> Dict[str, Any]:
-        key = (origin, dest)
-        flight_nos = self.routes_index.get(key, [])
-        results = []
-        for fn in flight_nos:
-            f = self.flight_catalog[fn]
-            results.append({"flight_no": fn, "airline": f.get("airline"), "duration_min": f.get("duration_min"), "price": round(f.get("price", 0) * passengers, 2)})
-        return {"status": "ok", "output": results}
+    def init_flights(self) -> Tuple[Dict[str, Flight], Dict[str, List[Flight]], Dict[str, List[Flight]]]:
+        def __mock_dura_price(
+            coord_1: Tuple[float, float],
+            coord_2: Tuple[float, float]
+        ) -> Tuple[int, float]:
+            lat1, lon1 = coord_1
+            lat2, lon2 = coord_2
+            
+            dlat = lat2 - lat1
+            dlon = lon2 - lon1
+            distance_km = 111 * math.sqrt(dlat**2 + (math.cos(math.radians(lat1)) * dlon)**2)
+            
+            flight_hours = distance_km / 800
+            total_minutes = int(round(flight_hours * 60 + 45))  # 飞行时间+起降
+            
+            total_minutes = int(total_minutes * self.rng.uniform(0.9, 1.1))
+            total_minutes = max(60, total_minutes)
+            
+            price_per_km = self.rng.uniform(0.8, 1.2)  # 每公里 0.8-1.2 元
+            price = distance_km * price_per_km
+            
+            # 简单调节
+            if total_minutes < 120:  # 短途
+                price *= 1.5
+            elif total_minutes > 360:  # 长途
+                price *= 0.9
+            
+            # 随机波动
+            price *= self.rng.uniform(0.3, 1.2)
+            
+            price = max(300, min(10000, price))
+            price = round(price / 10) * 10
+            
+            return total_minutes, price
 
-    def get_flight_details(self, flight_no: str) -> Dict[str, Any]:
-        f = self.flight_catalog.get(flight_no)
-        if not f:
-            return {"status": "failed", "output": f"Flight {flight_no} not found"}
-        return {"status": "ok", "output": f}
+        flights: Dict[str, Flight] = {}
+        flights_by_arrival: Dict[str, List[Flight]] = defaultdict(list)
+        flights_by_departure: Dict[str, List[Flight]] = defaultdict(list)
+        for airport in self.airports:
+            target_airports = self.rng.sample(self.airports, k=self.rng.randint(5, 50))
+            target_airports = self.rng.choices(target_airports, k=4 * len(target_airports))
+            for target_airport in target_airports:
+                dura, price = __mock_dura_price(airport._coord, target_airport._coord)
+                departure_time = self.time_machine.add_secs(
+                    timestamp=self.os.now(),
+                    min_secs=3600 * 4, max_secs= 3600 * 10 * 24
+                )
+                flight = Flight(
+                    fid=self.uuid("flight"),
+                    departure=airport.city,
+                    arrival=target_airport.city,
+                    departure_airport=airport.name,
+                    arrival_airport=target_airport.name,
+                    departure_time=departure_time,
+                    arrival_time=self.time_machine.add_secs(
+                        departure_time,
+                        min_secs=dura * 60, max_secs=dura * 60
+                    ),
+                    duration=dura,
+                    price=price, # economy
+                    seat_count={
+                        "economy": self.rng.randint(10, 50),
+                        "business": self.rng.randint(0, 20),
+                        "first": self.rng.randint(0, 7)
+                    }
+                )
+                flights[flight.fid] = flight
+                flights_by_arrival[flight.arrival].append(flight)
+                flights_by_departure[flight.departure].append(flight)
+        
+        return flights, dict(flights_by_arrival), dict(flights_by_departure)
 
-    def hold_seat(self, flight_no: str, seat_class: str, hold_minutes: int = 15) -> Dict[str, Any]:
-        hid = f"hold_{self.uuid()}"
-        self.holds[hid] = {"flight_no": flight_no, "seat_class": seat_class, "expires_in_min": hold_minutes}
-        return {"status": "ok", "output": {"hold_id": hid, "expires_in_min": hold_minutes}}
+    def __mock_booking(self):
+        if self.rng.uniform(0, 1) > 0.5:
+            return
+        
+    def list_all_cities(self) -> Dict[str, Any]:
+        return {
+            "status": "ok",
+            "output": list(self.airports_in_cities.keys())
+        }
 
-    def confirm_payment(self, hold_id: str, amount: float, method: str = "card") -> Dict[str, Any]:
-        if hold_id not in self.holds:
-            return {"status": "failed", "output": "Hold not found"}
-        if amount > self.wallet_balance:
-            return {"status": "failed", "output": "Insufficient balance"}
-        self.wallet_balance -= amount
-        bid = f"booking_{self.uuid()}"
-        hold = self.holds.pop(hold_id)
-        self.bookings[bid] = {"booking_id": bid, "flight_no": hold["flight_no"], "seat_class": hold["seat_class"], "paid": amount, "status": "confirmed"}
-        return {"status": "ok", "output": self.bookings[bid]}
+    def list_airports_by_city(self, city: str) -> Dict[str, Any]:
+        if city not in self.airports_in_cities:
+            return {
+                "status": "failed",
+                "output": f"City '{city}' not found"
+            }
+        return {
+            "status": "ok",
+            "output": self.airports_in_cities[city]
+        }
 
-    def book_flight(self, flight_no: str, passenger_info: Dict[str, Any], seat_class: str, promo: str | None = None) -> Dict[str, Any]:
-        # quick book without hold - use pre-computed price
-        price = self._precomputed_prices.get(flight_no, 100.0)
-        if promo and promo in self.promos:
-            promo_cfg = self.promos[promo]
-            if "discount_pct" in promo_cfg:
-                price = price * (1 - promo_cfg["discount_pct"]/100)
-            elif "discount_amt" in promo_cfg:
-                price = max(0, price - promo_cfg["discount_amt"]) 
-        if price > self.wallet_balance:
-            return {"status": "failed", "output": "Insufficient balance"}
-        self.wallet_balance -= price
-        bid = f"booking_{self.uuid()}"
-        self.bookings[bid] = {"booking_id": bid, "flight_no": flight_no, "passenger": passenger_info, "seat_class": seat_class, "paid": price, "status": "confirmed"}
-        return {"status": "ok", "output": self.bookings[bid]}
+    def __get_flight(self, fid: str) -> Tuple[Optional[Flight], Optional[Dict]]:
+        if fid not in self.flights:
+            return None, {
+                "status": "failed",
+                "output": f"Flight ID with {fid} not found"
+            }
+        
+        return self.flights[fid], None
 
-    def cancel_booking(self, booking_id: str) -> Dict[str, Any]:
-        b = self.bookings.get(booking_id)
-        if not b:
-            return {"status": "failed", "output": "Booking not found"}
-        # simple refund model - use pre-computed refund ratio from flight
-        flight_no = b.get("flight_no")
-        refund_ratio = self._precomputed_refunds.get(flight_no, 0.5)
-        refund = round(b.get("paid", 0) * refund_ratio, 2)
-        self.wallet_balance += refund
-        b["status"] = "cancelled"
-        b["refund"] = refund
-        return {"status": "ok", "output": b}
+    def get_flight_details(self, fid: str) -> Dict[str, Any]:
+        flight, err = self.__get_flight(fid)
+        if err: return err
 
-    def list_bookings(self) -> Dict[str, Any]:
-        return {"status": "ok", "output": list(self.bookings.values())}
+        flight_info = {
+            "fid": flight.fid,
+            "departure": f"{flight.departure}, {flight.departure_airport}",
+            "arrival": f"{flight.arrival}, {flight.arrival_airport}",
+            "depature_time": flight.departure_time,
+            "arrival_time": flight.arrival_time,
+            "duration": f"{flight.duration} min",
+            "price": {
+                "ecomony": flight.price,
+                "business": flight.price * 2,
+                "first": flight.price * 4.5
+            },
+            "seat_count": flight.seat_count
+        }
 
-    def get_booking(self, booking_id: str) -> Dict[str, Any]:
-        b = self.bookings.get(booking_id)
-        if not b:
-            return {"status": "failed", "output": "Booking not found"}
-        return {"status": "ok", "output": b}
+        return {
+            "status": "ok",
+            "output": flight_info
+        }
 
-    def upgrade_seat(self, booking_id: str, target_class: str) -> Dict[str, Any]:
-        b = self.bookings.get(booking_id)
-        if not b:
-            return {"status": "failed", "output": "Booking not found"}
-        # use pre-computed upgrade cost from flight
-        flight_no = b.get("flight_no")
-        extra = self._precomputed_upgrades.get(flight_no, 100.0)
-        if extra > self.wallet_balance:
-            return {"status": "failed", "output": "Insufficient balance for upgrade"}
-        self.wallet_balance -= extra
-        b["seat_class"] = target_class
-        b.setdefault("upgrades", []).append({"amount": extra, "to": target_class})
-        return {"status": "ok", "output": b}
+    def search_flights(self, departure: str, arrival: str, date: str) -> Dict[str, Any]:
+        # parse input date (accept "YYYY-MM-DD" or full timestamp)
+        try:
+            if len(date.strip()) == 10:
+                target_date = datetime.strptime(date.strip(), "%Y-%m-%d").date()
+            else:
+                target_date = datetime.strptime(date.strip(), "%Y-%m-%d %H:%M:%S").date()
+        except Exception:
+            return {
+                "status": "failed",
+                "output": f"Invalid date format: {date}. Use 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM:SS'"
+            }
 
-    def get_fare_rules(self, flight_no: str) -> Dict[str, Any]:
-        return {"status": "ok", "output": {"flight_no": flight_no, "rules": "Mock fare rules: refundable conditions vary."}}
+        matched = []
+        for flight in self.flights_by_departure.get(departure, []):
+            try:
+                dep_time = datetime.strptime(flight.departure_time, "%Y-%m-%d %H:%M:%S")
+            except Exception:
+                # skip malformed timestamps
+                continue
 
-    def get_seat_map(self, flight_no: str) -> Dict[str, Any]:
-        seats = self.seat_maps.get(flight_no)
-        if not seats:
-            return {"status": "failed", "output": f"Flight {flight_no} not found"}
-        return {"status": "ok", "output": {"flight_no": flight_no, "seats": seats}}
+            if dep_time.date() != target_date:
+                continue
 
-    def check_in(self, booking_id: str) -> Dict[str, Any]:
-        b = self.bookings.get(booking_id)
-        if not b:
-            return {"status": "failed", "output": "Booking not found"}
-        b["checked_in"] = True
-        b["boarding_pass"] = f"BP-{booking_id}-{self.uuid()}"
-        return {"status": "ok", "output": b}
+            if flight.arrival == arrival:
+                matched.append(flight.fid)
 
-    def get_boarding_pass(self, booking_id: str) -> Dict[str, Any]:
-        b = self.bookings.get(booking_id)
-        if not b or not b.get("boarding_pass"):
-            return {"status": "failed", "output": "Boarding pass not available"}
-        return {"status": "ok", "output": {"boarding_pass": b["boarding_pass"]}}
+        if not matched:
+            return {
+                "status": "failed",
+                "output": f"No flights found for {departure} -> {arrival} on {date}"
+            }
 
-    def list_promotions(self) -> Dict[str, Any]:
-        return {"status": "ok", "output": list(self.promos.values())}
+        return {
+            "status": "ok",
+            "output": matched
+        }
 
-    def apply_promo(self, promo_code: str, booking_id: str) -> Dict[str, Any]:
-        p = self.promos.get(promo_code)
-        b = self.bookings.get(booking_id)
-        if not p:
-            return {"status": "failed", "output": "Promo not found"}
-        if not b:
-            return {"status": "failed", "output": "Booking not found"}
-        # naive application: reduce paid
-        old = b.get("paid", 0)
-        if "discount_pct" in p:
-            new = old * (1 - p["discount_pct"]/100)
-        elif "discount_amt" in p:
-            new = max(0, old - p["discount_amt"])
-        else:
-            new = old
-        diff = round(old - new, 2)
-        self.wallet_balance += diff
-        b["paid"] = new
-        b.setdefault("applied_promos", []).append(promo_code)
-        return {"status": "ok", "output": b}
+    def check_seat_availability(self, fid: str, seat_class: str) -> Dict[str, Any]:
+        flight, err = self.__get_flight(fid)
+        if err: return err
 
-    def get_wallet_balance(self) -> Dict[str, Any]:
-        return {"status": "ok", "output": self.wallet_balance}
+        if seat_class not in flight.seat_count:
+            return {
+                "status": "failed",
+                "output": f"Seat class `{seat_class}` not found"
+            }
+        
+        return {
+            "status": "ok",
+            "output": f"remain {flight.seat_count[seat_class]}"
+        }
 
-    def add_funds(self, amount: float) -> Dict[str, Any]:
-        self.wallet_balance += amount
-        return {"status": "ok", "output": self.wallet_balance}
+    def add_to_booking(self, fid: str, seat_class: str, passenger_count: int) -> Dict[str, Any]:
+        pass
 
-    def refund(self, booking_id: str) -> Dict[str, Any]:
-        b = self.bookings.get(booking_id)
-        if not b:
-            return {"status": "failed", "output": "Booking not found"}
-        refund = b.get("refund") or 0
-        self.wallet_balance += refund
-        return {"status": "ok", "output": {"refunded": refund, "balance": self.wallet_balance}}
+    def remove_from_booking(self, bid: str) -> Dict[str, Any]:
+        pass
 
-    def estimate_travel_time(self, origin: str, dest: str) -> Dict[str, Any]:
-        # return heuristic - use pre-computed value
-        key = (origin, dest)
-        hours = self._precomputed_travel_times.get(key, 8.5)
-        return {"status": "ok", "output": {"origin": origin, "dest": dest, "est_hours": hours}}
+    def get_booking_summary(self) -> Dict[str, Any]:
+        pass
 
-    def suggest_connections(self, origin: str, dest: str) -> Dict[str, Any]:
-        # suggest a connection via a pre-computed airport
-        key = (origin, dest)
-        connections = self._precomputed_connections.get(key, [{"via": "HUB", "total_duration": 600}])
-        return {"status": "ok", "output": connections}
+    def check_balance(self) -> Dict[str, Any]:
+        pass
 
-    def report_issue(self, booking_id: str, issue: str) -> Dict[str, Any]:
-        ticket = f"ticket_{self.uuid()}"
-        return {"status": "ok", "output": {"ticket": ticket, "booking_id": booking_id, "issue": issue}}
+    def checkout_booking(self) -> Dict[str, Any]:
+        pass
 
-    def get_operational_status(self, flight_no: str) -> Dict[str, Any]:
-        status = self.operational_status.get(flight_no, "unknown")
-        return {"status": "ok", "output": {"flight_no": flight_no, "status": status}}
+    def get_booking_history(self) -> Dict[str, Any]:
+        pass
 
-    def get_delay_estimate(self, flight_no: str) -> Dict[str, Any]:
-        d = self.delay_estimates.get(flight_no, 0)
-        return {"status": "ok", "output": {"flight_no": flight_no, "delay_min": d}}
+    def get_booking_details(self, brid: str) -> Dict[str, Any]:
+        pass
 
-    def get_baggage_info(self, flight_no: str) -> Dict[str, Any]:
-        return {"status": "ok", "output": self.baggage_info.get(flight_no, {"allowance": "1 checked + 1 carry-on", "fee_per_extra_kg": 30})}
+    def cancel_booking(self, brid: str) -> Dict[str, Any]:
+        pass
 
-    def add_baggage(self, booking_id: str, kg: int) -> Dict[str, Any]:
-        b = self.bookings.get(booking_id)
-        if not b:
-            return {"status": "failed", "output": "Booking not found"}
-        fee = kg * 30
-        if fee > self.wallet_balance:
-            return {"status": "failed", "output": "Insufficient balance"}
-        self.wallet_balance -= fee
-        b.setdefault("baggage", 0)
-        b["baggage"] += kg
-        return {"status": "ok", "output": {"booking": b, "charged": fee}}
+    def search_airports(self, airport_name: str) -> Dict[str, Any]:
+        pass
 
-    def set_preference(self, key: str, value: Any) -> Dict[str, Any]:
-        self.preferences[key] = value
-        return {"status": "ok", "output": self.preferences}
+    def fuzzy_search_airports(self, airport_name: str) -> Dict[str, Any]:
+        pass
 
-    def get_preference(self, key: str) -> Dict[str, Any]:
-        return {"status": "ok", "output": self.preferences.get(key)}
+    def star_airport(self, aid: str) -> Dict[str, Any]:
+        pass
 
-    def health(self) -> Dict[str, Any]:
-        return {"status": "ok", "output": "ok"}
+    def unstar_airport(self, aid: str) -> Dict[str, Any]:
+        pass
+
+    def get_my_starred_airports(self) -> Dict[str, Any]:
+        pass
+
+    def wait_payment_password(self) -> Dict[str, Any]:
+        pass
+
+    def get_recommended_flights(self) -> Dict[str, Any]:
+        pass
+
+    def filter_flights_by_price_range(self, min_price: float, max_price: float) -> Dict[str, Any]:
+        pass
+
+    def filter_flights_by_duration(self, max_duration: int) -> Dict[str, Any]:
+        pass
+
+if __name__ == "__main__":
+    flight_session = FlightSession(seed=1, os_cfg=None)
+    from pprint import pprint
+
+    pprint(flight_session.search_flights(
+        departure="Dubai",
+        arrival="Seattle",
+        date="2026-01-02"
+    ))
+
+    fid1 = "flight_o4fKmMQTr2CnDMKSwwV5Qh"
+    fid2 = "flight_QgtC5UJAHYFZA2oZuiSijw"
+
+    pprint(flight_session.get_flight_details(fid1))
+    pprint(flight_session.get_flight_details(fid2))
 

@@ -61,7 +61,7 @@ def gen_instruct_by_human(agent: AgentClient, generate: bool):
 
     assert method != "provide"
     apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop", "LightWeather", "LightFlight", "LightStock", "LightNews"}]
-    # apps = [app for app in toolbox.servers if app in {"LightShop"}]
+    # apps = [app for app in toolbox.servers if app in {"LightTalk"}]
     seed = int(prompt("> seed: "))
     level = int(prompt("> level: "))
     query = f"{prompt('> instruct: ')}\nOnce you've completed the task—or if you believe it's unsolvable—output [END] at the end."

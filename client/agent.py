@@ -9,6 +9,7 @@ import asyncio
 import json
 import logging
 import colorlog
+import readline
 
 import sys
 import argparse

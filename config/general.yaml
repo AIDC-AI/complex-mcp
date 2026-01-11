@@ -15,8 +15,6 @@ servers:
     use_sandbox: false
     use: true
   
-  
-
   - name: LangServer
     url: http://127.0.0.1:8004/mcp
     use_sandbox: false

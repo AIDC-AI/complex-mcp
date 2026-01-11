@@ -4,6 +4,7 @@ import threading
 from typing import Dict, Any, Optional
 from concurrent.futures import ThreadPoolExecutor, Future
 from functools import wraps
+import random
 
 class OSConnector:
     _thread_executor = ThreadPoolExecutor(
@@ -198,6 +199,10 @@ class DummyOSConnector:
     
     def gen_past(self, start_year: int = 2026, k: int = 1):
         return [self.now()] * k
+
+def uuid_rng(rng: random.Random):
+    alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+    return ''.join(rng.choices(alphabet, k=22))
 
 if __name__ == "__main__":
     connector = OSConnector(
