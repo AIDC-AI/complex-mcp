@@ -412,3 +412,10 @@ async def acc_network(session_id: str):
     if err: return err
 
     return session.contact_session.acc_network()
+
+@mcp.tool
+async def get_my_name(session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.contact_session.get_my_name()

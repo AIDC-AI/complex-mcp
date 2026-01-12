@@ -80,7 +80,7 @@ class FlightSession:
         self.airports, self.airports_in_cities = self.init_airports()
         self.flights, self.flights_by_arrival, self.flights_by_departure = self.init_flights()
 
-        self.my_balance = self.rng.randint(5000, 50000)
+        self.my_balance = self.rng.randint(15000, 60000)
         self.current_bookings: List[BookingItem] = []
         self.bookings_history: List[BookingRecord] = []
         self.refund_history: List[RefundRecord] = []
@@ -94,10 +94,15 @@ class FlightSession:
         return f"{prefix}_{uuid_rng(self.rng)}"
 
     def get_session_dict(self) -> Dict[str, Any]:
+        bookings = [asdict(booking) for booking in self.current_bookings]
+        bookings.sort(key=lambda x: x["fid"])
+
+        passengers = [asdict(passenger) for passenger in self.passengers]
+
         return {
             "my_balance": self.my_balance,
-            "bookings": self.current_bookings,
-            "passengers": self.passengers
+            "bookings": bookings,
+            "passengers": passengers
         }
 
     def init_airports(self) -> Tuple[List[Airport], Dict[str, str]]:
@@ -162,13 +167,14 @@ class FlightSession:
         flights: Dict[str, Flight] = {}
         flights_by_arrival: Dict[str, List[Flight]] = defaultdict(list)
         flights_by_departure: Dict[str, List[Flight]] = defaultdict(list)
+        base_time = self.os.now()
         for airport in self.airports:
             target_airports = self.rng.sample(self.airports, k=self.rng.randint(5, 50))
             target_airports = self.rng.choices(target_airports, k=4 * len(target_airports))
             for target_airport in target_airports:
                 dura, price = __mock_dura_price(airport._coord, target_airport._coord)
                 departure_time = self.time_machine.add_secs(
-                    timestamp=self.os.now(),
+                    timestamp=base_time,
                     min_secs=3600 * 4, max_secs= 3600 * 10 * 24
                 )
                 flight = Flight(
@@ -199,7 +205,10 @@ class FlightSession:
     def __mock_booking(self):
         if self.rng.uniform(0, 1) > 0.5:
             return
-        # TODO
+        self.add_passenger(name="Carl Lee")
+        fid = self.rng.choice(list(self.flights.keys()))
+        self.add_to_booking(fid, seat_class="economy", passenger_idx=0)
+
         
     def list_all_cities(self) -> Dict[str, Any]:
         return {
@@ -312,10 +321,10 @@ class FlightSession:
             "output": passengers_info
         }
     
-    def add_passenger(self, name: str, light_talk_uid: str):
+    def add_passenger(self, name: str, light_talk_uid: str = ""):
         passenger_info = PassengerInfo(
             name=name,
-            light_talk_uid=light_talk_uid
+            light_talk_uid=light_talk_uid if light_talk_uid else "empty"
         )
         self.passengers.append(passenger_info)
 
@@ -395,7 +404,7 @@ class FlightSession:
             "output": "The user has already entered the correct password"
         }
 
-    def checkout_booking(self) -> Dict[str, Any]:
+    def checkout_bookings(self) -> Dict[str, Any]:
         if not self.enter_password:
             return {
                 "status": "failed",
@@ -606,20 +615,52 @@ class FlightSession:
             "status": "ok",
             "output": starred
         }
+    
+    def get_fids_by_arrival(self, arrival: str):
+        if arrival not in self.flights_by_arrival:
+            return {
+                "status": "failed",
+                "output": f"Arrival '{arrival}' not found"
+            }
+        
+        flights = self.flights_by_arrival[arrival]
+        fids = [flight.fid for flight in flights]
+
+        return {
+            "status": "ok",
+            "output": fids
+        }
+    
+    def get_fids_by_departure(self, departure: str):
+        if departure not in self.flights_by_departure:
+            return {
+                "status": "failed",
+                "output": f"Departure `{departure}` not found"
+            }
+        
+        flights = self.flights_by_departure[departure]
+        fids = [flight.fid for flight in flights]
+
+        return {
+            "status": "ok",
+            "output": fids
+        }
+
 
 if __name__ == "__main__":
     flight_session = FlightSession(seed=1, os_cfg=None)
     from pprint import pprint
 
-    pprint(flight_session.search_flights(
-        departure="Dubai",
-        arrival="Seattle",
-        date="2026-01-02"
-    ))
+    # pprint(flight_session.get_fids_by_arrival("New York"))
 
-    fid1 = "flight_o4fKmMQTr2CnDMKSwwV5Qh"
-    fid2 = "flight_QgtC5UJAHYFZA2oZuiSijw"
+    fid = "flight_WUqey8YVGFi6YMrZQrfM2t"
+    pprint(flight_session.check_bookings())
 
-    pprint(flight_session.get_flight_details(fid1))
-    pprint(flight_session.get_flight_details(fid2))
+    pprint(flight_session.check_balance())
+    pprint(flight_session.wait_payment_password())
+
+    pprint(flight_session.checkout_bookings())
+
+    pprint(flight_session.get_booking_history())
+    pprint(flight_session.check_balance())
 

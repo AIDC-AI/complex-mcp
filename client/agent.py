@@ -87,7 +87,11 @@ class Toolbox:
 
         if need_session:
             server_name = server["name"]
-            assert server_name in session_id_dict, f"{server_name} has not been logged into yet."
+            if server_name not in session_id_dict:
+                return {
+                    "status": "failed",
+                    "output": f"{server_name} has not been logged into yet."
+                }
             session_id = session_id_dict[server_name]
             arguments["session_id"] = session_id
 

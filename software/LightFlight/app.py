@@ -134,11 +134,11 @@ async def wait_payment_password(session_id: str):
     return session.flight_session.wait_payment_password()
 
 @mcp.tool
-async def checkout_booking(session_id: str):
+async def checkout_bookings(session_id: str):
     session, err = get_session(session_id)
     if err: return err
 
-    return session.flight_session.checkout_booking()
+    return session.flight_session.checkout_bookings()
 
 @mcp.tool
 async def check_balance(session_id: str):
@@ -188,3 +188,18 @@ async def get_my_starred_airports(session_id: str):
     if err: return err
 
     return session.flight_session.get_my_starred_airports()
+
+@mcp.tool
+async def get_fids_by_arrival(arrival: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.flight_session.get_fids_by_arrival(arrival)
+
+@mcp.tool
+async def get_fids_by_departure(departure: str, session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.flight_session.get_fids_by_departure(departure)
+

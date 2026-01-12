@@ -172,7 +172,7 @@
         }
     },
     {
-        "tool_name": "checkout_booking",
+        "tool_name": "checkout_bookings",
         "description": "Complete payment for all unpaid bookings in your cart in LightFlight.",
         "arguments": {},
         "returns": {
@@ -262,6 +262,34 @@
         "returns": {
             "type": "object",
             "description": "A dictionary containing status and output. On success, output is a list of starred airports with ID, name, city, and code; on failure, output contains an error message."
+        }
+    },
+        {
+        "tool_name": "get_fids_by_arrival",
+        "description": "Retrieve all flight IDs (FIDs) that arrive at a specific destination city in LightFlight.",
+        "arguments": {
+            "arrival": {
+                "type": "string",
+                "description": "The name of the destination city to query for arriving flights."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of flight IDs (FIDs) arriving at the specified city; on failure (e.g., city not found), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_fids_by_departure",
+        "description": "Retrieve all flight IDs (FIDs) that depart from a specific origin city in LightFlight.",
+        "arguments": {
+            "departure": {
+                "type": "string",
+                "description": "The name of the origin city to query for departing flights."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of flight IDs (FIDs) departing from the specified city; on failure (e.g., city not found), output contains an error message."
         }
     }
 ]

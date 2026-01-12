@@ -1219,6 +1219,12 @@ class ContactSession:
             "status": "ok",
             "output": "You have successfully accelerated the network for the LightTalk app."
         }
+    
+    def get_my_name(self):
+        return {
+            "status": "ok",
+            "output": self.my_name
+        }
 
 
 if __name__ == "__main__":
