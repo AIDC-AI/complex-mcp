@@ -1,1 +1,267 @@
-{}
+[
+    {
+        "tool_name": "list_all_cities",
+        "description": "Retrieve a list of all cities that have airports in LightFlight.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of city names; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "list_airports_by_city",
+        "description": "List all airports located in a specific city in LightFlight.",
+        "arguments": {
+            "city": {
+                "type": "string",
+                "description": "The name of the city to query for airports."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of airport names in that city; on failure (e.g., city not found), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_flight_details",
+        "description": "Get detailed information about a specific flight in LightFlight using its unique flight ID (FID).",
+        "arguments": {
+            "fid": {
+                "type": "string",
+                "description": "The unique flight ID (FID) of the flight to retrieve details for."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes departure/arrival cities and airports, times, duration, prices by class, and seat availability; on failure (e.g., invalid FID), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "search_flights",
+        "description": "Search for available flights between two cities on a specific date in LightFlight.",
+        "arguments": {
+            "departure": {
+                "type": "string",
+                "description": "The departure city name."
+            },
+            "arrival": {
+                "type": "string",
+                "description": "The destination city name."
+            },
+            "date": {
+                "type": "string",
+                "description": "The travel date in 'YYYY-MM-DD' format (e.g., '2026-01-02')."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of matching flight IDs (FIDs); on failure (e.g., no flights or invalid date), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "check_seat_availability",
+        "description": "Check the number of remaining seats for a specific cabin class on a given flight in LightFlight.",
+        "arguments": {
+            "fid": {
+                "type": "string",
+                "description": "The unique flight ID (FID)."
+            },
+            "seat_class": {
+                "type": "string",
+                "description": "The cabin class to check (e.g., 'economy', 'business', 'first')."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output states the number of remaining seats; on failure (e.g., invalid FID or class), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "check_passengers",
+        "description": "List all passengers currently registered in your LightFlight profile.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of passenger records (name and optional LightTalk UID); on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "add_passenger",
+        "description": "Add a new passenger to your LightFlight profile for booking purposes.",
+        "arguments": {
+            "name": {
+                "type": "string",
+                "description": "The full name of the passenger."
+            },
+            "light_talk_uid": {
+                "type": "string",
+                "description": "Optional LightTalk user ID associated with this passenger (can be any string, including 'empty')."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the passenger was added and includes their index; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "remove_passenger",
+        "description": "Remove a passenger from your LightFlight profile by their index.",
+        "arguments": {
+            "passenger_idx": {
+                "type": "integer",
+                "description": "The zero-based index of the passenger to remove."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms removal; on failure (e.g., index out of range), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "add_to_booking",
+        "description": "Add a flight seat for a specific passenger to your current booking cart in LightFlight.",
+        "arguments": {
+            "fid": {
+                "type": "string",
+                "description": "The unique flight ID (FID)."
+            },
+            "seat_class": {
+                "type": "string",
+                "description": "The cabin class (e.g., 'economy', 'business', 'first')."
+            },
+            "passenger_idx": {
+                "type": "integer",
+                "description": "The index of the passenger (from your passenger list) to book for."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the booking item was added; on failure (e.g., no seats, invalid passenger), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "check_bookings",
+        "description": "View all flight bookings currently in your cart (both paid and unpaid) in LightFlight.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of booking items with flight, class, passenger, price, and payment status; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "remove_from_booking",
+        "description": "Remove an unpaid booking item from your cart using its booking ID (BID) in LightFlight.",
+        "arguments": {
+            "bid": {
+                "type": "string",
+                "description": "The unique booking ID (BID) of the item to remove."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms removal; on failure (e.g., BID not found or already paid), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "wait_payment_password",
+        "description": "Prompt the user to enter their payment password in LightFlight. This step is required before checkout.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms authentication is complete; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "checkout_booking",
+        "description": "Complete payment for all unpaid bookings in your cart in LightFlight.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms successful checkout and updates balance/history; on failure (e.g., password not entered or insufficient balance), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "check_balance",
+        "description": "Check your current account balance in LightFlight.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is your current balance (e.g., '$ 12345'); on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_booking_history",
+        "description": "Retrieve your historical flight booking records in LightFlight.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of past booking records with timestamps, total prices, and flight details; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "cancel_booking",
+        "description": "Cancel one or more paid bookings and receive a 95% refund in LightFlight.",
+        "arguments": {
+            "bids": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "A list of booking IDs (BIDs) to cancel. All must be paid."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms cancellation and refund amount; on failure (e.g., unpaid booking or invalid BID), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "search_airports",
+        "description": "Search for airports by name (partial match) in LightFlight.",
+        "arguments": {
+            "airport_name": {
+                "type": "string",
+                "description": "The airport name or partial name to search for."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of matching airports with ID, name, city, and code; on failure (e.g., no matches), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "star_airport",
+        "description": "Mark an airport as starred (favorited) in LightFlight for quick access.",
+        "arguments": {
+            "aid": {
+                "type": "string",
+                "description": "The unique airport ID (AID) to star."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the airport was starred; on failure (e.g., already starred or invalid AID), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "unstar_airport",
+        "description": "Remove an airport from your starred list in LightFlight.",
+        "arguments": {
+            "aid": {
+                "type": "string",
+                "description": "The unique airport ID (AID) to unstar."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the airport was unstarred; on failure (e.g., not previously starred), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_my_starred_airports",
+        "description": "Retrieve a list of all airports you have starred in LightFlight.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of starred airports with ID, name, city, and code; on failure, output contains an error message."
+        }
+    }
+]

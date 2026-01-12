@@ -20,7 +20,7 @@ exclude_keys = {
     "mid", "moid", "cid", "gid", # LightTalk
     "sid", "tid", "caid", # LightShop
     "aid", # LightWeather
-    "hold_id", "booking_id", # LightFlight
+    "bid", "brid", "rid" # LightFlight
     "order_id", "alert_id", # LightStock
     "nid" # LightNews
 }

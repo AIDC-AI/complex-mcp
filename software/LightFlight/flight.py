@@ -39,20 +39,32 @@ class Airport:
     star: bool = field(default=False)
 
 @dataclass
+class PassengerInfo:
+    name: str
+    light_talk_uid: str = field(default="empty")
+
+@dataclass
 class BookingItem:
     bid: str
     fid: str
     seat_class: str
-    passenger_count: int
     total_price: float
+    passenger_info: PassengerInfo
+    paid: bool = field(default=False)
 
 @dataclass
 class BookingRecord:
-    timestamp: str
     brid: str
-    total: float
-    flights: Dict[str, Dict[str, int]] = field(default_factory=dict)  # {fid: {seat_class: passenger_count}}
+    timestamp: str
+    total_price: float
+    bookings: Dict[str, Dict[str, int]] = field(default_factory=dict) # fid: {seat_class: cnt}
 
+@dataclass
+class RefundRecord:
+    rid: str
+    timestamp: str
+    total_price: float
+    bookings: Dict[str, Dict[str, int]] = field(default_factory=dict) # fid: {seat_class: cnt}
 
 CORPUS_PATH = Path("software") / "LightFlight" / "corpus"
 
@@ -69,12 +81,11 @@ class FlightSession:
         self.flights, self.flights_by_arrival, self.flights_by_departure = self.init_flights()
 
         self.my_balance = self.rng.randint(5000, 50000)
-        self.bookings_wait_for_checkout: List[BookingItem] = []
         self.current_bookings: List[BookingItem] = []
-        self.booking_history: List[BookingRecord] = []
+        self.bookings_history: List[BookingRecord] = []
+        self.refund_history: List[RefundRecord] = []
+        self.passengers: List[PassengerInfo] = []
         self.__mock_booking()
-
-        self.my_starred_flights = set()
         self.my_starred_airports = set()
 
         self.enter_password = False
@@ -86,7 +97,7 @@ class FlightSession:
         return {
             "my_balance": self.my_balance,
             "bookings": self.current_bookings,
-            "history": self.booking_history
+            "passengers": self.passengers
         }
 
     def init_airports(self) -> Tuple[List[Airport], Dict[str, str]]:
@@ -188,6 +199,7 @@ class FlightSession:
     def __mock_booking(self):
         if self.rng.uniform(0, 1) > 0.5:
             return
+        # TODO
         
     def list_all_cities(self) -> Dict[str, Any]:
         return {
@@ -289,59 +301,311 @@ class FlightSession:
         
         return {
             "status": "ok",
-            "output": f"remain {flight.seat_count[seat_class]}"
+            "output": f"Remain {flight.seat_count[seat_class]} seats"
+        }
+    
+    def check_passengers(self):
+        passengers_info = [asdict(passenger) for passenger in self.passengers]
+
+        return {
+            "status": "ok",
+            "output": passengers_info
+        }
+    
+    def add_passenger(self, name: str, light_talk_uid: str):
+        passenger_info = PassengerInfo(
+            name=name,
+            light_talk_uid=light_talk_uid
+        )
+        self.passengers.append(passenger_info)
+
+        return {
+            "status": "ok",
+            "output": f"You have successfully added a new passenger : {asdict(passenger_info)}, index = {len(self.passengers) - 1}"
+        }
+    
+    def remove_passenger(self, passenger_idx: int):
+        if passenger_idx >= len(self.passengers):
+            return {
+                "status": "failed",
+                "output": "Index out of range"
+            }
+        passenger_info = self.passengers.pop(passenger_idx)
+
+        return {
+            "status": "ok",
+            "output": f"You have succussfully removed one passenger : {asdict(passenger_info)}"
         }
 
-    def add_to_booking(self, fid: str, seat_class: str, passenger_count: int) -> Dict[str, Any]:
-        pass
+    def add_to_booking(self, fid: str, seat_class: str, passenger_idx: int) -> Dict[str, Any]:
+        flight, err = self.__get_flight(fid)
+        if err: return err
 
-    def remove_from_booking(self, bid: str) -> Dict[str, Any]:
-        pass
+        if flight.seat_count[seat_class] == 0:
+            return {
+                "status": "failed",
+                "output": f"There is not enough seat count for this seat class"
+            }
+        
+        if passenger_idx >= len(self.passengers):
+            return {
+                "status": "failed",
+                "output": "Passenger index out of range"
+            }
+        
+        passenger_info = self.passengers[passenger_idx]
 
-    def get_booking_summary(self) -> Dict[str, Any]:
-        pass
+        price_table = {
+            "economy": flight.price,
+            "business": 2 * flight.price,
+            "first": 4.5 * flight.price
+        }
+        if seat_class not in price_table:
+            return {
+                "status": "failed",
+                "output": f"Unsupported seat class `{seat_class}`"
+            }
+        price = price_table[seat_class]
+        booking_item = BookingItem(
+            bid=self.uuid(prefix="booking"),
+            fid=flight.fid,
+            seat_class=seat_class,
+            total_price=price,
+            passenger_info=passenger_info
+        )
 
-    def check_balance(self) -> Dict[str, Any]:
-        pass
+        self.current_bookings.append(booking_item)
 
-    def checkout_booking(self) -> Dict[str, Any]:
-        pass
+        return {
+            "status": "ok",
+            "output": "You have successfully added one booking into list"
+        }
 
-    def get_booking_history(self) -> Dict[str, Any]:
-        pass
-
-    def get_booking_details(self, brid: str) -> Dict[str, Any]:
-        pass
-
-    def cancel_booking(self, brid: str) -> Dict[str, Any]:
-        pass
-
-    def search_airports(self, airport_name: str) -> Dict[str, Any]:
-        pass
-
-    def fuzzy_search_airports(self, airport_name: str) -> Dict[str, Any]:
-        pass
-
-    def star_airport(self, aid: str) -> Dict[str, Any]:
-        pass
-
-    def unstar_airport(self, aid: str) -> Dict[str, Any]:
-        pass
-
-    def get_my_starred_airports(self) -> Dict[str, Any]:
-        pass
+    def check_bookings(self):
+        bookings = [asdict(booking) for booking in self.current_bookings]
+        return {
+            "status": "ok",
+            "output": sorted(bookings, key=lambda x: x["paid"])
+        }
 
     def wait_payment_password(self) -> Dict[str, Any]:
-        pass
+        self.enter_password = True
+        return {
+            "status": "ok",
+            "output": "The user has already entered the correct password"
+        }
 
-    def get_recommended_flights(self) -> Dict[str, Any]:
-        pass
+    def checkout_booking(self) -> Dict[str, Any]:
+        if not self.enter_password:
+            return {
+                "status": "failed",
+                "output": "This operation need user to enter the passward first"
+            }
+        self.enter_password = False
+        all_price = 0
+        seats_cnt = defaultdict(lambda: defaultdict(int))
 
-    def filter_flights_by_price_range(self, min_price: float, max_price: float) -> Dict[str, Any]:
-        pass
+        for booking in self.current_bookings:
+            if booking.paid:
+                continue
+            all_price += booking.total_price
+            seats_cnt[booking.fid][booking.seat_class] += 1
 
-    def filter_flights_by_duration(self, max_duration: int) -> Dict[str, Any]:
-        pass
+        if all_price > self.my_balance:
+            return {
+                "status": "failed",
+                "output": "Your balance is insufficient"
+            }
+        else:
+            for booking in self.current_bookings:
+                booking.paid = True
+        self.my_balance -= all_price
+        bookings = {fid: dict(seat_cnt) for fid, seat_cnt in seats_cnt.items()}
+
+        booking_rec = BookingRecord(
+            brid=self.uuid(prefix="booking_rec"),
+            timestamp=self.os.step(),
+            total_price=all_price,
+            bookings=bookings
+        )
+
+        self.bookings_history.append(booking_rec)
+
+        return {
+            "status": "ok",
+            "output": "You have successfully checkout all bookings"
+        }
+
+    def remove_from_booking(self, bid: str) -> Dict[str, Any]:
+        for idx, booking in enumerate(self.current_bookings):
+            if booking.bid != bid:
+                continue
+            if booking.paid:
+                return {
+                    "stats": "failed",
+                    "output": f"The booking ({booking}) has already been paid"
+                }
+            self.current_bookings.pop(idx)
+            return {
+                "status": "ok",
+                "output": f"You have successfully removed one booking"
+            }
+        
+        return {
+            "status": "failed",
+            "output": f"Booking with bid={bid} not found"
+        }
+
+    def check_balance(self) -> Dict[str, Any]:
+        return {
+            "status": "ok",
+            "output": f"$ {self.my_balance}"
+        }
+
+    def get_booking_history(self) -> Dict[str, Any]:
+        booking_history = [asdict(booking_rec) for booking_rec in self.bookings_history]
+        
+        return {
+            "status": "ok",
+            "output": booking_history
+        }
+
+    def cancel_booking(self, bids: List[str]) -> Dict[str, Any]:
+        total_refund = 0
+        refund_bookings = defaultdict(lambda: defaultdict(int))
+        removed_count = 0
+        
+        for bid in bids:
+            found = False
+            for idx, booking in enumerate(self.current_bookings):
+                if booking.bid == bid:
+                    found = True
+                    if not booking.paid:
+                        return {
+                            "status": "failed",
+                            "output": f"Booking {bid} has not been paid yet"
+                        }
+                    # Calculate 95% refund
+                    refund_amount = booking.total_price * 0.95
+                    total_refund += refund_amount
+                    refund_bookings[booking.fid][booking.seat_class] += 1
+                    self.current_bookings.pop(idx)
+                    removed_count += 1
+                    break
+            
+            if not found:
+                return {
+                    "status": "failed",
+                    "output": f"Booking {bid} not found"
+                }
+        
+        # Add refund record
+        if removed_count > 0:
+            refund_rec = RefundRecord(
+                rid=self.uuid(prefix="refund_rec"),
+                timestamp=self.os.step(),
+                total_price=total_refund,
+                bookings=dict(refund_bookings)
+            )
+            self.refund_history.append(refund_rec)
+            self.my_balance += total_refund
+        
+        return {
+            "status": "ok",
+            "output": f"Successfully cancelled {removed_count} booking(s). Refunded ${total_refund:.2f}"
+        }
+
+    def search_airports(self, airport_name: str) -> Dict[str, Any]:
+        matched = []
+        airport_name_lower = airport_name.lower()
+        
+        for airport in self.airports:
+            if airport_name_lower in airport.name.lower():
+                matched.append({
+                    "aid": airport.aid,
+                    "name": airport.name,
+                    "city": airport.city,
+                    "code": airport.code
+                })
+        
+        if not matched:
+            return {
+                "status": "failed",
+                "output": f"No airports found matching '{airport_name}'"
+            }
+        
+        return {
+            "status": "ok",
+            "output": matched
+        }
+
+    def star_airport(self, aid: str) -> Dict[str, Any]:
+        # Find airport
+        airport = None
+        for ap in self.airports:
+            if ap.aid == aid:
+                airport = ap
+                break
+        
+        if not airport:
+            return {
+                "status": "failed",
+                "output": f"Airport with aid={aid} not found"
+            }
+        
+        if aid in self.my_starred_airports:
+            return {
+                "status": "failed",
+                "output": f"Airport '{airport.name}' is already starred"
+            }
+        
+        self.my_starred_airports.add(aid)
+        return {
+            "status": "ok",
+            "output": f"Successfully starred airport '{airport.name}'"
+        }
+
+    def unstar_airport(self, aid: str) -> Dict[str, Any]:
+        # Find airport
+        airport = None
+        for ap in self.airports:
+            if ap.aid == aid:
+                airport = ap
+                break
+        
+        if not airport:
+            return {
+                "status": "failed",
+                "output": f"Airport with aid={aid} not found"
+            }
+        
+        if aid not in self.my_starred_airports:
+            return {
+                "status": "failed",
+                "output": f"Airport '{airport.name}' is not starred"
+            }
+        
+        self.my_starred_airports.remove(aid)
+        return {
+            "status": "ok",
+            "output": f"Successfully unstarred airport '{airport.name}'"
+        }
+
+    def get_my_starred_airports(self) -> Dict[str, Any]:
+        starred = []
+        for airport in self.airports:
+            if airport.aid in self.my_starred_airports:
+                starred.append({
+                    "aid": airport.aid,
+                    "name": airport.name,
+                    "city": airport.city,
+                    "code": airport.code
+                })
+        
+        return {
+            "status": "ok",
+            "output": starred
+        }
 
 if __name__ == "__main__":
     flight_session = FlightSession(seed=1, os_cfg=None)
