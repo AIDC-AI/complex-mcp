@@ -1,0 +1,166 @@
+instructs:
+- apps:
+  - LightTalk
+  - LightWeather
+  - LightFlight
+  query: "I have a chemical sample with the raw formula '  C2 H4 O2  '. Please begin\
+    \ by normalizing this formula, determining its empirical form, and verifying if\
+    \ it is organic. Also, calculate the weight in grams of 0.5 moles of this substance.\
+    \ Next, find the 8th number in the Fibonacci sequence (starting with 0, 1, 1,\
+    \ 2...). Use this number as an index\u2014wrapping around to the start of the\
+    \ list if the index exceeds the count\u2014to retrieve a specific post from Archer\
+    \ Mason\u2019s timeline. On this post, first ensure any like I\u2019ve previously\
+    \ given is removed, then add a comment that says 'Lucky you!' and immediately\
+    \ withdraw that same comment. Following this, obtain the shareable URL for the\
+    \ post and send it to the group chat I share with Delilah Bell and Julia Black,\
+    \ confirming the message was sent by checking the group's chat history. For my\
+    \ upcoming travel, list my starred airports and check the current seat availability\
+    \ in economy class for flight 'flight_5THFRWrX8vjVkoZTAXyGPa'. Calculate the standard\
+    \ deviation of 120, 150, and 200 to assist with my budgeting, then subtract the\
+    \ cost of my pending flight booking from my current flight account balance. If\
+    \ the resulting balance is an even number, proceed to checkout all unpaid bookings\
+    \ in my cart after providing the necessary authorization. I also require a security\
+    \ profile for 'example.com'; please provide a comprehensive OSINT overview, a\
+    \ network scan, a WHOIS record, and both DNS and lookalike domain lookups. Finally,\
+    \ determine the ideal gas pressure for 1.5 moles of gas at 298K in a 10L volume,\
+    \ calculate the arccosine of 0.8, and after checking the list of supported cities\
+    \ to set London as my primary location and verifying the setting, retrieve its\
+    \ hourly forecast for the next 3 hours and today\u2019s sunrise and sunset times\
+    \ before deleting my existing weather alert for that city."
+  seed: 19070
+- apps:
+  - LightTalk
+  - LightNews
+  - LightStock
+  query: "Start by resolving the current network lag by switching your session to\
+    \ the London server and then browse the first page of your contact list to get\
+    \ an overview of your connections. After filtering specifically for your coworkers\
+    \ to find their unique identifiers, look up Helen Hunter\u2019s most recent social\
+    \ post to see what she has been sharing lately. Since she seems to have an interest\
+    \ in local food, review the list of all available news sections and fetch the\
+    \ latest news from the Local Business category, then perform a search specifically\
+    \ for any mentions of bread subscriptions within that section; once you find the\
+    \ relevant article, retrieve both the full details and the shareable link for\
+    \ that story. Helen also needs help with a technical project brief: decode the\
+    \ hidden Base64 message \"SGVsbG8gSGVsZW4sIGhlcmUgaXMgdGhlIGRhdGE6\", paraphrase\
+    \ the statement \"The sourdough bread is very delicious\", convert the text \"\
+    the chemical project report\" into title case and \"Final Results for Helen\"\
+    \ into snake case, and then join the separate words \"The\", \"project\", \"is\"\
+    , \"done\" into a single coherent sentence. Additionally, calculate the following\
+    \ unit conversions: 60 miles per hour to kilometers per hour, 1.2 kilograms per\
+    \ liter to grams per cubic centimeter, 50 newtons to pounds force, 2 gallons to\
+    \ liters, and 1 gigabytes to megabytes. For the chemistry portion, take the formula\
+    \ \"C3H8 \", normalize it by removing any trailing whitespace, determine its complete\
+    \ combustion products, and then use those results to simulate a balanced chemical\
+    \ reaction where the fuel reacts with oxygen; furthermore, calculate the mole\
+    \ fraction for a mixture containing 2 moles of a substance out of 10 total moles,\
+    \ and use a clamping function to restrict the value 150 to a range between 0 and\
+    \ 100. Finally, update your financial market tracker by adding JPMorgan Chase\
+    \ & Co. (JPM) to your watchlist, removing Apple Inc. (AAPL) from it, fetching\
+    \ the current market order book for Microsoft (MSFT), checking the recent trade\
+    \ history for Tesla (TSLA), and looking up the company background for Alphabet\
+    \ (GOOGL). Once you have compiled all these details, verify your own user identity\
+    \ and send a comprehensive message to Helen Hunter containing the news URL and\
+    \ all the calculated data results."
+  seed: 69035
+- apps:
+  - LightTalk
+  - LightNews
+  - LightStock
+  query: 'Please start by exploring the available news sections to identify the "Local
+    Business" category and then search for the specific article titled "Outdoor Outfitters
+    Adds Rental Equipment" to fetch its complete content and shareable web link. I
+    need you to report on the total number of characters in that article''s main body
+    after all common English stopwords have been removed, and also provide the original
+    text split into a list of distinct sentences. Next, use a set-based token overlap
+    method to compare the similarity of this business article''s title with the title
+    of the latest story from the "Sports" section. Moving to financial tasks, determine
+    the ticker symbol for "Apple Inc." so you can retrieve its historical dividend
+    records and check it against a snapshot of my current portfolio cash, while also
+    performing a keyword search for "Microsoft Corp." to obtain its comprehensive
+    company metadata. For security, generate a fresh random identifier and use it
+    as a salt to derive a cryptographic key from the title of the business news article
+    using a standard iterative hashing technique; then, calculate both the MD5 and
+    SHA1 hex digests of this derived key and provide an estimate of the Shannon entropy
+    for that SHA1 string. Regarding logistics, model a transport network where a ''Warehouse''
+    connects to a ''Port'' with a weight of 5, and the ''Port'' connects to a ''Store''
+    with a weight of 10; you should generate an adjacency matrix for this network,
+    verify if a connection exists from the ''Warehouse'' to the ''Store'', list the
+    nodes in a valid topological processing order, and find the shortest path from
+    the ''Warehouse'' both by simple step count and by total weighted distance. Finally,
+    among my female contacts, identify the one named Elizabeth Nelson and look up
+    her unique identifier to remove the comment she left saying "Rewatch party later?"
+    on my recent status about missing a show, update her contact remark to be "Auth:
+    " followed by the MD5 digest you calculated, and then use a message template to
+    send her a verification message containing her name and the SHA1 digest after
+    first sending her the gear image located at "https://example.com/rental-gear.jpg".'
+  seed: 8498
+- apps:
+  - LightTalk
+  - LightFlight
+  - LightShop
+  query: Optimize your communication network first, then perform a set of scientific
+    and mathematical calculations starting with converting 298 Kelvin to Celsius and
+    calculating the molar mass of propane (C3H8) to determine its complete combustion
+    products and generate a SHA-256 hex digest of that molar mass value. Identify
+    the elements in the formula 'H2SO4', check the balance of 'KMnO4', and provide
+    the results for balancing the reaction of hydrogen and oxygen into water. For
+    unit conversions, determine the metric equivalents for 800 square feet in square
+    meters, 1.5 grams per cubic centimeter in kilograms per cubic meter, and 200 pounds
+    in kilograms, while also converting 45 degrees Fahrenheit to Celsius and 50 gigabytes
+    to megabytes. In the security domain, decode the URL-safe Base64 string 'Q2xlYW5pbmcgQ29ybmVy',
+    convert the hex string '666c69676874' into raw bytes, and decrypt the XOR ciphertext
+    '1d1a111a1b' using the calculated molar mass of methane (CH4) as the repeating
+    key, then sign the message 'FlightCheck' with the key 'key_99' using HMAC-SHA256.
+    Transition to shopping by listing all available categories and shops within 'home_appliances'
+    to find the unique ID for the store 'Cleaning Corner' via a fuzzy search, unstarring
+    that store from your favorites, and performing another fuzzy search to find the
+    price of a 'Bissell PowerFresh Steam Mop' before viewing your cart summary. For
+    travel, verify your flight account balance, list all airports in Los Angeles,
+    find all flight IDs departing from there, and search for a flight to New York
+    on 2025-09-12 so you can add a business class seat for the first passenger in
+    your profile to your booking and initiate the payment password prompt. Finally,
+    look up the unique ID for Raymond Butler, find the shareable URL for his most
+    recent moment, and after deleting the last message you sent him, send him a new
+    message containing the steam mop price, the ID of the flight you found, and the
+    HMAC signature.
+  seed: 65569
+- apps:
+  - LightTalk
+  - LightFlight
+  - LightNews
+  query: "Begin by identifying the available news sections and then look at the two\
+    \ most recent articles in the 'Technology' category before searching for any news\
+    \ regarding 'Sustainability' in that same section. For the most pertinent article\
+    \ found, retrieve its full body text and its shareable web URL. Create an extractive\
+    \ summary of this article, calculate the word frequency of that summary after\
+    \ removing common English stopwords, and transform the entire summary into lowercase\
+    \ text. Then, calculate the Jaccard similarity between your generated summary\
+    \ and the first sentence of the article's full content. Moving to a scientific\
+    \ calculation, take the chemical formula 'H 2 O', normalize its formatting, and\
+    \ convert a mass of 180 grams into moles using its approximate molar mass. Use\
+    \ the resulting mole count to determine the ideal gas pressure if the gas were\
+    \ contained in a 10-liter tank at 300 Kelvin, ensuring you clamp this pressure\
+    \ value to a range between 500 and 2000. Also, check if the chemical notation\
+    \ string 'C(=O)O' is valid according to simple SMILES validation rules. Next,\
+    \ analyze a social network of your family contacts\u2014Nolan Hunt, Jose Torres,\
+    \ Damian Lopez, and Frank Henry\u2014represented as nodes in an undirected graph.\
+    \ Define weighted connections between Nolan and Jose with a distance of 15, Jose\
+    \ and Damian with a distance of 10, and Damian and Frank with a distance of 5.\
+    \ Verify whether this graph is connected and bipartite, confirm if a path exists\
+    \ from Nolan to Frank, calculate the shortest distance from Nolan to every other\
+    \ member in the network using the specified weights, and list the nodes in the\
+    \ order they are visited during a depth-first search starting from Nolan. In the\
+    \ social app, find Nolan Hunt's latest public moment, generate a shareable URL\
+    \ for it, and leave a comment on it that says 'Interesting read!'. Locate the\
+    \ unique ID of your comment and proceed to withdraw it immediately. To finish,\
+    \ handle travel arrangements: retrieve all flights leaving London, get the specific\
+    \ details for the first flight on the list, and add an economy seat to your bookings\
+    \ for Nolan Hunt, making sure to add him as a passenger with his unique user ID\
+    \ first. Review the status of all your current bookings, then create a new group\
+    \ chat with Nolan Hunt and Jose Torres, post the news article's URL within this\
+    \ group, mark the group messages as read for yourself, fetch the group's entire\
+    \ chat history, and finally delete the group."
+  seed: 22237
+level: 3
+timestamp: '2026-01-13 11:48:04'

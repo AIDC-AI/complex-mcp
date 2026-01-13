@@ -56,7 +56,7 @@ async def percent_composition(formula: str) -> dict:
 
     Percentages sum to (approximately) 100 for known elements in the small periodic table.
     """
-    mm = await molar_mass.__wrapped__(formula)
+    mm = await molar_mass.fn(formula)
     parts = re.findall(r"([A-Z][a-z]?)(\d*)", formula)
     comp = {}
     for el, num in parts:
@@ -112,14 +112,14 @@ async def ideal_gas_pressure(n_moles: float, temp_k: float, volume_l: float) -> 
 @mcp.tool
 async def convert_moles_to_grams(moles: float, formula: str) -> float:
     """Convert an amount in `moles` of a substance with `formula` to mass in grams (approx)."""
-    mm = await molar_mass.__wrapped__(formula)
+    mm = await molar_mass.fn(formula)
     return moles * mm
 
 
 @mcp.tool
 async def convert_grams_to_moles(grams: float, formula: str) -> float:
     """Convert `grams` of a substance with `formula` to moles using approximate molar mass."""
-    mm = await molar_mass.__wrapped__(formula)
+    mm = await molar_mass.fn(formula)
     return grams / mm if mm else 0
 
 

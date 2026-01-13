@@ -464,6 +464,8 @@ class AgentClient:
         results["apps"] = {}
         results["tool_cnt"] = defaultdict(lambda: defaultdict(int))
 
+        cnt_without_tc = 0
+
         try:
             await self.__login(
                 env=env,
@@ -518,6 +520,7 @@ class AgentClient:
                 
                 if msg.endswith(TOOL_STOP_SEQ) and self.toolbox:
                     tool_calling_req = parse_tool(msg)
+                    cnt_without_tc *= 0
                     if tool_calling_req is None:
                         tool_resp = {
                             "status": "error",
@@ -563,7 +566,10 @@ class AgentClient:
                         "content": format_tool_resp
                     })
                 else:
+                    cnt_without_tc += 1
                     if stop_tag and msg.strip().endswith(stop_tag):
+                        break # quit
+                    if cnt_without_tc >= 5:
                         break # quit
             
             results["tool_cnt"] = {key: dict(val) for key, val in results["tool_cnt"].items()}

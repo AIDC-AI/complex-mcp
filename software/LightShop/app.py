@@ -119,7 +119,6 @@ async def get_trans_history(session_id: str):
 
     return session.shop_session.get_trans_history()
 
-# TODO
 @mcp.tool
 async def get_cart_summary(session_id: str):
     session, err = get_session(session_id)

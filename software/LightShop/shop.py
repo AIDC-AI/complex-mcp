@@ -544,7 +544,7 @@ class ShopSession:
         starred_shops = []
         for sid in self.my_starred_shops:
             shop = self.shops[sid]
-            assert shop # TODO: delete
+            # assert shop
             starred_shops.append(
                 {
                     "sid": shop.sid,
@@ -561,9 +561,9 @@ class ShopSession:
         starred_items = []
         for sid, tid in self.my_starred_items:
             shop = self.shops[sid]
-            assert shop # TODO: delete
+            # assert shop
             item = shop.items[tid]
-            assert item # TODO: delete
+            # assert item
             starred_items.append(
                 {
                     "sid": sid,
