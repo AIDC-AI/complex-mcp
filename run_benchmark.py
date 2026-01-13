@@ -61,8 +61,8 @@ def gen_instruct_by_human(agent: AgentClient, generate: bool):
 
     assert method != "provide"
     # apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop", "LightWeather", "LightFlight", "LightStock", "LightNews"}]
-    # apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop"}]
-    apps = [app for app in toolbox.servers if app in {"LightShop"}]
+    apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop"}]
+    # apps = [app for app in toolbox.servers if app in {"LightShop"}]
     seed = int(prompt("> seed: "))
     level = int(prompt("> level: "))
     query = f"{prompt('> instruct: ')}\nOnce you've completed the task—or if you believe it's unsolvable—output [END] at the end."
@@ -218,7 +218,7 @@ def main(args):
         return
 
     data_path = Path("benchmark") / "data" / "data.parquet"
-    dataset = pd.read_parquet(data_path).iloc[-1:]
+    dataset = pd.read_parquet(data_path)
 
     avg_recall_rate = 0
     avg_misbehave_rate = 0

@@ -592,10 +592,8 @@ class ShopSession:
 
 
 if __name__ == "__main__":
-    shop_session = ShopSession(seed=1, os_cfg=None)
+    shop_session = ShopSession(seed=7, os_cfg=None)
 
     from pprint import pprint
 
     pprint(shop_session.get_session_dict())
-
-    pprint(shop_session.get_cart_summary())
