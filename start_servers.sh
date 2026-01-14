@@ -40,9 +40,9 @@ fastmcp run servers/osint/app.py --transport http --port 8002 &
 PIDS+=($!)
 sleep 1
 
-# fastmcp run servers/stats/app.py --transport http --port 8003 &
-# PIDS+=($!)
-# sleep 1
+fastmcp run servers/time/app.py --transport http --port 8003 &
+PIDS+=($!)
+sleep 1
 
 fastmcp run servers/lang/app.py --transport http --port 8004 &
 PIDS+=($!)

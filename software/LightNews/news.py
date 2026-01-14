@@ -105,8 +105,9 @@ class NewsSession:
         
         return {
             "status": "ok",
-            "output": [{"nid": news_item.nid, "title": news_item.title, "timestamp": news_item.timestamp, "abstract": news_item.abstract} for news_item in self._news[section][:k]]
+            "output": [{"nid": news_item.nid, "title": news_item.title, "timestamp": news_item.timestamp, "abstract": news_item.abstract} for news_item in self._news[section][-k:]]
         }
+    
     def search(self, section: str, query: str, maxn: int = 10, begin_date: str = None, end_date: str = None):
         if section not in self.sections:
             return {

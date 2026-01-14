@@ -285,7 +285,7 @@ class OpenAIBackend(ChatBackend):
         )
     
     @retry(
-        stop=stop_after_attempt(10),
+        stop=stop_after_attempt(100),
         wait=wait_exponential(multiplier=1, min=2, max=10),
         reraise=True,
         before_sleep=before_sleep_log(logger, logging.WARNING),
