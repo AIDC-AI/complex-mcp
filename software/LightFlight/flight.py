@@ -648,19 +648,8 @@ class FlightSession:
 
 
 if __name__ == "__main__":
-    flight_session = FlightSession(seed=1, os_cfg=None)
+    flight_session = FlightSession(seed=12, os_cfg=None)
     from pprint import pprint
 
-    # pprint(flight_session.get_fids_by_arrival("New York"))
-
-    fid = "flight_WUqey8YVGFi6YMrZQrfM2t"
-    pprint(flight_session.check_bookings())
-
-    pprint(flight_session.check_balance())
-    pprint(flight_session.wait_payment_password())
-
-    pprint(flight_session.checkout_bookings())
-
-    pprint(flight_session.get_booking_history())
-    pprint(flight_session.check_balance())
+    pprint(flight_session.flights)
 

@@ -1,149 +1,353 @@
 [
-	{
-		"tool_name": "list_cities",
-		"description": "List available mock cities supported by LightWeather.",
-		"arguments": {},
-		"returns": {"type": "object", "description": "status + list of city names"}
-	},
-	{
-		"tool_name": "get_current_weather",
-		"description": "Get a mocked current weather observation for a city.",
-		"arguments": {
-			"location": {"type": "string", "description": "City name"}
-		},
-		"returns": {"type": "object", "description": "status + current weather object"}
-	},
-	{
-		"tool_name": "get_forecast",
-		"description": "Get a multi-day mock forecast for a city.",
-		"arguments": {
-			"location": {"type": "string", "description": "City name"},
-			"days": {"type": "integer", "description": "Number of days to forecast"}
-		},
-		"returns": {"type": "object", "description": "status + list of daily forecasts"}
-	},
-	{
-		"tool_name": "get_hourly_forecast",
-		"description": "Get an hourly mock forecast for a city.",
-		"arguments": {
-			"location": {"type": "string", "description": "City name"},
-			"hours": {"type": "integer", "description": "Number of hours to forecast"}
-		},
-		"returns": {"type": "object", "description": "status + list of hourly forecasts"}
-	},
-	{
-		"tool_name": "list_stations",
-		"description": "List available mock weather stations.",
-		"arguments": {},
-		"returns": {"type": "object", "description": "status + station list"}
-	},
-	{
-		"tool_name": "get_station_info",
-		"description": "Get metadata for a specific station.",
-		"arguments": {"station_id": {"type": "string", "description": "Station identifier"}},
-		"returns": {"type": "object", "description": "status + station info"}
-	},
-	{
-		"tool_name": "get_station_observation",
-		"description": "Get the latest mocked observation from a station.",
-		"arguments": {"station_id": {"type": "string", "description": "Station identifier"}},
-		"returns": {"type": "object", "description": "status + observation"}
-	},
-	{
-		"tool_name": "get_historical_weather",
-		"description": "Fetch mocked historical weather records for a location and period.",
-		"arguments": {"location": {"type": "string"}, "start": {"type": "string"}, "end": {"type": "string"}},
-		"returns": {"type": "object", "description": "status + list of historical records"}
-	},
-	{
-		"tool_name": "get_weather_alerts",
-		"description": "Return active alerts for a location.",
-		"arguments": {"location": {"type": "string"}},
-		"returns": {"type": "object", "description": "status + list of alerts"}
-	},
-	{
-		"tool_name": "create_alert",
-		"description": "Create a simple alert for a location and condition.",
-		"arguments": {"location": {"type": "string"}, "condition": {"type": "string"}, "threshold": {"type": "number"}},
-		"returns": {"type": "object", "description": "status + created alert"}
-	},
-	{
-		"tool_name": "delete_alert",
-		"description": "Delete an existing alert by id.",
-		"arguments": {"alert_id": {"type": "string"}},
-		"returns": {"type": "object", "description": "status + message"}
-	},
-	{
-		"tool_name": "list_alerts",
-		"description": "List all created alerts for the session.",
-		"arguments": {},
-		"returns": {"type": "object", "description": "status + list of alerts"}
-	},
-	{
-		"tool_name": "get_uv_index",
-		"description": "Get a mocked UV index for a location.",
-		"arguments": {"location": {"type": "string"}},
-		"returns": {"type": "object", "description": "status + UV value and level"}
-	},
-	{
-		"tool_name": "get_air_quality",
-		"description": "Get a mocked air quality index for a location.",
-		"arguments": {"location": {"type": "string"}},
-		"returns": {"type": "object", "description": "status + AQI and category"}
-	},
-	{
-		"tool_name": "get_sun_times",
-		"description": "Return mocked sunrise and sunset times for a date and location.",
-		"arguments": {"location": {"type": "string"}, "date": {"type": "string"}},
-		"returns": {"type": "object", "description": "status + sunrise/sunset times"}
-	},
-	{
-		"tool_name": "convert_temperature",
-		"description": "Convert temperature between C/F/K.",
-		"arguments": {"value": {"type": "number"}, "from_unit": {"type": "string"}, "to_unit": {"type": "string"}},
-		"returns": {"type": "object", "description": "status + converted numeric value"}
-	},
-	{
-		"tool_name": "estimate_travel_weather",
-		"description": "Estimate weather along a route (list of city names).",
-		"arguments": {"route": {"type": "array", "description": "List of location names"}},
-		"returns": {"type": "object", "description": "status + per-location weather"}
-	},
-	{
-		"tool_name": "compare_climate",
-		"description": "Return a simple climate comparison between two locations.",
-		"arguments": {"location1": {"type": "string"}, "location2": {"type": "string"}},
-		"returns": {"type": "object", "description": "status + differences in avg temp and rainfall"}
-	},
-	{
-		"tool_name": "get_precip_probability",
-		"description": "Return per-hour precipitation probabilities for the next N hours.",
-		"arguments": {"location": {"type": "string"}, "next_hours": {"type": "integer"}},
-		"returns": {"type": "object", "description": "status + hourly probabilities"}
-	},
-	{
-		"tool_name": "get_wind_forecast",
-		"description": "Return a mocked wind forecast for a location.",
-		"arguments": {"location": {"type": "string"}, "hours": {"type": "integer"}},
-		"returns": {"type": "object", "description": "status + wind forecast list"}
-	},
-	{
-		"tool_name": "get_climate_summary",
-		"description": "Return a mock climate summary for a given year and location.",
-		"arguments": {"location": {"type": "string"}, "year": {"type": "integer"}},
-		"returns": {"type": "object", "description": "status + climate summary"}
-	},
-	{
-		"tool_name": "set_primary_location",
-		"description": "Set a preferred primary location for the session.",
-		"arguments": {"location": {"type": "string"}},
-		"returns": {"type": "object", "description": "status + message"}
-	},
-	{
-		"tool_name": "get_primary_location",
-		"description": "Get the session's primary location, if set.",
-		"arguments": {},
-		"returns": {"type": "object", "description": "status + primary location or null"}
-	}
+    {
+        "tool_name": "list_cities",
+        "description": "List all cities supported by LightWeather.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of city names; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_current_weather",
+        "description": "Get the current weather observation for a city.",
+        "arguments": {
+            "location": {
+                "type": "string",
+                "description": "The name of the city to query."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes temperature, humidity, wind, condition, and other current weather data; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_forecast",
+        "description": "Get a multi-day weather forecast for a city.",
+        "arguments": {
+            "location": {
+                "type": "string",
+                "description": "The name of the city to forecast."
+            },
+            "days": {
+                "type": "integer",
+                "description": "Number of days to include in the forecast (must be a positive integer)."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of daily forecast entries (date, high/low temp, condition, etc.); on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_hourly_forecast",
+        "description": "Get an hourly weather forecast for a city.",
+        "arguments": {
+            "location": {
+                "type": "string",
+                "description": "The name of the city to forecast."
+            },
+            "hours": {
+                "type": "integer",
+                "description": "Number of hours to include in the forecast (must be a positive integer)."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of hourly forecast entries (time, temperature, precipitation chance, etc.); on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "list_stations",
+        "description": "List all available weather stations in LightWeather.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of station identifiers and basic info; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_station_info",
+        "description": "Get metadata for a specific weather station.",
+        "arguments": {
+            "station_id": {
+                "type": "string",
+                "description": "The unique identifier of the weather station."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes station name, location, elevation, and operational details; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_station_observation",
+        "description": "Get the latest weather observation from a specific weather station.",
+        "arguments": {
+            "station_id": {
+                "type": "string",
+                "description": "The unique identifier of the weather station."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes real-time measurements such as temperature, pressure, wind speed, and humidity; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_historical_weather",
+        "description": "Fetch historical weather records for a location over a specified date range.",
+        "arguments": {
+            "location": {
+                "type": "string",
+                "description": "The name of the city or location."
+            },
+            "start": {
+                "type": "string",
+                "description": "Start date in 'YYYY-MM-DD' format."
+            },
+            "end": {
+                "type": "string",
+                "description": "End date in 'YYYY-MM-DD' format."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of daily historical weather records; on failure (e.g., invalid dates), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_weather_alerts",
+        "description": "Retrieve active weather alerts (e.g., storms, heatwaves) for a location.",
+        "arguments": {
+            "location": {
+                "type": "string",
+                "description": "The name of the city or region."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of active alerts with type, severity, and description; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "create_alert",
+        "description": "Create a custom weather alert for a location based on a condition and threshold.",
+        "arguments": {
+            "location": {
+                "type": "string",
+                "description": "The name of the city to monitor."
+            },
+            "condition": {
+                "type": "string",
+                "description": "The weather condition to monitor (e.g., 'temperature', 'rainfall', 'wind_speed')."
+            },
+            "threshold": {
+                "type": "number",
+                "description": "The numeric threshold that triggers the alert."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the alert was created and includes its ID; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "delete_alert",
+        "description": "Delete an existing custom weather alert by its ID.",
+        "arguments": {
+            "alert_id": {
+                "type": "string",
+                "description": "The unique identifier of the alert to delete."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms deletion; on failure (e.g., alert not found), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "list_alerts",
+        "description": "List all custom weather alerts created during the current session.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of active alerts with conditions and thresholds; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_uv_index",
+        "description": "Get the current UV index and risk level for a location.",
+        "arguments": {
+            "location": {
+                "type": "string",
+                "description": "The name of the city or location."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes the UV index value (0–11+) and associated health risk level; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_air_quality",
+        "description": "Get the current air quality index (AQI) and category for a location.",
+        "arguments": {
+            "location": {
+                "type": "string",
+                "description": "The name of the city or location."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes AQI value and category (e.g., 'Good', 'Moderate', 'Unhealthy'); on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_sun_times",
+        "description": "Get sunrise and sunset times for a location on the current date.",
+        "arguments": {
+            "location": {
+                "type": "string",
+                "description": "The name of the city or location."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes ISO-formatted sunrise and sunset times; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "convert_temperature",
+        "description": "Convert a temperature value between Celsius, Fahrenheit, and Kelvin.",
+        "arguments": {
+            "value": {
+                "type": "number",
+                "description": "The numeric temperature value to convert."
+            },
+            "from_unit": {
+                "type": "string",
+                "description": "Source unit: 'C', 'F', or 'K'."
+            },
+            "to_unit": {
+                "type": "string",
+                "description": "Target unit: 'C', 'F', or 'K'."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is the converted temperature as a number; on failure (e.g., invalid units), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "estimate_travel_weather",
+        "description": "Estimate current weather conditions along a travel route consisting of multiple cities.",
+        "arguments": {
+            "route": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "An ordered list of city names representing the travel route."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of weather summaries for each city in the route; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "compare_climate",
+        "description": "Compare average climate conditions (e.g., temperature, rainfall) between two locations.",
+        "arguments": {
+            "location1": {
+                "type": "string",
+                "description": "The first location to compare."
+            },
+            "location2": {
+                "type": "string",
+                "description": "The second location to compare."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output highlights key differences in annual averages; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_precip_probability",
+        "description": "Get the probability of precipitation for each hour over the next N hours in a location.",
+        "arguments": {
+            "location": {
+                "type": "string",
+                "description": "The name of the city or location."
+            },
+            "next_hours": {
+                "type": "integer",
+                "description": "Number of upcoming hours to forecast (must be a positive integer)."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of hourly precipitation probabilities (0–100%); on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_wind_forecast",
+        "description": "Get a wind speed and direction forecast for a location over the next N hours.",
+        "arguments": {
+            "location": {
+                "type": "string",
+                "description": "The name of the city or location."
+            },
+            "hours": {
+                "type": "integer",
+                "description": "Number of hours to include in the wind forecast."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of hourly wind forecasts (speed, gust, direction); on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_climate_summary",
+        "description": "Get an annual climate summary for a location and year, including temperature and precipitation trends.",
+        "arguments": {
+            "location": {
+                "type": "string",
+                "description": "The name of the city or location."
+            },
+            "year": {
+                "type": "integer",
+                "description": "The year for which to retrieve the climate summary."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes yearly averages and notable weather events; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "set_primary_location",
+        "description": "Set a default primary location for weather queries in the current session.",
+        "arguments": {
+            "location": {
+                "type": "string",
+                "description": "The name of the city to set as primary."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the primary location was updated; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_primary_location",
+        "description": "Retrieve the current session's primary location, if one has been set.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is the primary location name or null if none is set; on failure, output contains an error message."
+        }
+    }
 ]
-

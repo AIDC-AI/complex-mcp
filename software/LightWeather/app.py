@@ -162,11 +162,11 @@ async def get_air_quality(location: str, session_id: str):
 
 
 @mcp.tool
-async def get_sun_times(location: str, date: str, session_id: str):
+async def get_sun_times(location: str, session_id: str):
 	session, err = get_session(session_id)
 	if err:
 		return err
-	return session.weather_session.get_sun_times(location, date)
+	return session.weather_session.get_sun_times(location)
 
 
 @mcp.tool

@@ -201,7 +201,22 @@ class WeatherSession:
     def get_historical_weather(self, location: str, start: str, end: str) -> Dict[str, Any]:
         if location not in self._historical:
             return {"status": "failed", "output": f"Location {location} not found"}
-        return {"status": "ok", "output": self._historical[location]}
+        
+        try:
+            start_date = datetime.strptime(start, "%Y-%m-%d")
+            end_date = datetime.strptime(end, "%Y-%m-%d")
+        except ValueError:
+            return {"status": "failed", "output": "Invalid date format. Use YYYY-MM-DD."}
+
+        if start_date > end_date:
+            return {"status": "failed", "output": "Start date must be before end date."}
+
+        filtered_data = [
+            entry for entry in self._historical[location]
+            if start_date <= datetime.strptime(entry["date"], "%Y-%m-%d") <= end_date
+        ]
+
+        return {"status": "ok", "output": filtered_data}
 
     def get_weather_alerts(self, location: str) -> Dict[str, Any]:
         results = [a for a in self.alerts.values() if a.get("location") == location]
@@ -234,7 +249,7 @@ class WeatherSession:
             return {"status": "failed", "output": f"Location {location} not found"}
         return {"status": "ok", "output": self._aqi[location]}
 
-    def get_sun_times(self, location: str, date: str) -> Dict[str, Any]:
+    def get_sun_times(self, location: str) -> Dict[str, Any]:
         if location not in self._sun_times:
             return {"status": "failed", "output": f"Location {location} not found"}
         return {"status": "ok", "output": self._sun_times[location]}
