@@ -1,242 +1,502 @@
+from dataclasses import dataclass, field, asdict
+from typing import List, Dict, Any, Set, Tuple, Literal
+from collections import defaultdict
 import random
-from typing import Dict, List, Any
-from pathlib import Path
 import yaml
-
+from pathlib import Path
 import sys
-from pathlib import Path
 
-WORK_DIR = Path('.').__str__()
+WORK_DIR = Path('.')
 if WORK_DIR not in sys.path:
-    sys.path.append(WORK_DIR)
+    sys.path.append(WORK_DIR.__str__())
 
-import random
-from typing import Dict, List, Any
-from pathlib import Path
-import yaml
-
-from software.utils.core import OSConnector, DummyOSConnector
 from software.utils.time import TimeMachine
-from datetime import datetime, timedelta
+from software.utils.core import OSConnector, DummyOSConnector, uuid_rng
+
+@dataclass
+class Stock:
+    ticker: str
+    name: str
+    price: float
+    sector: str
+    description: str = ""
+    pe_ratio: float = 0.0
+    market_cap: str = "0B"
+
+@dataclass
+class Position:
+    ticker: str
+    quantity: int  # 正数为多头，负数为空头
+    avg_price: float
+
+@dataclass
+class PendingOrder:
+    oid: str
+    ticker: str
+    side: str  # "buy" or "sell"
+    quantity: int
+    price_type: str  # "limit", "stop_loss"
+    limit_price: float = 0.0
+    frozen_margin: float = 0.0
+
+@dataclass
+class StockTransaction:
+    timestamp: str
+    trid: str
+    ticker: str
+    side: str
+    quantity: int
+    price: float
+    total_amount: float
+    fee: float
 
 CORPUS_PATH = Path("software") / "LightStock" / "corpus"
 
-
 class StockSession:
-    """Deterministic StockSession: build price series and snapshots at init; later calls read/update state deterministically."""
     def __init__(self, seed: int, os_cfg: Dict[str, str]):
         self.rng = random.Random(seed)
-        self.os = OSConnector(session_id=os_cfg["session_id"], url=os_cfg["url"])
         self.time_machine = TimeMachine(rng=self.rng)
+        self.os = OSConnector(session_id=os_cfg["session_id"], url=os_cfg["url"]) if os_cfg else DummyOSConnector()
+        
+        self.stocks: Dict[str, Stock] = self.init_stocks() # {tocker: Stock}
+        self.market_open = self.rng.choice([True, True, False]) # 模拟非交易时段
+        
+        self.trading_balance = self.rng.randint(10000, 50000)
+        self.savings_balance = self.rng.randint(50000, 150000)
+        self.frozen_margin = 0.0
+        self.user_tier: Literal["Basic", "VIP"] = self.rng.choice(["Basic", "VIP"]) # VIP 才能做空和止损
+        self.day_trades_remaining = self.rng.randint(1, 3)
 
+        self.portfolio: Dict[str, Position] = {} # {ticker : position}
+        self.pending_orders: List[PendingOrder] = []
+        self.trade_history: List[StockTransaction] = []
+        self.watchlist: Set[str] = set()
+        self.price_alerts: Dict[str, float] = {}
+
+        self.fee_rate = 0.002 * self.rng.uniform(0.5, 1.5)
+        self.vip_fee = 8000
+        
+        self.__mock_environment()
+        self.password_verified = False
+
+    @staticmethod
+    def require_market_open(func):
+        def wrapper(self: 'StockSession', *args, **kwargs):
+            if not self.market_open:
+                return {
+                    "status": "failed",
+                    "output": "The market is currently closed for trading"
+                }
+            return func(self, *args, **kwargs)
+        return wrapper
+    
+    @staticmethod
+    def require_vip(func):
+        def wrapper(self: 'StockSession', *args, **kwargs):
+            if self.user_tier != "VIP":
+                return {
+                    "status": "failed",
+                    "output": "This operation need VIP"
+                }
+            return func(self, *args, **kwargs)
+        return wrapper
+    
+    @staticmethod
+    def require_password(func):
+        def wrapper(self: 'StockSession', *args, **kwargs):
+            if not self.password_verified:
+                return {
+                    "status": "failed",
+                    "output": "Please enter the trading password first"
+                }
+            self.password_verified = False
+            return func(self, *args, **kwargs)
+        return wrapper
+    
+    @staticmethod
+    def require_trade_cnt(func):
+        def wrapper(self: 'StockSession', *args, **kwargs):
+            if self.user_tier != "VIP" and self.day_trades_remaining == 0:
+                return {
+                    "status": "failed",
+                    "output": "Daily trade limit reached. No remaining quota for today. Please upgrade to VIP to unlock unlimited trading."
+                }
+            return func(self, *args, **kwargs)
+        
+        return wrapper
+
+    def init_stocks(self):
+        stocks: Dict[str, Stock] = {}
         with open(CORPUS_PATH / "stock.yaml") as f:
-            info = yaml.safe_load(f)
+            _stocks = yaml.safe_load(f)["stocks"]
+            for _stock in _stocks:
+                ticker = _stock["ticker"]
+                name = _stock["name"]
+                price = round(_stock["price"] * self.rng.uniform(0.8, 1.6), 2)
+                sector = _stock["sector"]
+                description = _stock["description"]
+                pe_ratio = round(_stock["pe_ratio"] * self.rng.uniform(0.9, 1.1), 2)
+                market_cap = round(float(_stock["market_cap"][:-1]) * self.rng.uniform(0.9, 1.4), 2).__str__() + _stock["market_cap"][-1]
 
-        self.markets = {m["code"]: m for m in info.get("markets", [])}
-        self.companies = {c["symbol"]: c for c in info.get("companies", [])}
-        self.news = {n["symbol"]: n for n in info.get("sample_news", [])}
-        self.ratings = {r["symbol"]: r for r in info.get("analyst_ratings", [])}
-        self.dividends = {d["symbol"]: d for d in info.get("dividends", [])}
+                stock = Stock(
+                    ticker=ticker, name=name, price=price, sector=sector,
+                    description=description, pe_ratio=pe_ratio,
+                    market_cap=market_cap
+                )
 
-        self.portfolio: Dict[str, int] = {}
-        self.orders: Dict[str, Dict[str, Any]] = {}
-        self.watchlist: List[str] = []
-        self.cash = round(self.rng.uniform(1000, 100000), 2)
-        self.alerts: Dict[str, Dict[str, Any]] = {}
+                stocks[ticker] = stock
+        
+        return stocks
 
-        # price series and orderbook snapshots per symbol
-        self._price_series: Dict[str, List[float]] = {}
-        self._order_books: Dict[str, Dict[str, Any]] = {}
-        self._price_dates: Dict[str, List[str]] = {}
-        for sym in self.companies.keys():
-            base = round(self.rng.uniform(20, 500), 2)
-            series = [round(base * (1 + self.rng.uniform(-0.05, 0.05)), 2)]
-            # generate 60 days
-            for _ in range(59):
-                last = series[-1]
-                series.append(round(max(1.0, last * (1 + self.rng.uniform(-0.03, 0.03))), 2))
-            # generate deterministic, evenly-spaced daily timestamps ending at now
-            now_str = self.os.now()
-            now_dt = datetime.fromisoformat(now_str)
-            n = len(series)
-            # oldest first, last date aligns to current date (day precision)
-            dates = [
-                (now_dt.date() - timedelta(days=(n - 1 - i))).isoformat()
-                for i in range(n)
-            ]
-            self._price_series[sym] = series
-            self._price_dates[sym] = dates
-            bids = [[round(series[-1] * (1 - i*0.001), 2), self.rng.randint(10,500)] for i in range(5)]
-            asks = [[round(series[-1] * (1 + i*0.001), 2), self.rng.randint(10,500)] for i in range(5)]
-            self._order_books[sym] = {"bids": bids, "asks": asks}
-
-    def uuid(self) -> str:
-        alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-        return ''.join(self.rng.choices(alphabet, k=12))
+    def __mock_environment(self):
+        if self.rng.uniform(0, 1) < 0.5:
+            return
+        tickers = self.rng.choices(list(self.stocks.keys()), k=self.rng.randint(1, 3))
+        for ticker in tickers:
+            self.day_trades_remaining += 1
+            self.wait_trade_password()
+            self.place_market_order(ticker, side="buy", quantity=self.rng.randint(1, 15))
+        
+        limit_stock = self.rng.choice(list(self.stocks.values()))
+        self.day_trades_remaining += 1
+        self.wait_trade_password()
+        self.place_limit_order(ticker=limit_stock.ticker, side="buy", quantity=self.rng.randint(10, 100), limit_price=round(limit_stock.price * self.rng.uniform(0.85, 0.97), 2))
+        
 
     def get_session_dict(self):
+        portfolio = [asdict(pos) for pos in self.portfolio.values()]
+        portfolio.sort(key=lambda x: x["ticker"])
+
+        pending_orders = [asdict(order) for order in self.pending_orders]
+        pending_orders.sort(key=lambda x: (x["ticker"], x["side"], x["quantity"]))
+
+        trade_history = [asdict(trade) for trade in self.trade_history]
+        trade_history.sort(key=lambda x: (x["ticker"], x["side"], x["quantity"]))
+
         return {
-            "portfolio": list(self.portfolio.values()),
-            "orders": list(self.orders.values()),
-            "watchlist": self.watchlist,
-            "cash": self.cash
+            "user": {
+                "tier": self.user_tier,
+                "trading_balance": self.trading_balance,
+                "savings_balance": self.savings_balance,
+                "frozen_margin": self.frozen_margin
+            },
+            "stocks": {
+                "portfolio": portfolio,
+                "pending_orders": pending_orders,
+                "trade_history": trade_history,
+                "watch_list": sorted(list(self.watchlist)),
+                "price_alerts": self.price_alerts
+            }
         }
 
-    def list_markets(self) -> Dict[str, Any]:
-        return {"status": "ok", "output": list(self.markets.values())}
+    def uuid(self, prefix: str):
+        return f"{prefix}_{uuid_rng(self.rng)}"
+    
+    def get_account_summary(self): 
+        return {
+            "status": "ok",
+            "output": {
+                "tier": self.user_tier,
+                "trading balance": self.trading_balance,
+                "savings balance": self.savings_balance,
+                "frozen margin": self.frozen_margin
+            }
+        }
+    
+    def list_all_sectors(self): 
+        sectors = sorted(list(set(s.sector for s in self.stocks.values())))
 
-    def list_companies(self) -> Dict[str, Any]:
-        return {"status": "ok", "output": list(self.companies.values())}
+        return {"status": "ok", "output": sectors}
+    
+    def list_all_tickers_by_sector(self, sector: str): 
+        sector = sector.lower().strip()
+        results = [s.ticker for s in self.stocks.values() if s.sector.lower() == sector]
 
-    def get_quote(self, symbol: str) -> Dict[str, Any]:
-        if symbol not in self._price_series:
-            return {"status": "failed", "output": "Symbol not found"}
-        price = self._price_series[symbol][-1]
-        prev = self._price_series[symbol][-2] if len(self._price_series[symbol]) > 1 else price
-        change = round(price - prev, 2)
-        return {"status": "ok", "output": {"symbol": symbol, "price": price, "change": change}}
-
-    def get_historical(self, symbol: str, days: int = 30) -> Dict[str, Any]:
-        if symbol not in self._price_series:
-            return {"status": "failed", "output": "Symbol not found"}
-        series = self._price_series[symbol][-days:]
-        dates = self._price_dates.get(symbol, [])[-days:]
-        data = []
-        for d, p in zip(dates, series):
-            data.append({"date": d, "close": p})
-        return {"status": "ok", "output": data}
-
-    def place_order(self, symbol: str, side: str, qty: int, price: float | None = None) -> Dict[str, Any]:
-        if symbol not in self._price_series:
-            return {"status": "failed", "output": "Symbol not found"}
-        market_price = self._price_series[symbol][-1]
-        exec_price = price if price is not None else market_price
-        cost = exec_price * qty
-        if side.lower() == "buy" and cost > self.cash:
-            return {"status": "failed", "output": "Insufficient cash"}
-        oid = f"order_{self.uuid()}"
-        order = {"order_id": oid, "symbol": symbol, "side": side, "qty": qty, "price": exec_price, "status": "filled"}
-        self.orders[oid] = order
-        if side.lower() == "buy":
-            self.portfolio[symbol] = self.portfolio.get(symbol, 0) + qty
-            self.cash -= cost
-        else:
-            self.portfolio[symbol] = max(0, self.portfolio.get(symbol, 0) - qty)
-            self.cash += cost
-        return {"status": "ok", "output": order}
-
-    def cancel_order(self, order_id: str) -> Dict[str, Any]:
-        o = self.orders.get(order_id)
-        if not o:
-            return {"status": "failed", "output": "Order not found"}
-        if o.get("status") != "filled":
-            o["status"] = "cancelled"
-            return {"status": "ok", "output": o}
-        return {"status": "failed", "output": "Cannot cancel filled order"}
-
-    def list_orders(self) -> Dict[str, Any]:
-        return {"status": "ok", "output": list(self.orders.values())}
-
-    def get_order(self, order_id: str) -> Dict[str, Any]:
-        o = self.orders.get(order_id)
-        if not o:
-            return {"status": "failed", "output": "Order not found"}
-        return {"status": "ok", "output": o}
-
-    def get_portfolio(self) -> Dict[str, Any]:
-        total_value = 0
-        positions = {}
-        for s, qty in self.portfolio.items():
-            price = self._price_series.get(s, [0])[-1]
-            positions[s] = {"qty": qty, "price": price}
-            total_value += price * qty
-        return {"status": "ok", "output": {"positions": positions, "cash": self.cash, "est_value": round(total_value + self.cash,2)}}
-
-    def deposit_funds(self, amount: float) -> Dict[str, Any]:
-        self.cash += amount
-        return {"status": "ok", "output": self.cash}
-
-    def withdraw_funds(self, amount: float) -> Dict[str, Any]:
-        if amount > self.cash:
-            return {"status": "failed", "output": "Insufficient cash"}
-        self.cash -= amount
-        return {"status": "ok", "output": self.cash}
-
-    def get_company_info(self, symbol: str) -> Dict[str, Any]:
-        c = self.companies.get(symbol)
-        if not c:
-            return {"status": "failed", "output": "Symbol not found"}
-        return {"status": "ok", "output": c}
-
-    def search_stocks(self, keyword: str) -> Dict[str, Any]:
-        results = [sym for sym, info in self.companies.items() if keyword.upper() in sym or keyword.lower() in info["name"].lower()]
+        return {
+            "status": "ok",
+            "output": results
+        }
+    
+    def search_stocks(self, query: str): 
+        query = query.lower()
+        results = []
+        for s in self.stocks.values():
+            if query in s.ticker.lower() or query in s.name.lower():
+                results.append({"ticker": s.ticker, "name": s.name, "price": s.price})
         return {"status": "ok", "output": results}
+    
+    def get_stock_details(self, ticker: str): 
+        stock = self.stocks.get(ticker.upper())
+        if not stock:
+            return {"status": "failed", "output": f"Ticker {ticker} not found"}
+        return {"status": "ok", "output": asdict(stock)}
+    
+    def wait_trade_password(self): 
+        self.password_verified = True
+        return {
+            "status": "ok",
+            "output": "The user has enterred the correct password"
+        }
+    
+    def transfer_funds(self, amount: float, direction: Literal["s2t", "t2s"]): 
+        if direction == "s2t":
+            if self.savings_balance < amount:
+                return {"status": "failed", "output": "Insufficient savings balance."}
+            self.savings_balance -= amount
+            self.trading_balance += amount
+        else:
+            if self.trading_balance < amount:
+                return {"status": "failed", "output": "Insufficient trading balance."}
+            self.trading_balance -= amount
+            self.savings_balance += amount
 
-    def get_watchlist(self) -> Dict[str, Any]:
-        return {"status": "ok", "output": self.watchlist}
+        return {"status": "ok", "output": f"Transferred {amount} successfully."}
+    
+    @require_market_open
+    @require_password
+    @require_trade_cnt
+    def place_market_order(self, ticker: str, side: Literal["buy", "sell"], quantity: int): 
+        """市价单：直接按当前价格成交"""
+        
+        ticker = ticker.upper()
+        stock = self.stocks.get(ticker)
+        if not stock: return {"status": "failed", "output": "Invalid ticker"}
 
-    def add_watch(self, symbol: str) -> Dict[str, Any]:
-        if symbol not in self.watchlist:
-            self.watchlist.append(symbol)
-        return {"status": "ok", "output": self.watchlist}
+        total_price = stock.price * quantity
+        fee = round(min(self.fee_rate * total_price, 100), 2)
+        
+        if side == "buy":
+            available_cash = self.trading_balance - self.frozen_margin
+            if available_cash < (total_price + fee):
+                return {"status": "failed", "output": f"Insufficient available cash. You have {self.trading_balance}$ in total, and {self.frozen_margin}$ is frozen by pending orders."}
+            
+            self.trading_balance -= (total_price + fee)
+            # 更新持仓
+            pos = self.portfolio.get(ticker, Position(ticker, 0, 0))
+            new_qty = pos.quantity + quantity
+            new_avg = (pos.avg_price * pos.quantity + total_price) / new_qty
+            self.portfolio[ticker] = Position(ticker, new_qty, round(new_avg, 2))
+        
+        else: # Sell
+            pos = self.portfolio.get(ticker)
+            # 如果没有持仓且不是 VIP，禁止做空
+            if (not pos or pos.quantity < quantity) and self.user_tier != "VIP":
+                return {"status": "failed", "output": "Short selling is only available for VIP users."}
+            
+            self.trading_balance += (total_price - fee)
+            current_qty = pos.quantity if pos else 0
+            self.portfolio[ticker] = Position(ticker, current_qty - quantity, pos.avg_price if pos else stock.price)
 
-    def remove_watch(self, symbol: str) -> Dict[str, Any]:
-        if symbol in self.watchlist:
-            self.watchlist.remove(symbol)
-        return {"status": "ok", "output": self.watchlist}
+        # 记录交易
+        tx = StockTransaction(self.os.step(), self.uuid("trade"), ticker, side, quantity, stock.price, total_price, fee)
+        self.trade_history.append(tx)
 
-    def dividend_history(self, symbol: str) -> Dict[str, Any]:
-        d = self.dividends.get(symbol)
-        if not d:
-            return {"status": "failed", "output": "No dividend data"}
-        return {"status": "ok", "output": d}
+        if self.user_tier != "VIP":
+            self.day_trades_remaining -= 1
 
-    def analyst_rating(self, symbol: str) -> Dict[str, Any]:
-        r = self.ratings.get(symbol)
-        if not r:
-            return {"status": "failed", "output": "No rating"}
-        return {"status": "ok", "output": r}
+        return {"status": "ok", "output": f"Market order executed. {side} {quantity} shares of {ticker}, fee: {fee}$"}
+    
+    @require_market_open
+    @require_password
+    @require_trade_cnt
+    def place_limit_order(self, ticker: str, side: Literal["buy", "sell"], quantity: int, limit_price: float): 
+            
+        total_cost = limit_price * quantity
+        # 核心陷阱：可用余额检查
+        available_cash = self.trading_balance - self.frozen_margin
+        
+        if side == "buy":
+            if available_cash < total_cost:
+                return {
+                    "status": "failed", 
+                    "output": f"Insufficient available cash. Total: {self.trading_balance}$, Frozen: {self.frozen_margin}$, Needed: {total_cost}$"
+                }
+            # 只增加冻结计数，不直接扣除总余额
+            self.frozen_margin += total_cost
 
-    def market_news(self, symbol: str) -> Dict[str, Any]:
-        n = self.news.get(symbol, {})
-        return {"status": "ok", "output": n.get("headlines", [])}
+        oid = self.uuid("order")
+        new_order = PendingOrder(oid, ticker.upper(), side, quantity, "limit", limit_price, total_cost if side == "buy" else 0)
+        self.pending_orders.append(new_order)
 
-    def set_alert(self, symbol: str, target_price: float) -> Dict[str, Any]:
-        aid = f"alert_{self.uuid()}"
-        self.alerts[aid] = {"symbol": symbol, "target": target_price}
-        return {"status": "ok", "output": {"alert_id": aid}}
+        if self.user_tier != "VIP":
+            self.day_trades_remaining -= 1
 
-    def list_alerts(self) -> Dict[str, Any]:
-        return {"status": "ok", "output": list(self.alerts.values())}
+        return {"status": "ok", "output": f"Limit order {oid} placed. {total_cost} is now frozen."}
+    
+    @require_market_open
+    @require_password
+    @require_trade_cnt
+    @require_vip
+    def place_stop_loss_order(self, ticker: str, quantity: int, stop_price: float):
+        """
+        [VIP 专享] 设置一个止损单。
+        当股价跌至或低于 stop_price 时，系统将自动以市价卖出。
+        """
+        ticker = ticker.upper()
+        if ticker not in self.stocks:
+            return {"status": "failed", "output": "Invalid ticker."}
 
-    def delete_alert(self, alert_id: str) -> Dict[str, Any]:
-        if alert_id in self.alerts:
-            del self.alerts[alert_id]
-            return {"status": "ok", "output": "deleted"}
-        return {"status": "failed", "output": "alert not found"}
+        # 1. 逻辑检查：止损价格必须低于当前价格（否则下单就会被立刻触发）
+        current_price = self.stocks[ticker].price
+        if stop_price >= current_price:
+            return {
+                "status": "failed",
+                "output": f"Stop price ({stop_price}) must be lower than the current price ({current_price})."
+            }
 
-    def get_trade_history(self, symbol: str = None) -> Dict[str, Any]:
-        history = []
-        for o in self.orders.values():
-            if symbol and o["symbol"] != symbol:
-                continue
-            history.append(o)
-        return {"status": "ok", "output": history}
+        # 2. 持仓检查：你得先有这只股票才能设止损（或者至少该动作是合理的）
+        pos = self.portfolio.get(ticker)
+        if not pos or pos.quantity < quantity:
+            return {
+                "status": "failed",
+                "output": f"You don't have enough shares of {ticker} to set a stop-loss. Current: {pos.quantity if pos else 0}"
+            }
 
-    def get_market_status(self) -> Dict[str, Any]:
-        return {"status": "ok", "output": {"open": True, "server_time": self.os.now()}}
+        # 3. 创建止损挂单
+        oid = self.uuid("order")
+        new_order = PendingOrder(
+            oid=oid,
+            ticker=ticker,
+            side="sell",      # 止损通常是卖出
+            quantity=quantity,
+            price_type="stop_loss",
+            limit_price=stop_price, # 这里的字段借用来存触发价
+            frozen_margin=0.0       # 止损单卖出通常不冻结现金
+        )
+        
+        self.pending_orders.append(new_order)
 
-    def simulate_trade(self, symbol: str, side: str, qty: int) -> Dict[str, Any]:
-        if symbol not in self._price_series:
-            return {"status": "failed", "output": "Symbol not found"}
-        price = self._price_series[symbol][-1]
-        return {"status": "ok", "output": {"symbol": symbol, "side": side, "qty": qty, "sim_price": price}}
+        if self.user_tier != "VIP":
+            self.day_trades_remaining -= 1
+        
+        return {
+            "status": "ok",
+            "output": f"Stop-loss order {oid} for {ticker} set at {stop_price}. It will trigger automatically if the price drops."
+        }
 
-    def get_order_book(self, symbol: str) -> Dict[str, Any]:
-        ob = self._order_books.get(symbol)
-        if not ob:
-            return {"status": "failed", "output": "Symbol not found"}
-        return {"status": "ok", "output": ob}
+    def get_portfolio(self): 
+        if not self.portfolio:
+            return {"status": "ok", "output": "You currently hold no positions."}
+        return {"status": "ok", "output": [asdict(p) for p in self.portfolio.values()]}
 
-    def health(self) -> Dict[str, Any]:
-        return {"status": "ok", "output": "ok"}
+    def get_pending_orders(self): 
+        if not self.pending_orders:
+            return {"status": "ok", "output": "No pending orders."}
+        return {"status": "ok", "output": [asdict(o) for o in self.pending_orders]}
+
+    def cancel_order(self, oid: str): 
+        for i, order in enumerate(self.pending_orders):
+            if order.oid == oid:
+                # 释放冻结资金
+                if order.side == "buy":
+                    self.trading_balance += order.frozen_margin
+                    self.frozen_margin -= order.frozen_margin
+                self.pending_orders.pop(i)
+                return {"status": "ok", "output": f"Order {oid} cancelled successfully."}
+        return {"status": "failed", "output": "Order ID not found."}
+
+    def get_trade_history(self): 
+        return {"status": "ok", "output": [asdict(t) for t in self.trade_history]}
+
+    def toggle_watchlist(self, ticker: str): 
+        ticker = ticker.upper()
+        if ticker not in self.stocks: return {"status": "failed", "output": "Invalid ticker"}
+        
+        if ticker in self.watchlist:
+            self.watchlist.remove(ticker)
+            msg = f"Removed {ticker} from watchlist."
+        else:
+            self.watchlist.add(ticker)
+            msg = f"Added {ticker} to watchlist."
+        return {"status": "ok", "output": msg}
+
+    def get_watchlist_details(self): 
+        res = []
+        for t in self.watchlist:
+            s = self.stocks[t]
+            res.append({"ticker": t, "price": s.price, "pe": s.pe_ratio})
+        return {"status": "ok", "output": res}
+    
+    def check_vip_price(self):
+        return {
+            "status": "ok",
+            "output": self.vip_fee
+        }
+    
+    @require_password
+    def upgrade_to_vip(self): 
+        if self.user_tier == "VIP":
+            return {
+                "status": "failed",
+                "output": "You are already a VIP member. No further upgrade is required."
+            }
+
+        fee = self.vip_fee
+        available_cash = self.trading_balance - self.frozen_margin
+        
+        if available_cash < fee:
+            if self.trading_balance >= fee:
+                return {
+                    "status": "failed",
+                    "output": (f"Insufficient available cash to upgrade. Your total balance is {self.trading_balance}, "
+                               f"and {self.frozen_margin} is frozen by pending orders. "
+                               f"Please cancel some orders or transfer funds from savings.")
+                }
+            else:
+                return {
+                    "status": "failed",
+                    "output": f"Insufficient funds. The VIP upgrade requires {fee}$, but your trading balance is {self.trading_balance}$."
+                }
+
+        self.trading_balance -= fee
+        self.user_tier = "VIP"
+
+        return {
+            "status": "ok",
+            "output": f"Congratulations! You have successfully upgraded to VIP. {fee}$ has been deducted from your balance."
+        }
+    
+    def get_day_trades_remaining(self):
+        if self.user_tier == "Basic":
+            return {
+                "status": "ok",
+                "output": self.day_trades_remaining
+            }
+        else:
+            return {
+                "status": "ok",
+                "output": "Unlimited"
+            }
+
+    def set_price_alert(self, ticker: str, price: float):
+        if ticker not in self.stocks:
+            return {
+                "status": "failed",
+                "output": f"Ticker {ticker} not found"
+            }
+        self.price_alerts[ticker] = price
+
+        return {
+            "status": "ok",
+            "output": f"You have succussfully set one price alert: {ticker} ({price})"
+        }
+    
+    def remove_price_alert(self, ticker: str):
+        if ticker not in self.price_alerts:
+            return {
+                "status": "failed",
+                "output": f"Ticker {ticker} not in alert table"
+            }
+        price = self.price_alerts.pop(ticker)
+
+        return {
+            "status": "ok",
+            "output": f"You have succussfully removed one price alert: {ticker} ({price})"
+        }
+    
+    
+if __name__ == "__main__":
+    stock_session = StockSession(seed=41, os_cfg=None)
+
+    print(stock_session.get_pending_orders())
+    print(stock_session.get_portfolio())

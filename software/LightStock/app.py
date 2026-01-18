@@ -26,7 +26,14 @@ async def login(seed: int, os_cfg: Dict[str, str]):
     session = LightStockSession(seed=seed, os_cfg=os_cfg)
     session_dict[session.session_id] = session
     logger.info(f"A new user logged in! [{session.session_id}]")
-    return {"status": "ok", "session_id": session.session_id, "session_info": {"status": "ok", "output": session.stock_session.get_session_dict()}}
+    return {
+        "status": "ok",
+        "session_id": session.session_id,
+        "session_info": {
+            "status": "ok",
+            "output": session.stock_session.get_session_dict()
+        }
+    }
 
 
 @mcp.tool
@@ -39,218 +46,165 @@ async def logout(session_id: str):
     logger.info(f"A user logged out! [{session_id}]")
     return session_info
 
+@mcp.tool
+async def get_account_summary(session_id: str):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.stock_session.get_account_summary()
 
 @mcp.tool
-async def list_markets(session_id: str):
+async def list_all_sectors(session_id: str):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.list_markets()
+    if err: return err
 
+    return session.stock_session.list_all_sectors()
 
 @mcp.tool
-async def list_companies(session_id: str):
+async def list_all_tickers_by_sector(sector: str, session_id: str):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.list_companies()
+    if err: return err
 
+    return session.stock_session.list_all_tickers_by_sector(sector)
 
 @mcp.tool
-async def get_quote(symbol: str, session_id: str):
+async def search_stocks(session_id: str, query: str):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.get_quote(symbol)
+    if err: return err
 
-
-@mcp.tool
-async def get_historical(symbol: str, days: int, session_id: str):
-    session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.get_historical(symbol, days)
+    return session.stock_session.search_stocks(query)
 
 
 @mcp.tool
-async def place_order(symbol: str, side: str, qty: int, price: float | None, session_id: str):
+async def get_stock_details(session_id: str, ticker: str):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.place_order(symbol, side, qty, price)
+    if err: return err
+
+    return session.stock_session.get_stock_details(ticker)
 
 
 @mcp.tool
-async def cancel_order(order_id: str, session_id: str):
+async def wait_trade_password(session_id: str):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.cancel_order(order_id)
+    if err: return err
+
+    return session.stock_session.wait_trade_password()
 
 
 @mcp.tool
-async def list_orders(session_id: str):
+async def transfer_funds(session_id: str, amount: float, direction: str):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.list_orders()
+    if err: return err
+
+    return session.stock_session.transfer_funds(amount, direction)
 
 
 @mcp.tool
-async def get_order(order_id: str, session_id: str):
+async def place_market_order(session_id: str, ticker: str, side: str, quantity: int):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.get_order(order_id)
+    if err: return err
+
+    return session.stock_session.place_market_order(ticker, side, quantity)
+
+
+@mcp.tool
+async def place_limit_order(session_id: str, ticker: str, side: str, quantity: int, limit_price: float):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.stock_session.place_limit_order(ticker, side, quantity, limit_price)
+
+
+@mcp.tool
+async def place_stop_loss_order(session_id: str, ticker: str, quantity: int, stop_price: float):
+    session, err = get_session(session_id)
+    if err: return err
+
+    return session.stock_session.place_stop_loss_order(ticker, quantity, stop_price)
 
 
 @mcp.tool
 async def get_portfolio(session_id: str):
     session, err = get_session(session_id)
-    if err:
-        return err
+    if err: return err
+
     return session.stock_session.get_portfolio()
 
 
 @mcp.tool
-async def deposit_funds(amount: float, session_id: str):
+async def get_pending_orders(session_id: str):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.deposit_funds(amount)
+    if err: return err
+
+    return session.stock_session.get_pending_orders()
 
 
 @mcp.tool
-async def withdraw_funds(amount: float, session_id: str):
+async def cancel_order(session_id: str, oid: str):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.withdraw_funds(amount)
+    if err: return err
+
+    return session.stock_session.cancel_order(oid)
 
 
 @mcp.tool
-async def get_company_info(symbol: str, session_id: str):
+async def get_trade_history(session_id: str):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.get_company_info(symbol)
+    if err: return err
+
+    return session.stock_session.get_trade_history()
 
 
 @mcp.tool
-async def search_stocks(keyword: str, session_id: str):
+async def toggle_watchlist(session_id: str, ticker: str):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.search_stocks(keyword)
+    if err: return err
+
+    return session.stock_session.toggle_watchlist(ticker)
 
 
 @mcp.tool
-async def get_watchlist(session_id: str):
+async def get_watchlist_details(session_id: str):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.get_watchlist()
+    if err: return err
+
+    return session.stock_session.get_watchlist_details()
 
 
 @mcp.tool
-async def add_watch(symbol: str, session_id: str):
+async def check_vip_price(session_id: str):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.add_watch(symbol)
+    if err: return err
+
+    return session.stock_session.check_vip_price()
 
 
 @mcp.tool
-async def remove_watch(symbol: str, session_id: str):
+async def upgrade_to_vip(session_id: str):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.remove_watch(symbol)
+    if err: return err
+
+    return session.stock_session.upgrade_to_vip()
 
 
 @mcp.tool
-async def dividend_history(symbol: str, session_id: str):
+async def get_day_trades_remaining(session_id: str):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.dividend_history(symbol)
+    if err: return err
+
+    return session.stock_session.get_day_trades_remaining()
 
 
 @mcp.tool
-async def analyst_rating(symbol: str, session_id: str):
+async def set_price_alert(session_id: str, ticker: str, price: float):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.analyst_rating(symbol)
+    if err: return err
 
+    return session.stock_session.set_price_alert(ticker, price)
 
 @mcp.tool
-async def market_news(symbol: str, session_id: str):
+async def remove_price_alert(session_id: str, ticker: str):
     session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.market_news(symbol)
+    if err: return err
 
-
-@mcp.tool
-async def set_alert(symbol: str, target_price: float, session_id: str):
-    session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.set_alert(symbol, target_price)
-
-
-@mcp.tool
-async def list_alerts(session_id: str):
-    session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.list_alerts()
-
-
-@mcp.tool
-async def delete_alert(alert_id: str, session_id: str):
-    session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.delete_alert(alert_id)
-
-
-@mcp.tool
-async def get_trade_history(symbol: str | None, session_id: str):
-    session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.get_trade_history(symbol)
-
-
-@mcp.tool
-async def get_market_status(session_id: str):
-    session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.get_market_status()
-
-
-@mcp.tool
-async def simulate_trade(symbol: str, side: str, qty: int, session_id: str):
-    session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.simulate_trade(symbol, side, qty)
-
-
-@mcp.tool
-async def get_order_book(symbol: str, session_id: str):
-    session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.get_order_book(symbol)
-
-
-@mcp.tool
-async def health(session_id: str):
-    session, err = get_session(session_id)
-    if err:
-        return err
-    return session.stock_session.health()
+    return session.stock_session.remove_price_alert(ticker)

@@ -411,6 +411,7 @@ class AgentClient:
                         }
                     )
                     
+                    # print(login_info)
                     login_info: Dict[str, Any] = json.loads(login_info)
                     session_info = login_info.pop("session_info")
                     results["old_apps"][app] = session_info

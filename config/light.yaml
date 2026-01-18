@@ -34,3 +34,9 @@ servers:
     desc: software/LightStock/desc.json
     use_sandbox: true
     use: true
+
+  - name: LightNews
+    url: http://127.0.0.1:9006/mcp
+    desc: software/LightNews/desc.json
+    use_sandbox: true
+    use: true

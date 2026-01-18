@@ -1,29 +1,282 @@
 [
-  {"tool_name": "list_markets", "description": "List available mock markets.", "arguments": {}, "returns": {"type": "object"}},
-  {"tool_name": "list_companies", "description": "List sample companies.", "arguments": {}, "returns": {"type": "object"}},
-  {"tool_name": "get_quote", "description": "Get a mocked quote for a symbol.", "arguments": {"symbol": {"type": "string"}}, "returns": {"type": "object"}},
-  {"tool_name": "get_historical", "description": "Get mocked historical prices.", "arguments": {"symbol": {"type": "string"}, "days": {"type": "integer"}}, "returns": {"type": "object"}},
-  {"tool_name": "place_order", "description": "Place a market or limit order (mocked).", "arguments": {"symbol": {"type": "string"}, "side": {"type": "string"}, "qty": {"type": "integer"}, "price": {"type": "number"}}, "returns": {"type": "object"}},
-  {"tool_name": "cancel_order", "description": "Cancel an existing order.", "arguments": {"order_id": {"type": "string"}}, "returns": {"type": "object"}},
-  {"tool_name": "list_orders", "description": "List orders in session.", "arguments": {}, "returns": {"type": "object"}},
-  {"tool_name": "get_order", "description": "Get details for an order.", "arguments": {"order_id": {"type": "string"}}, "returns": {"type": "object"}},
-  {"tool_name": "get_portfolio", "description": "Get portfolio snapshot.", "arguments": {}, "returns": {"type": "object"}},
-  {"tool_name": "deposit_funds", "description": "Deposit funds to account.", "arguments": {"amount": {"type": "number"}}, "returns": {"type": "object"}},
-  {"tool_name": "withdraw_funds", "description": "Withdraw funds from account.", "arguments": {"amount": {"type": "number"}}, "returns": {"type": "object"}},
-  {"tool_name": "get_company_info", "description": "Get company metadata.", "arguments": {"symbol": {"type": "string"}}, "returns": {"type": "object"}},
-  {"tool_name": "search_stocks", "description": "Search companies by keyword.", "arguments": {"keyword": {"type": "string"}}, "returns": {"type": "object"}},
-  {"tool_name": "get_watchlist", "description": "Get your watchlist.", "arguments": {}, "returns": {"type": "object"}},
-  {"tool_name": "add_watch", "description": "Add a symbol to watchlist.", "arguments": {"symbol": {"type": "string"}}, "returns": {"type": "object"}},
-  {"tool_name": "remove_watch", "description": "Remove a symbol from watchlist.", "arguments": {"symbol": {"type": "string"}}, "returns": {"type": "object"}},
-  {"tool_name": "dividend_history", "description": "Get dividend history for a symbol.", "arguments": {"symbol": {"type": "string"}}, "returns": {"type": "object"}},
-  {"tool_name": "analyst_rating", "description": "Get analyst rating mock.", "arguments": {"symbol": {"type": "string"}}, "returns": {"type": "object"}},
-  {"tool_name": "market_news", "description": "Get market news for a symbol.", "arguments": {"symbol": {"type": "string"}}, "returns": {"type": "object"}},
-  {"tool_name": "set_alert", "description": "Set a price alert for a symbol.", "arguments": {"symbol": {"type": "string"}, "target_price": {"type": "number"}}, "returns": {"type": "object"}},
-  {"tool_name": "list_alerts", "description": "List alerts in session.", "arguments": {}, "returns": {"type": "object"}},
-  {"tool_name": "delete_alert", "description": "Delete an alert by id.", "arguments": {"alert_id": {"type": "string"}}, "returns": {"type": "object"}},
-  {"tool_name": "get_trade_history", "description": "Get trade history (optionally per symbol).", "arguments": {"symbol": {"type": "string"}}, "returns": {"type": "object"}},
-  {"tool_name": "get_market_status", "description": "Get market open/close status.", "arguments": {}, "returns": {"type": "object"}},
-  {"tool_name": "simulate_trade", "description": "Simulate a trade price for planning.", "arguments": {"symbol": {"type": "string"}, "side": {"type": "string"}, "qty": {"type": "integer"}}, "returns": {"type": "object"}},
-  {"tool_name": "get_order_book", "description": "Get mock order book for a symbol.", "arguments": {"symbol": {"type": "string"}}, "returns": {"type": "object"}},
-  {"tool_name": "health", "description": "Health check for LightStock session.", "arguments": {}, "returns": {"type": "object"}}
+    {
+        "tool_name": "get_account_summary",
+        "description": "Retrieve a summary of your account status in LightStock, including user tier and balances.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes user tier (Basic/VIP), trading balance, savings balance, and frozen margin; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "list_all_sectors",
+        "description": "List all industry sectors available in LightStock.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a sorted list of sector names; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "list_all_tickers_by_sector",
+        "description": "List all stock tickers belonging to a specific industry sector in LightStock.",
+        "arguments": {
+            "sector": {
+                "type": "string",
+                "description": "The name of the sector (case-insensitive)."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of ticker symbols in that sector; on failure (e.g., invalid sector), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "search_stocks",
+        "description": "Search for stocks by ticker symbol or company name in LightStock.",
+        "arguments": {
+            "query": {
+                "type": "string",
+                "description": "The keyword to search for in ticker symbols or company names."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of matching stocks with ticker, name, and current price; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_stock_details",
+        "description": "Get detailed information about a specific stock, including price, P/E ratio, market cap, and description.",
+        "arguments": {
+            "ticker": {
+                "type": "string",
+                "description": "The stock ticker symbol (e.g., 'AAPL')."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output includes full stock metadata; on failure (e.g., invalid ticker), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "wait_trade_password",
+        "description": "Authenticate the user by entering the trading password. Required before placing orders or upgrading to VIP.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms successful authentication; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "transfer_funds",
+        "description": "Transfer funds between your trading account and savings account in LightStock.",
+        "arguments": {
+            "amount": {
+                "type": "number",
+                "description": "The amount to transfer (must be positive)."
+            },
+            "direction": {
+                "type": "string",
+                "description": "Transfer direction: 's2t' (savings to trading) or 't2s' (trading to savings)."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the transfer; on failure (e.g., insufficient balance), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "place_market_order",
+        "description": "Place a market order to buy or sell a stock at the current market price.",
+        "arguments": {
+            "ticker": {
+                "type": "string",
+                "description": "The stock ticker symbol."
+            },
+            "side": {
+                "type": "string",
+                "description": "Order side: 'buy' or 'sell'."
+            },
+            "quantity": {
+                "type": "integer",
+                "description": "Number of shares to trade (must be positive)."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms execution with fee; on failure (e.g., market closed, insufficient funds, or daily trade limit reached), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "place_limit_order",
+        "description": "Place a limit order to buy or sell a stock only at a specified price or better.",
+        "arguments": {
+            "ticker": {
+                "type": "string",
+                "description": "The stock ticker symbol."
+            },
+            "side": {
+                "type": "string",
+                "description": "Order side: 'buy' or 'sell'."
+            },
+            "quantity": {
+                "type": "integer",
+                "description": "Number of shares to trade."
+            },
+            "limit_price": {
+                "type": "number",
+                "description": "The limit price for the order."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms order placement and shows frozen funds; on failure (e.g., market closed, insufficient available cash), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "place_stop_loss_order",
+        "description": "Place a stop-loss order to automatically sell a stock when its price falls to a specified level. (VIP-only feature)",
+        "arguments": {
+            "ticker": {
+                "type": "string",
+                "description": "The stock ticker symbol."
+            },
+            "quantity": {
+                "type": "integer",
+                "description": "Number of shares to sell."
+            },
+            "stop_price": {
+                "type": "number",
+                "description": "The trigger price (must be below current market price)."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the stop-loss order; on failure (e.g., not VIP, invalid price, or insufficient shares), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_portfolio",
+        "description": "Retrieve your current stock holdings (positions) in LightStock.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of positions with ticker, quantity, and average cost; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_pending_orders",
+        "description": "List all active pending orders (limit or stop-loss) in your account.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of pending orders with details; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "cancel_order",
+        "description": "Cancel a pending order by its unique order ID and release any frozen funds.",
+        "arguments": {
+            "oid": {
+                "type": "string",
+                "description": "The unique order ID to cancel."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms cancellation; on failure (e.g., order not found), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_trade_history",
+        "description": "Retrieve a complete history of all executed trades in your account.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of past transactions with timestamp, ticker, side, price, and fee; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "toggle_watchlist",
+        "description": "Add or remove a stock from your watchlist in LightStock.",
+        "arguments": {
+            "ticker": {
+                "type": "string",
+                "description": "The stock ticker symbol to toggle."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms whether the stock was added or removed; on failure (e.g., invalid ticker), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_watchlist_details",
+        "description": "Get current price and key metrics for all stocks in your watchlist.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is a list of watchlist stocks with ticker, price, and P/E ratio; on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "check_vip_price",
+        "description": "Check the current fee required to upgrade your account to VIP status in LightStock.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is the VIP upgrade fee (in dollars); on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "upgrade_to_vip",
+        "description": "Upgrade your account to VIP status to unlock advanced features like short selling and unlimited day trades.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms VIP activation and deducts the fee; on failure (e.g., already VIP or insufficient funds), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "get_day_trades_remaining",
+        "description": "Check how many day trades you have left today. Basic users have a daily limit; VIP users have unlimited trades.",
+        "arguments": {},
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output is either a number (Basic) or 'Unlimited' (VIP); on failure, output contains an error message."
+        }
+    },
+    {
+        "tool_name": "set_price_alert",
+        "description": "Set a price alert for a stock to notify you when it reaches a target price.",
+        "arguments": {
+            "ticker": {
+                "type": "string",
+                "description": "The stock ticker symbol."
+            },
+            "price": {
+                "type": "number",
+                "description": "The target price that triggers the alert."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms the alert was set; on failure (e.g., invalid ticker), output contains an error message."
+        }
+    },
+    {
+        "tool_name": "remove_price_alert",
+        "description": "Remove an existing price alert for a stock.",
+        "arguments": {
+            "ticker": {
+                "type": "string",
+                "description": "The stock ticker symbol to remove the alert for."
+            }
+        },
+        "returns": {
+            "type": "object",
+            "description": "A dictionary containing status and output. On success, output confirms removal; on failure (e.g., no alert exists), output contains an error message."
+        }
+    }
 ]
