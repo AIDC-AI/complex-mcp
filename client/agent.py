@@ -108,7 +108,7 @@ class Toolbox:
                 return result
         except Exception as e:
             return {
-                "status": "failed",
+                "status": "error",
                 "output": e.__str__()
             }
 

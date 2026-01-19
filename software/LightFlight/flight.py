@@ -648,7 +648,7 @@ class FlightSession:
 
 
 if __name__ == "__main__":
-    flight_session = FlightSession(seed=13, os_cfg=None)
+    flight_session = FlightSession(seed=109, os_cfg=None)
     from pprint import pprint
 
     pprint(flight_session.flights)
