@@ -285,7 +285,7 @@ class OpenAIBackend(ChatBackend):
         )
     
     @retry(
-        stop=stop_after_attempt(100),
+        stop=stop_after_attempt(1000),
         wait=wait_exponential(multiplier=1, min=2, max=10),
         reraise=True,
         before_sleep=before_sleep_log(logger, logging.WARNING),
@@ -315,6 +315,11 @@ class HumanAnnotator(ChatBackend):
     async def chat(self, *_, **__):
         content = input("$ ")
         resp = argparse.Namespace(
+            usage=argparse.Namespace(
+                prompt_tokens=0,
+                completion_tokens=0,
+                total_tokens=0
+            ),
             choices=[argparse.Namespace(
                 message=argparse.Namespace(
                     content=self.convert_func_calls(content)
@@ -499,9 +504,24 @@ class AgentClient:
                 "content": query
             })
 
-            for _ in range(max_turns):
+            system_token_num = 0
+            llm_token_num = 0
+
+            for idx in range(max_turns):
                 resp = await self.llm.chat(messages)
                 msg: str = resp.choices[0].message.content
+                usage = resp.usage
+
+                if idx == 0:
+                    system_token_num += usage.prompt_tokens
+                llm_token_num += usage.completion_tokens
+                tool_token_num = usage.total_tokens - llm_token_num - system_token_num
+
+                results["tokens"] = {
+                    "prompt": system_token_num,
+                    "llm": llm_token_num,
+                    "tool": tool_token_num
+                }
 
                 if self.toolbox and resp.choices[0].finish_reason == "stop" and \
                     TOOL_START_SEQ in msg and TOOL_STOP_SEQ not in msg:
@@ -547,12 +567,11 @@ class AgentClient:
                             tool_name,
                             arguments,
                             session_id_dict=session_id_dict
-                        )).__str__()
+                        ))
                         try:
-                            tool_resp_dict = json.loads(tool_resp)
+                            tool_resp_dict = json.loads(tool_resp) if isinstance(tool_resp, str) else tool_resp
                             status = tool_resp_dict["status"]
                         except Exception as e:
-                            # print(e)
                             status = "ok"
                         results["tool_cnt"][tool_name][status] += 1
 

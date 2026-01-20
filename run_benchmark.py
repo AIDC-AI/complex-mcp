@@ -229,6 +229,10 @@ def main(args):
     avg_error_tc = 0
     avg_invalid_tc = 0
 
+    prompt_tokens = 0
+    llm_tokens = 0
+    tool_tokens = 0
+
     for i in range(len(dataset)):
         data = dataset.iloc[i]
         query = data["query"]
@@ -244,7 +248,7 @@ def main(args):
 
         task = agent.process_query(
             query=query + " You don't need to ask me for anything, just try to solve the task.",
-            max_turns=100,
+            max_turns=10000,
             verbose=True,
             stop_tag="[END]",
             env={
@@ -259,6 +263,7 @@ def main(args):
         old_env = result["old_apps"]
         new_env = result["apps"]
         tool_cnt = result["tool_cnt"]
+        tokens = result["tokens"]
 
         judge_result = judge_env(old_env, new_env, gt_env, verbose=True)
         print(judge_result)
@@ -270,19 +275,33 @@ def main(args):
             avg_error_tc += tool_cnt_info.get("error", 0)
             avg_invalid_tc += tool_cnt_info.get("failed", 0)
 
+        prompt_tokens += tokens["prompt"]
+        llm_tokens += tokens["llm"]
+        tool_tokens += tokens["tool"]
+
     avg_recall_rate /= len(dataset)
     avg_misbehave_rate /= len(dataset)
     avg_valid_tc /= len(dataset)
     avg_error_tc /= len(dataset)
     avg_invalid_tc /= len(dataset)
 
+    prompt_tokens /= len(dataset)
+    llm_tokens /= len(dataset)
+    tool_tokens /= len(dataset)
+
     print(f"Model: {model}")
-    print(f"\t\tavg. recall rate:\t{avg_recall_rate}")
-    print(f"\t\tavg. misbehave rate:\t{avg_misbehave_rate}")
     print(f"\t\taccuracy:\t{acc_cnt / len(dataset)}")
+    print(f"\t\tavg. completion rate:\t{avg_recall_rate}")
+    print(f"\t\tavg. misbehave rate:\t{avg_misbehave_rate}")
+    print("+" * 50)
     print(f"\t\tvalid tool calling count:\t{avg_valid_tc}")
-    print(f"\t\terror tool calling count:\t{avg_error_tc}")
     print(f"\t\tinvalid tool calling count:\t{avg_invalid_tc}")
+    print(f"\t\terror tool calling count:\t{avg_error_tc}")
+    print("+" * 50)
+    print(f"\t\tavg. prompt tokens:\t{prompt_tokens}")
+    print(f"\t\tavg. llm tokens:\t{llm_tokens}")
+    print(f"\t\tavg. tool tokens:\t{tool_tokens}")
+
 
 if __name__ == "__main__":
     parser = ArgumentParser()
