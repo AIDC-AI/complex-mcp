@@ -247,7 +247,7 @@ def main(args):
             random.shuffle(provide_tools)
 
         task = agent.process_query(
-            query=query + " You don't need to ask me for anything, just try to solve the task.",
+            query=query + " You don't need to ask me anything, just try to solve the task.",
             max_turns=10000,
             verbose=True,
             stop_tag="[END]",

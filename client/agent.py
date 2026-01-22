@@ -161,6 +161,7 @@ class Toolbox:
             f"{TOOL_START_SEQ}\n"
             "{\"name\": \"tool_name\", \"arguments\": {\"arg1\": value1, \"arg2\": value2, ...}}\n"
             f"{TOOL_STOP_SEQ}\n"
+            "After you submit the tool call in this format, I will execute it and return the result to you. "
             "Below is the list of available tools and their descriptions:\n"
         )
         if discard_tools:
@@ -506,6 +507,7 @@ class AgentClient:
 
             system_token_num = 0
             llm_token_num = 0
+            tool_token_num = 0
 
             for idx in range(max_turns):
                 resp = await self.llm.chat(messages)
@@ -515,13 +517,6 @@ class AgentClient:
                 if idx == 0:
                     system_token_num += usage.prompt_tokens
                 llm_token_num += usage.completion_tokens
-                tool_token_num = usage.total_tokens - llm_token_num - system_token_num
-
-                results["tokens"] = {
-                    "prompt": system_token_num,
-                    "llm": llm_token_num,
-                    "tool": tool_token_num
-                }
 
                 if self.toolbox and resp.choices[0].finish_reason == "stop" and \
                     TOOL_START_SEQ in msg and TOOL_STOP_SEQ not in msg:
@@ -576,6 +571,7 @@ class AgentClient:
                         results["tool_cnt"][tool_name][status] += 1
 
                     format_tool_resp = f"<response>\n{tool_resp}\n</response>"
+                    tool_token_num += len(format_tool_resp) // 4
 
                     if verbose:
                         print(format_tool_resp)
@@ -591,6 +587,11 @@ class AgentClient:
                         break # quit
                     if cnt_without_tc >= 5:
                         break # quit
+            results["tokens"] = {
+                "prompt": system_token_num,
+                "llm": llm_token_num,
+                "tool": tool_token_num
+            }
             
             results["tool_cnt"] = {key: dict(val) for key, val in results["tool_cnt"].items()}
             results["output"] = '\n'.join(output)

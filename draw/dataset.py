@@ -4,6 +4,9 @@ import pandas as pd
 import json
 from collections import defaultdict
 import numpy as np
+import scienceplots
+
+plt.style.use("science")
 
 # 确保输出目录存在
 img_dir = Path("imgs")
