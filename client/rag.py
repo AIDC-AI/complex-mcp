@@ -21,7 +21,7 @@ class RAGEngine(ABC):
 class ChromaRAG(RAGEngine):
     def __init__(self, name: str = "vec_db"):
         self.client = chromadb.Client()
-        self.collection = self.client.create_collection(name=name, embedding_function=OpenAIEmbeddingFunction(model_name="text-embedding-3-small"))
+        self.collection = self.client.create_collection(name=name)
 
     def read(self, query: str, k: int = 3) -> List[Dict[str, Any]]:
         results = self.collection.query(

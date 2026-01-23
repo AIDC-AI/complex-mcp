@@ -516,7 +516,6 @@ class AgentClient:
 
                 if idx == 0:
                     system_token_num += usage.prompt_tokens
-                llm_token_num += usage.completion_tokens
 
                 if self.toolbox and resp.choices[0].finish_reason == "stop" and \
                     TOOL_START_SEQ in msg and TOOL_STOP_SEQ not in msg:
@@ -524,6 +523,8 @@ class AgentClient:
                 
                 if TOOL_STOP_SEQ in msg:
                     msg = msg[: msg.find(TOOL_STOP_SEQ) + len(TOOL_STOP_SEQ)]
+                # llm_token_num += usage.completion_tokens 
+                llm_token_num += len(msg) // 4
                 
                 if verbose:
                     print(msg)

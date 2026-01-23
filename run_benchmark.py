@@ -1,4 +1,5 @@
 from client.agent import OpenAIBackend, HumanAnnotator, AgentClient, Toolbox
+from client.rag import ChromaRAG
 from benchmark.judge import judge_env
 from dotenv import load_dotenv
 from argparse import ArgumentParser
@@ -23,7 +24,7 @@ def parse_toolbox(tool_config_path: str | Path, method: str):
         data = yaml.safe_load(f)
         config["servers"] = data["servers"]
 
-    toolbox = Toolbox(method=method)
+    toolbox = Toolbox(method=method) if method not in ["rag", "fetch"] else Toolbox(method=method, rag_cls=ChromaRAG)
     for server in config["servers"]:
         if not server["use"]: continue
         server_args = {
@@ -194,7 +195,7 @@ def main(args):
     generate = args.__getattribute__("generate")
     distraction = args.__getattribute__("distraction")
 
-    method = "list_all" if distraction == -1 else "provide"
+    method = args.__getattribute__("method") if distraction == -1 else "provide"
 
     toolbox = parse_toolbox(tool_config_path, method) if tool_config_path else None
     if model == "human":
@@ -306,6 +307,7 @@ def main(args):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-m", "--model", default="gpt-4o", type=str)
+    parser.add_argument("--method", default="list_all", type=str)
     parser.add_argument("-t", "--tool-config", type=str, required=False)
     parser.add_argument("-c", "--custom", action="store_true", default=False)
     parser.add_argument("-g", "--generate", action="store_true", default=False) # Generate instruct
