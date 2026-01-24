@@ -18,13 +18,13 @@ import pandas as pd
 from shortuuid import uuid
 from datetime import datetime
 
-def parse_toolbox(tool_config_path: str | Path, method: str):
+def parse_toolbox(tool_config_path: str | Path, method: str, rag_conf: Dict = {}):
     config = {}
     with open(tool_config_path) as f:
         data = yaml.safe_load(f)
         config["servers"] = data["servers"]
 
-    toolbox = Toolbox(method=method) if method not in ["rag", "fetch"] else Toolbox(method=method, rag_cls=ChromaRAG)
+    toolbox = Toolbox(method=method) if method not in ["rag", "fetch"] else Toolbox(method=method, rag_cls=ChromaRAG, default_k=rag_conf["topk"])
     for server in config["servers"]:
         if not server["use"]: continue
         server_args = {
@@ -194,10 +194,14 @@ def main(args):
     custom = args.__getattribute__("custom")
     generate = args.__getattribute__("generate")
     distraction = args.__getattribute__("distraction")
+    topk = args.__getattribute__("topk")
+    rag_conf = {
+        "topk": topk
+    }
 
     method = args.__getattribute__("method") if distraction == -1 else "provide"
 
-    toolbox = parse_toolbox(tool_config_path, method) if tool_config_path else None
+    toolbox = parse_toolbox(tool_config_path, method, rag_conf) if tool_config_path else None
     if model == "human":
         llm = HumanAnnotator()
     else:
@@ -235,6 +239,7 @@ def main(args):
     tool_tokens = 0
 
     for i in range(len(dataset)):
+        print(f"Completion: [{i + 1} / {len(dataset)}]")
         data = dataset.iloc[i]
         query = data["query"]
         seed = int(data["seed"])
@@ -245,11 +250,11 @@ def main(args):
         if distraction > 0:
             distra_tools = list(set(toolbox.tools.keys()) - set(provide_tools))
             provide_tools += random.sample(distra_tools, k=min(len(distra_tools), distraction))
-            random.shuffle(provide_tools)
+            # random.shuffle(provide_tools)
 
         task = agent.process_query(
             query=query + " You don't need to ask me anything, just try to solve the task.",
-            max_turns=10000,
+            max_turns=100,
             verbose=True,
             stop_tag="[END]",
             env={
@@ -270,7 +275,7 @@ def main(args):
         print(judge_result)
         acc_cnt += int(judge_result["recall"] == judge_result["total"] and judge_result["misbehave"] == 0)
         avg_recall_rate += judge_result["recall"] / (judge_result["total"]) if judge_result["total"] else (judge_result["recall"] == 0)
-        avg_misbehave_rate += judge_result["misbehave"] / judge_result["total"] if judge_result["total"] else (judge_result["misbehave"])
+        avg_misbehave_rate += min(judge_result["misbehave"] / judge_result["total"] if judge_result["total"] else (judge_result["misbehave"]), 3)
         for tool_cnt_info in tool_cnt.values():
             avg_valid_tc += tool_cnt_info.get("ok", 0)
             avg_error_tc += tool_cnt_info.get("error", 0)
@@ -312,6 +317,7 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--custom", action="store_true", default=False)
     parser.add_argument("-g", "--generate", action="store_true", default=False) # Generate instruct
     parser.add_argument("-d", "--distraction", type=int, default=-1, help="0: no other tools; -1: all tools' description will be put in system prompt; n: n tools' description will be put in system prompt")
+    parser.add_argument("--topk", type=int, default=30)
 
     args = parser.parse_args()
     load_dotenv()

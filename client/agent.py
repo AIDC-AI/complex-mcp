@@ -495,7 +495,6 @@ class AgentClient:
                     )
                 print(f"Tool number: {len(self.toolbox.tools)}")
             if system_prompt:
-                # print(system_prompt)
                 messages.append({
                     "role": "system",
                     "content": system_prompt
