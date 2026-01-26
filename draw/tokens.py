@@ -3,7 +3,7 @@ from pathlib import Path
 
 # --- 数据定义 ---
 labels = ['Prompt', 'Tool Feedback', 'LLM Generation']
-counts = [29964.0, 1750.19, 1901.2]
+counts = [29964.0, 1750.19, 901.2]
 
 # 价格计算 (Costs) - 基于 Gemini-3-flash 比例: Input (1) / Output (6)
 in_price = 1

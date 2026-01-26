@@ -609,7 +609,7 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv()
 
-    toolbox = Toolbox(rag_cls=None, method="provide")
+    toolbox = Toolbox(rag_cls=ChromaRAG, method="fetch")
 
     toolbox.register_server(
         server_name="MathServer",
@@ -617,22 +617,5 @@ if __name__ == "__main__":
     )
 
     print(toolbox.get_system_prompt())
-
-    llm = OpenAIBackend(model="gpt-4o")
-    client = AgentClient(
-        llm=llm,
-        toolbox=toolbox,
-        system_prompt=toolbox.get_system_prompt()
-    )
-
-    result = asyncio.run(
-        client.process_query(
-            query="What is the value of 213213 + 3214213, after you finish this task, output an [END] in the end",
-            verbose=True,
-            stop_tag="[END]",
-            max_turns=100,
-            provide_tools=["add", "sub"]
-        )
-    )
 
     
