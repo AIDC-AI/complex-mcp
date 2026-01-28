@@ -288,7 +288,7 @@ class StockSession:
             self.portfolio[ticker] = Position(ticker, current_qty - quantity, pos.avg_price if pos else stock.price)
 
         # 记录交易
-        tx = StockTransaction(self.os.step(), self.uuid("trade"), ticker, side, quantity, stock.price, total_price, fee)
+        tx = StockTransaction(self.os.step(), self.uuid("trans"), ticker, side, quantity, stock.price, total_price, fee)
         self.trade_history.append(tx)
 
         if self.user_tier != "VIP":
