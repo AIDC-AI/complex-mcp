@@ -253,7 +253,7 @@ def main(args):
             # random.shuffle(provide_tools)
 
         task = agent.process_query(
-            query=query + " You don't need to ask me anything, just try to solve the task.",
+            query=query + " All operations can be done by these Light series app. You don't need to ask me anything, just try to solve the task. ",
             max_turns=100,
             verbose=True,
             stop_tag="[END]",
