@@ -126,7 +126,7 @@ def main(args):
         return
 
     data_path = Path("benchmark") / "data" / "data.parquet"
-    dataset = pd.read_parquet(data_path).iloc[:1]
+    dataset = pd.read_parquet(data_path)
 
     avg_recall_rate = 0
     avg_misbehave_rate = 0
