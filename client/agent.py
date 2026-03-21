@@ -5,11 +5,13 @@ from fastmcp import Client as MCPClient
 from typing import List, Dict, Any, Literal
 from tenacity import retry, stop_after_attempt, wait_exponential, before_sleep_log
 from collections import defaultdict
+from functools import lru_cache
 import asyncio
 import json
 import logging
 import colorlog
 import readline
+import tiktoken
 
 import sys
 import argparse
@@ -24,6 +26,24 @@ from client.rag import RAGEngine, ChromaRAG
 LOG_FORMAT = '%(log_color)s%(levelname)-8s%(reset)s %(message)s'
 colorlog.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
+
+
+@lru_cache(maxsize=32)
+def get_encoding(model: str):
+    try:
+        return tiktoken.encoding_for_model(model)
+    except KeyError:
+        logger.warning(
+            "Unknown model '%s' for tiktoken; falling back to cl100k_base.",
+            model,
+        )
+        return tiktoken.get_encoding("cl100k_base")
+
+
+def count_tokens(text: str, model: str) -> int:
+    if not text:
+        return 0
+    return len(get_encoding(model).encode(text))
 
 class Toolbox:
     def __init__(self, tools: Dict[str, Dict[str, Any]] = {}, rag_cls = None, method: Literal["list_all", "provide", "rag", "fetch"] = "list_all", *args, **kwargs):
@@ -507,6 +527,7 @@ class AgentClient:
             system_token_num = 0
             llm_token_num = 0
             tool_token_num = 0
+            token_model = getattr(self.llm, "model", "gpt-4o")
 
             for idx in range(max_turns):
                 resp = await self.llm.chat(messages)
@@ -522,8 +543,7 @@ class AgentClient:
                 
                 if TOOL_STOP_SEQ in msg:
                     msg = msg[: msg.find(TOOL_STOP_SEQ) + len(TOOL_STOP_SEQ)]
-                # llm_token_num += usage.completion_tokens 
-                llm_token_num += len(msg) // 4
+                llm_token_num += count_tokens(msg, token_model)
                 
                 if verbose:
                     print(msg)
@@ -571,7 +591,7 @@ class AgentClient:
                         results["tool_cnt"][tool_name][status] += 1
 
                     format_tool_resp = f"<response>\n{tool_resp}\n</response>"
-                    tool_token_num += len(format_tool_resp) // 4
+                    tool_token_num += count_tokens(format_tool_resp, token_model)
 
                     if verbose:
                         print(format_tool_resp)

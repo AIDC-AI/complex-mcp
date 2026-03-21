@@ -27,36 +27,36 @@ PIDS=()
 echo "Starting Local MCP suite..."
 
 # Start each servers
-fastmcp run servers/math/app.py --transport http --port 8000 &
+fastmcp run servers/math/app.py --transport http --host 0.0.0.0 --port 8000 &
 PIDS+=($!)
 sleep 1
 
-python -m servers.unit.app --port 8001 &
+python -m servers.unit.app --host 0.0.0.0 --port 8001 &
 PIDS+=($!)
 echo "Started UnitServer ..."
 sleep 1
 
-fastmcp run servers/osint/app.py --transport http --port 8002 &
+fastmcp run servers/osint/app.py --transport http --host 0.0.0.0 --port 8002 &
 PIDS+=($!)
 sleep 1
 
-fastmcp run servers/time/app.py --transport http --port 8003 &
+fastmcp run servers/time/app.py --transport http --host 0.0.0.0 --port 8003 &
 PIDS+=($!)
 sleep 1
 
-fastmcp run servers/lang/app.py --transport http --port 8004 &
+fastmcp run servers/lang/app.py --transport http --host 0.0.0.0 --port 8004 &
 PIDS+=($!)
 sleep 1
 
-fastmcp run servers/crypto/app.py --transport http --port 8005 &
+fastmcp run servers/crypto/app.py --transport http --host 0.0.0.0 --port 8005 &
 PIDS+=($!)
 sleep 1
 
-fastmcp run servers/graphs/app.py --transport http --port 8006 &
+fastmcp run servers/graphs/app.py --transport http --host 0.0.0.0 --port 8006 &
 PIDS+=($!)
 sleep 1
 
-fastmcp run servers/chem/app.py --transport http --port 8007 &
+fastmcp run servers/chem/app.py --transport http --host 0.0.0.0 --port 8007 &
 PIDS+=($!)
 sleep 1
 

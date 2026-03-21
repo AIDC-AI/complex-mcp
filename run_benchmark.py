@@ -62,10 +62,6 @@ def gen_instruct_by_human(agent: AgentClient, generate: bool):
 
     assert method != "provide"
     apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop", "LightWeather", "LightFlight", "LightStock", "LightNews"}]
-    # apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop"}]
-    # apps = [app for app in toolbox.servers if app in {"LightShop"}]
-    # apps = [app for app in toolbox.servers if app in {"LightTalk", "LightShop", "LightNews"}]
-    # apps = [app for app in toolbox.servers if app in {"LightTalk", "LightNews", "LightFlight", "LightStock"}]
     seed = int(prompt("> seed: "))
     level = int(prompt("> level: "))
     query = f"{prompt('> instruct: ')}\nOnce you've completed the task—or if you believe it's unsolvable—output [END] at the end."
@@ -98,96 +94,6 @@ def gen_instruct_by_human(agent: AgentClient, generate: bool):
         if ok.strip().lower() == "y":
             add_data(query_result)
 
-INSTRUCT_GEN_PROMPT = """
-You are now tasked with designing a challenging problem that rigorously tests a model's tool-calling capabilities and its ability to manage complex interdependencies among multiple tools. The problem must explicitly require the use of the following tools: **$TOOLS** (though other previously mentioned tools may also be used if necessary).
-
-To craft this problem effectively, **begin by simulating the process yourself**: follow the tool-calling rules outlined earlier to gather observations—such as retrieving contact lists, querying store inventories, checking account balances, etc.—until you have sufficient contextual information. Once you've collected enough observations, formulate a problem that satisfies all the criteria below:
-
-1. **State-modifying actions required**: The problem must necessitate calling functions that alter the environment’s state (e.g., `send_message`, `create_group_chat`, `purchase_item`, etc.).
-
-2. **Precise and unambiguous instructions**: Your problem description must be exact and deterministic. For example: “Send a message to Dennis that reads: ‘I spent $199 to buy an AirPods.’” This ensures the expected outcome is clearly verifiable against a fixed rule set.
-
-3. **Non-trivial complexity with interdependent tool calls**: The solution should involve a sequence of tool invocations where later steps depend on the outputs or side effects of earlier ones, creating meaningful logical or temporal dependencies (e.g., checking inventory before purchasing, confirming available funds before completing a transaction, and only then notifying a contact).
-
-4. **Self-validation**: After drafting your problem, attempt to solve it yourself using the allowed tools. If you encounter ambiguities, missing prerequisites, or logical inconsistencies, revise the problem accordingly.
-
-5. **Implicit tool usage**: The final problem must be phrased as a single, coherent, natural-language instruction chain—written as one continuous narrative without bullet points or explicit step-by-step breakdowns—to genuinely test the model’s ability to autonomously plan and sequence actions. It must implicitly require multiple tool calls, including at least one that modifies the environment’s state (e.g., sending a message, making a purchase, creating a group chat, booking an event), but never name or reference any tools, APIs, or technical operations directly.
-
-6. **Iterative refinement with staged output**: During your design process, first present your candidate problem wrapped in `<temp>...</temp>` tags. Then, simulate solving it step by step using the available tools. If you identify any issues—such as missing information, infeasible steps, or unclear phrasing—revise the problem and re-test. Only when you are fully satisfied that it is clear, well-posed, sufficiently complex, and meets all requirements should you output the final version strictly within `<query>...</query>` tags.
-
-In short:  
-- Gather necessary information using the provided schema and rules.  
-- **Draft an initial version of your problem and enclose it in `<temp>...</temp>`**.
-- Attempt to solve it yourself; refine as needed.  
-- Once confident the problem is robust and complete, output the polished version exactly as:
-
-<query>
-[Your final problem statement here]
-</query>
-"""
-
-def gen_instruct_by_llm(agent: AgentClient):
-    toolbox = agent.toolbox
-
-    softwares = [server_name for server_name in toolbox.servers if toolbox.servers[server_name]["need_session"] and server_name != "LightSystem"]
-    external_servers = [server_name for server_name in toolbox.servers if not toolbox.servers[server_name]["need_session"]]
-
-    level = int(prompt("> level: "))
-    assert level >= 1
-    number = int(prompt("> number: "))
-    assert number >= 1
-
-    instructs = []
-    for _ in range(number):
-        apps = [softwares[0]] + random.sample(softwares[1:], k=level - 1)
-        servers = random.sample(external_servers, k=level)
-
-        server_descs = []
-        sel_tools = []
-
-        for server_name in apps + servers:
-            tools = toolbox.servers[server_name]["tools"]
-            
-            sel_tools.extend(random.sample(tools, k=level + 2))
-            tool_descs = toolbox.get_tool_descs(tools)
-            server_descs.append(f"{server_name}:\n{tool_descs}")
-        system_prompt = toolbox.get_system_prompt(discard_tools=True) + "\n".join(server_descs)
-
-        agent.set_system_prompt(system_prompt)
-        query = INSTRUCT_GEN_PROMPT.replace("$TOOLS", str(sel_tools))
-        seed = random.randint(1, 100000)
-
-        task = agent.process_query(
-            query=query,
-            max_turns=1000,
-            verbose=True,
-            stop_tag="</query>",
-            env={
-                "apps": apps,
-                "seed": seed
-            }
-        )
-
-        result = asyncio.run(task)
-        output = result["output"]
-        query = parse_query(output)
-        instructs.append({
-            "seed": seed,
-            "apps": apps,
-            "query": query.strip()
-        })
-
-    file_path = Path("benchmark") / "instruct" / f"inst_{uuid()[:8]}.yaml"
-    data = {
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "level": level,
-        "instructs": instructs
-    }
-
-    with open(file_path, "w") as f:
-        yaml.safe_dump(data, f)
-
-
 def main(args):
     model = args.__getattribute__("model")
     tool_config_path = args.__getattribute__("tool_config")
@@ -218,14 +124,9 @@ def main(args):
             generate=generate
         )
         return
-    elif generate:
-        gen_instruct_by_llm(
-            agent=agent
-        )
-        return
 
     data_path = Path("benchmark") / "data" / "data.parquet"
-    dataset = pd.read_parquet(data_path)
+    dataset = pd.read_parquet(data_path).iloc[:1]
 
     avg_recall_rate = 0
     avg_misbehave_rate = 0
@@ -253,7 +154,7 @@ def main(args):
             # random.shuffle(provide_tools)
 
         task = agent.process_query(
-            query=query + " All operations can be done by these Light series app. You don't need to ask me anything, just try to solve the task. ",
+            query=query,
             max_turns=100,
             verbose=True,
             stop_tag="[END]",
@@ -315,7 +216,7 @@ if __name__ == "__main__":
     parser.add_argument("--method", default="list_all", type=str)
     parser.add_argument("-t", "--tool-config", type=str, required=False)
     parser.add_argument("-c", "--custom", action="store_true", default=False)
-    parser.add_argument("-g", "--generate", action="store_true", default=False) # Generate instruct
+    parser.add_argument("-g", "--generate", action="store_true", default=False)
     parser.add_argument("-d", "--distraction", type=int, default=-1, help="0: no other tools; -1: all tools' description will be put in system prompt; n: n tools' description will be put in system prompt")
     parser.add_argument("--topk", type=int, default=30)
 

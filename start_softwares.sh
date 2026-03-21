@@ -27,37 +27,37 @@ PIDS=()
 echo "Starting Light application suite..."
 
 # Start each application
-fastmcp run software/LightSystem/app.py --transport http --port 9000 &
+fastmcp run software/LightSystem/app.py --transport http --host 0.0.0.0 --port 9000 &
 PIDS+=($!)
 echo "LightSystem started (PID: $!, Port: 9000)"
 sleep 1
 
-fastmcp run software/LightTalk/app.py --transport http --port 9001 &
+fastmcp run software/LightTalk/app.py --transport http --host 0.0.0.0 --port 9001 &
 PIDS+=($!)
 echo "LightTalk started (PID: $!, Port: 9001)"
 sleep 1
 
-fastmcp run software/LightShop/app.py --transport http --port 9002 &
+fastmcp run software/LightShop/app.py --transport http --host 0.0.0.0 --port 9002 &
 PIDS+=($!)
 echo "LightShop started (PID: $!, Port: 9002)"
 sleep 1
 
-fastmcp run software/LightWeather/app.py --transport http --port 9003 &
+fastmcp run software/LightWeather/app.py --transport http --host 0.0.0.0 --port 9003 &
 PIDS+=($!)
 echo "LightWeather started (PID: $!, Port: 9003)"
 sleep 1
 
-fastmcp run software/LightFlight/app.py --transport http --port 9004 &
+fastmcp run software/LightFlight/app.py --transport http --host 0.0.0.0 --port 9004 &
 PIDS+=($!)
 echo "LightFlight started (PID: $!, Port: 9004)"
 sleep 1
 
-fastmcp run software/LightStock/app.py --transport http --port 9005 &
+fastmcp run software/LightStock/app.py --transport http --host 0.0.0.0 --port 9005 &
 PIDS+=($!)
 echo "LightStock started (PID: $!, Port: 9005)"
 sleep 1
 
-fastmcp run software/LightNews/app.py --transport http --port 9006 &
+fastmcp run software/LightNews/app.py --transport http --host 0.0.0.0 --port 9006 &
 PIDS+=($!)
 echo "LightNews started (PID: $!, Port 9006)"
 sleep 1
