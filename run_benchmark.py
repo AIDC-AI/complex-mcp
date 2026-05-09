@@ -210,6 +210,10 @@ def main(args):
     print(f"\t\tavg. tool tokens:\t{tool_tokens}")
 
 
+def load_dotenv_if_not_exist():
+    if "OPENAI_API_KEY" not in os.environ:
+        load_dotenv()
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-m", "--model", default="gpt-4o", type=str)
@@ -221,6 +225,6 @@ if __name__ == "__main__":
     parser.add_argument("--topk", type=int, default=30)
 
     args = parser.parse_args()
-    load_dotenv()
+    load_dotenv_if_not_exist()
     
     sys.exit(main(args))

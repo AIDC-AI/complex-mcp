@@ -136,6 +136,9 @@ celerybeat.pid
 
 # Environments
 .env
+.env.1
+.env.2
+.env.3
 .envrc
 .venv
 env/
@@ -213,3 +216,5 @@ check-server.py
 check-client.py
 
 /ignore/
+
+draw/
