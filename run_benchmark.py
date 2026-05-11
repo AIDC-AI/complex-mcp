@@ -16,7 +16,6 @@ import asyncio
 
 import pandas as pd
 from shortuuid import uuid
-from datetime import datetime
 
 def parse_toolbox(tool_config_path: str | Path, method: str, rag_conf: Dict = {}):
     config = {}
@@ -36,14 +35,6 @@ def parse_toolbox(tool_config_path: str | Path, method: str, rag_conf: Dict = {}
         toolbox.register_server(**server_args)
     
     return toolbox
-
-def parse_query(output: str):
-    i = output.find("<query>")
-    j = output.find("</query>")
-    if i < 0 or i >= j:
-        return None
-    
-    return output[i + len("<query>") : j]
 
 def add_data(query_result: Dict[str, Any]):
     dataset_path = Path("benchmark") / "data" / "data.parquet"
