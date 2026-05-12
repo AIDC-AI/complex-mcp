@@ -33,3 +33,21 @@ Then fill values in `.env` as needed.
 python run_benchmark.py --tool-config config/general.yaml \
   --model [model_name]
 ```
+
+
+
+
+
+If you find this work helpful, please cite our paper:
+
+```latex
+@misc{li2026complexmcpevaluationllmagents,
+      title={ComplexMCP: Evaluation of LLM Agents in Dynamic, Interdependent, and Large-Scale Tool Sandbox}, 
+      author={Yuanyang Li and Xue Yang and Longyue Wang and Weihua Luo and Hongyang Chen},
+      year={2026},
+      eprint={2605.10787},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2605.10787}, 
+}
+```
