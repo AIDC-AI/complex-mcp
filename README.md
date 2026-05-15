@@ -2,6 +2,8 @@
 
 **ComplexMCP** is a benchmark for evaluating model performance in complex software workflows and large API tool ecosystems.
 
+[![arXiv](https://img.shields.io/badge/arXiv-2605.10787v1-b31b1b?logo=arxiv&logoColor=white&style=for-the-badge)](https://arxiv.org/pdf/2605.10787v1)
+
 ![ComplexMCP](assets/complex-mcp.png)
 
 ### 1) Build Environment Via Docker
