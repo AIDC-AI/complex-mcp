@@ -1,4 +1,4 @@
-## [ICML 2026] ComplexMCP: Evaluation of LLM Agents in Dynamic, Interdependent, and Large-Scale Tool Sandbox 
+## ComplexMCP: Evaluation of LLM Agents in Dynamic, Interdependent, and Large-Scale Tool Sandbox 
 
 **ComplexMCP** is a benchmark for evaluating model performance in complex software workflows and large API tool ecosystems.
 
