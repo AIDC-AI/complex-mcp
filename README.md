@@ -2,7 +2,11 @@
 
 **ComplexMCP** is a benchmark for evaluating model performance in complex software workflows and large API tool ecosystems.
 
-[![arXiv](https://img.shields.io/badge/arXiv-2605.10787v1-b31b1b?logo=arxiv&logoColor=white&style=for-the-badge)](https://arxiv.org/pdf/2605.10787v1)
+<p align="center">
+  <a href="https://arxiv.org/pdf/2605.10787v1" target="_blank">
+    <img src="https://img.shields.io/badge/arXiv-2605.10787v1-b31b1b?logo=arxiv&logoColor=white&style=for-the-badge" alt="arXiv badge">
+  </a>
+</p>
 
 ![ComplexMCP](assets/complex-mcp.png)
 
@@ -35,8 +39,6 @@ Then fill values in `.env` as needed.
 python run_benchmark.py --tool-config config/general.yaml \
   --model [model_name]
 ```
-
-
 
 
 
