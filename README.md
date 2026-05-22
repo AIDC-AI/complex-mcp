@@ -3,10 +3,11 @@
 **ComplexMCP** is a benchmark for evaluating model performance in complex software workflows and large API tool ecosystems.
 
 <p align="center">
-  <a href="https://arxiv.org/abs/2605.10787v1" target="_blank">
+  <a href="https://arxiv.org/abs/2605.10787" target="_blank">
     <img src="https://img.shields.io/badge/arXiv-2605.10787v1-b31b1b?logo=arxiv&logoColor=white&style=for-the-badge" alt="arXiv badge">
   </a>
 </p>
+
 
 
 ![ComplexMCP](assets/complex-mcp.png)
